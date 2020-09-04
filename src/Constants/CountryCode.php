@@ -12,4 +12,5 @@ interface CountryCode
     const ECUADOR = 'ec';
     const PERU = 'pe';
     const MEXICO = 'mx';
+    const COSTA_RICA = 'cr';
 }

@@ -1,6 +1,6 @@
 <div class="panel">
     <div class="alert alert-info">
-        <img src="https://www.placetopay.com/images/providers/placetopay.full.png"
+        <img src="https://static.placetopay.com/placetopay-logo.svg"
              style="float:left; margin-right:15px;" alt="PlacetoPay" height="48">
         <p>
             <strong>
