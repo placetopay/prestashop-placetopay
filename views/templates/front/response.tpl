@@ -2,7 +2,7 @@
 
 <div class="panel">
     <div>
-        <img src="https://www.placetopay.com/images/providers/placetopay.full.png"
+        <img src="https://static.placetopay.com/placetopay-logo.svg"
              style="float:left; margin-right:15px;" alt="PlacetoPay" height="48">
         {if $status eq 'ok'}
             <h2>{l s='Completed payment' mod='placetopaypayment'}</h2>

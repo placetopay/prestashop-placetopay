@@ -14,7 +14,7 @@ abstract class PaymentUrl
     public static function getDefaultEndpoints()
     {
         return [
-            Environment::PRODUCTION => 'https://secure.placetopay.com/redirection',
+            Environment::PRODUCTION => 'https://checkout.placetopay.com',
             Environment::TEST => 'https://test.placetopay.com/redirection',
             Environment::DEVELOPMENT => 'https://dev.placetopay.com/redirection',
         ];
@@ -29,7 +29,7 @@ abstract class PaymentUrl
         switch ($countryCode) {
             case CountryCode::ECUADOR:
                 $endpoints = [
-                    Environment::PRODUCTION => 'https://secure.placetopay.ec/redirection',
+                    Environment::PRODUCTION => 'https://checkout.placetopay.ec',
                     Environment::TEST => 'https://test.placetopay.ec/redirection',
                     Environment::DEVELOPMENT => 'https://dev.placetopay.ec/redirection',
                 ];
@@ -37,6 +37,7 @@ abstract class PaymentUrl
             case CountryCode::MEXICO:
             case CountryCode::PERU:
             case CountryCode::COLOMBIA:
+            case CountryCode::COSTA_RICA:
             default:
                 $endpoints = self::getDefaultEndpoints();
                 break;

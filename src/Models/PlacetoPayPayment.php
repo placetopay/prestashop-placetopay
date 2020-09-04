@@ -137,7 +137,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_ORDER_DETAILS = 'index.php?controller=order-detail';
 
     const MIN_VERSION_PS = '1.6.0.5';
-    const MAX_VERSION_PS = '1.7.4.2';
+    const MAX_VERSION_PS = '1.7.6.7';
 
     /**
      * @var string
@@ -155,7 +155,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.4.3';
+        $this->version = '3.4.4';
         $this->author = 'EGM Ingeniería Sin Fronteras S.A.S';
         $this->tab = 'payments_gateways';
 
@@ -163,7 +163,8 @@ class PlacetoPayPayment extends PaymentModule
             'gb',
             'us',
             CountryCode::COLOMBIA,
-            CountryCode::ECUADOR
+            CountryCode::ECUADOR,
+            CountryCode::COSTA_RICA
         ];
 
         $this->ps_versions_compliancy = [
@@ -2374,6 +2375,7 @@ class PlacetoPayPayment extends PaymentModule
         $options = [
             CountryCode::COLOMBIA => $this->ll('Colombia'),
             CountryCode::ECUADOR => $this->ll('Ecuador'),
+            CountryCode::COSTA_RICA => $this->ll('Costa Rica'),
         ];
 
         return $this->getOptionList($options);
@@ -2662,9 +2664,7 @@ class PlacetoPayPayment extends PaymentModule
         return !$this->isProduction()
         && !empty($force)
         && Tools::strlen($force) === 5
-        && Tools::substr($this->getLogin(), -5) === $force
-            ? true
-            : false;
+        && Tools::substr($this->getLogin(), -5) === $force;
     }
 
     /**
