@@ -155,7 +155,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.4.4';
+        $this->version = '3.4.5';
         $this->author = 'EGM Ingeniería Sin Fronteras S.A.S';
         $this->tab = 'payments_gateways';
 
@@ -1637,9 +1637,8 @@ class PlacetoPayPayment extends PaymentModule
     final private function getUrl($page, $params = '')
     {
         $baseUrl = Context::getContext()->shop->getBaseURL(true);
-        $url = $baseUrl . 'modules/' . getModuleName() . '/' . $page . $params;
 
-        return $url;
+        return $baseUrl . 'modules/' . getModuleName() . '/' . $page . $params;
     }
 
     /**
@@ -1888,12 +1887,21 @@ class PlacetoPayPayment extends PaymentModule
      */
     final private function getRedirectPageFromStatus($status)
     {
-        if ($status == PaymentStatus::APPROVED) {
+        if (!Context::getContext()->customer->isLogged()) {
             $redirectTo = self::PAGE_ORDER_CONFIRMATION;
         } else {
-            $redirectTo = $this->isShowOnReturnDetails()
-                ? self::PAGE_ORDER_DETAILS
-                : self::PAGE_ORDER_HISTORY;
+            switch ($this->getShowOnReturn()) {
+                case self::SHOW_ON_RETURN_DETAILS:
+                    $redirectTo = self::PAGE_ORDER_DETAILS;
+                    break;
+                case self::SHOW_ON_RETURN_PSE_LIST:
+                    $redirectTo = self::PAGE_ORDER_HISTORY;
+                    break;
+                case self::SHOW_ON_RETURN_DEFAULT:
+                default:
+                    $redirectTo = self::PAGE_ORDER_CONFIRMATION;
+                    break;
+            }
         }
 
         return $redirectTo;
