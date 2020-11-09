@@ -3,7 +3,7 @@
 <div class="panel">
     <div>
         <a href="https://www.placetopay.com/"><img src="https://static.placetopay.com/placetopay-logo.svg"
-             style="float:left; margin-right:15px;" alt="PlacetoPay" height="48"></a>
+             style="float:left; margin-right:15px;" alt="Placetopay" height="48"></a>
         {if $status eq 'ok'}
             <h2>{l s='Completed payment' mod='placetopaypayment'}</h2>
             <p>{l s='Dear customer, your payment has been approved, thank you for your purchase.' mod='placetopaypayment'}</p>

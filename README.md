@@ -1,6 +1,6 @@
-# Prestashop Gateway to PlacetoPay
+# Prestashop Gateway to Placetopay
 
-[PlacetoPay][link-placetopay] Plugin Payment for [Prestashop][link-prestashop] 1.5, 1.6 and 1.7 Stable
+[Placetopay][link-placetopay] Plugin Payment for [Prestashop][link-prestashop] 1.5, 1.6 and 1.7 Stable
 
 ## Prerequisites
 
