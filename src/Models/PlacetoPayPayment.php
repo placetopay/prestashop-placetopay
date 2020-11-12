@@ -155,7 +155,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.4.4';
+        $this->version = '3.4.5';
         $this->author = 'EGM Ingeniería Sin Fronteras S.A.S';
         $this->tab = 'payments_gateways';
 
@@ -182,7 +182,7 @@ class PlacetoPayPayment extends PaymentModule
 
         parent::__construct();
 
-        $this->displayName = $this->ll('PlacetoPay');
+        $this->displayName = $this->ll('Placetopay');
         $this->description = $this->ll('Accept payments by credit cards and debits account.');
 
         $this->confirmUninstall = $this->ll('Are you sure you want to uninstall?');
@@ -202,7 +202,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             $this->warning .= '<br> - '
-                . $this->ll('You need to configure your PlacetoPay account before using this module.');
+                . $this->ll('You need to configure your Placetopay account before using this module.');
         }
 
         @date_default_timezone_set(Configuration::get('PS_TIMEZONE'));
@@ -244,7 +244,7 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::COMPANY_NAME, '');
             Configuration::updateValue(self::EMAIL_CONTACT, '');
             Configuration::updateValue(self::TELEPHONE_CONTACT, '');
-            Configuration::updateValue(self::DESCRIPTION, 'Pago en PlacetoPay No: %s');
+            Configuration::updateValue(self::DESCRIPTION, 'Pago en Placetopay No: %s');
 
             Configuration::updateValue(self::EXPIRATION_TIME_MINUTES, self::EXPIRATION_TIME_MINUTES_DEFAULT);
             Configuration::updateValue(self::SHOW_ON_RETURN, self::SHOW_ON_RETURN_PSE_LIST);
@@ -321,7 +321,7 @@ class PlacetoPayPayment extends PaymentModule
             if (count($formErrors) == 0) {
                 $this->formProcess();
 
-                $contentExtra = $this->displayConfirmation($this->ll('PlacetoPay settings updated'));
+                $contentExtra = $this->displayConfirmation($this->ll('Placetopay settings updated'));
             } else {
                 $contentExtra = $this->showError($formErrors);
             }
@@ -355,7 +355,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             PaymentLogger::log(
-                $this->ll('You need to configure your PlacetoPay account before using this module.'),
+                $this->ll('You need to configure your Placetopay account before using this module.'),
                 PaymentLogger::WARNING,
                 6,
                 __FILE__,
@@ -427,7 +427,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             PaymentLogger::log(
-                $this->ll('You need to configure your PlacetoPay account before using this module.'),
+                $this->ll('You need to configure your Placetopay account before using this module.'),
                 PaymentLogger::WARNING,
                 6,
                 __FILE__,
@@ -455,7 +455,7 @@ class PlacetoPayPayment extends PaymentModule
         $form = $this->generateForm($action, $content);
 
         $newOption = new PaymentOption();
-        $newOption->setCallToActionText($this->ll('Pay by PlacetoPay'))
+        $newOption->setCallToActionText($this->ll('Pay by Placetopay'))
             ->setAdditionalInformation('')
             ->setForm($form);
 
@@ -554,7 +554,7 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         if (!CurrencyValidator::isValidCurrency($currency->iso_code)) {
-            $message = sprintf('Currency ISO Code [%s] is not supported by PlacetoPay', $currency->iso_code);
+            $message = sprintf('Currency ISO Code [%s] is not supported by Placetopay', $currency->iso_code);
             throw new PaymentException($message, 304);
         }
 
@@ -1637,9 +1637,8 @@ class PlacetoPayPayment extends PaymentModule
     final private function getUrl($page, $params = '')
     {
         $baseUrl = Context::getContext()->shop->getBaseURL(true);
-        $url = $baseUrl . 'modules/' . getModuleName() . '/' . $page . $params;
 
-        return $url;
+        return $baseUrl . 'modules/' . getModuleName() . '/' . $page . $params;
     }
 
     /**
@@ -1888,12 +1887,21 @@ class PlacetoPayPayment extends PaymentModule
      */
     final private function getRedirectPageFromStatus($status)
     {
-        if ($status == PaymentStatus::APPROVED) {
+        if (!Context::getContext()->customer->isLogged()) {
             $redirectTo = self::PAGE_ORDER_CONFIRMATION;
         } else {
-            $redirectTo = $this->isShowOnReturnDetails()
-                ? self::PAGE_ORDER_DETAILS
-                : self::PAGE_ORDER_HISTORY;
+            switch ($this->getShowOnReturn()) {
+                case self::SHOW_ON_RETURN_DETAILS:
+                    $redirectTo = self::PAGE_ORDER_DETAILS;
+                    break;
+                case self::SHOW_ON_RETURN_PSE_LIST:
+                    $redirectTo = self::PAGE_ORDER_HISTORY;
+                    break;
+                case self::SHOW_ON_RETURN_DEFAULT:
+                default:
+                    $redirectTo = self::PAGE_ORDER_CONFIRMATION;
+                    break;
+            }
         }
 
         return $redirectTo;
@@ -2173,17 +2181,18 @@ class PlacetoPayPayment extends PaymentModule
     {
         // By default is pending so make a query for it later (see information.php example)
         $status = PaymentStatus::PENDING;
-        $lastPayment = $response->lastTransaction();
+        //$lastPayment = $response->lastTransaction();
+        $lastStatus = $response->status();
 
-        if ($response->isSuccessful() && !empty($lastPayment)) {
+        if ($response->isSuccessful() && !empty($lastStatus)) {
             // In order to use the functions please refer to the RedirectInformation class
-            if ($lastPayment->status()->isApproved()) {
+            if ($lastStatus->isApproved()) {
                 // Approved status
                 $status = PaymentStatus::APPROVED;
-            } elseif ($lastPayment->status()->isRejected()) {
+            } elseif ($lastStatus->isRejected()) {
                 // This is why it has been reject
                 $status = PaymentStatus::REJECTED;
-            } elseif ($lastPayment->status()->isFailed()) {
+            } elseif ($lastStatus->isFailed()) {
                 // This is why it has been fail
                 $status = PaymentStatus::FAILED;
             }
@@ -2519,7 +2528,7 @@ class PlacetoPayPayment extends PaymentModule
                 'name' => $this->getNameInMultipleFormat(self::PAYMENT_METHODS_ENABLED),
                 'id' => self::PAYMENT_METHODS_ENABLED,
                 // @codingStandardsIgnoreLine
-                'desc' => $this->ll('IMPORTANT: Payment methods in PlacetoPay will restrict by this selection. [Ctrl + Clic] to select several'),
+                'desc' => $this->ll('IMPORTANT: Payment methods in Placetopay will restrict by this selection. [Ctrl + Clic] to select several'),
                 'options' => [
                     'id' => 'value',
                     'name' => 'label',

@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.4.5] - 2020-09-04
+
+### Updated
+- Brand name
+
+### Fixed
+- Error when there is a declined transaction
+- Error when returning from web checkout to eCommerce
+
 ## [3.4.4] - 2020-09-04
 
 ### Updated

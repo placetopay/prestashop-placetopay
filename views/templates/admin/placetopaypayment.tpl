@@ -1,11 +1,11 @@
-{l s='PlacetoPay' mod='placetopaypayment'}
+{l s='Placetopay' mod='placetopaypayment'}
 {l s='Accept payments by credit cards and debits account.' mod='placetopaypayment'}
 {l s='Are you sure you want to uninstall?' mod='placetopaypayment'}
 {l s='No currency has been set for this module.' mod='placetopaypayment'}
-{l s='You need to configure your PlacetoPay account before using this module.' mod='placetopaypayment'}
+{l s='You need to configure your Placetopay account before using this module.' mod='placetopaypayment'}
 {l s='is required.' mod='placetopaypayment'}
 {l s='is not valid.' mod='placetopaypayment'}
-{l s='PlacetoPay settings updated' mod='placetopaypayment'}
+{l s='Placetopay settings updated' mod='placetopaypayment'}
 {l s='Re-inject stock on declination?' mod='placetopaypayment'}
 {l s='Company data' mod='placetopaypayment'}
 {l s='Merchant ID' mod='placetopaypayment'}
@@ -31,6 +31,7 @@
 {l s='Ecuador' mod='placetopaypayment'}
 {l s='Peru' mod='placetopaypayment'}
 {l s='Mexico' mod='placetopaypayment'}
+{l s='Costa Rica' mod='placetopaypayment'}
 {l s='Environment' mod='placetopaypayment'}
 {l s='Production' mod='placetopaypayment'}
 {l s='Test' mod='placetopaypayment'}
@@ -43,8 +44,8 @@
 {l s='Connection type' mod='placetopaypayment'}
 {l s='SOAP' mod='placetopaypayment'}
 {l s='REST' mod='placetopaypayment'}
-{l s='Pay by PlacetoPay' mod='placetopaypayment'}
-{l s='PlacetoPay secure web site will be displayed when you select this payment method.' mod='placetopaypayment'}
+{l s='Pay by Placetopay' mod='placetopaypayment'}
+{l s='Placetopay secure web site will be displayed when you select this payment method.' mod='placetopaypayment'}
 {l s='Pending payment' mod='placetopaypayment'}
 {l s='Completed payment' mod='placetopaypayment'}
 {l s='Failed payment' mod='placetopaypayment'}
