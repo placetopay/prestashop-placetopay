@@ -1,6 +1,6 @@
 {
   "name": "placetopay/prestashop-gateway",
-  "description": "Plugin for integration PlacetoPay gateway with PrestaShop CMS",
+  "description": "Plugin for integration Placetopay gateway with PrestaShop CMS",
   "type": "plugin",
   "require": {
     "php": ">=5.6.0",

@@ -1,10 +1,10 @@
 <div class="panel">
     <div class="alert alert-info">
-        <img src="https://static.placetopay.com/placetopay-logo.svg"
-             style="float:left; margin-right:15px;" alt="PlacetoPay" height="48">
+        <a href="https://www.placetopay.com/"><img src="https://static.placetopay.com/placetopay-logo.svg"
+             style="float:left; margin-right:15px;" alt="Placetopay" height="48"></a>
         <p>
             <strong>
-                {l s='This module allows you to accept payments by PlacetoPay.' mod='placetopaypayment'}
+                {l s='This module allows you to accept payments by Placetopay.' mod='placetopaypayment'}
             </strong>
         </p>
         <p>
@@ -15,7 +15,7 @@
     {if !$is_set_credentials}
         <div class="alert alert-warning">
             <p>
-                {l s='You need to configure your PlacetoPay account before using this module.' mod='placetopaypayment'}
+                {l s='You need to configure your Placetopay account before using this module.' mod='placetopaypayment'}
             </p>
         </div>
     {/if}
@@ -29,7 +29,7 @@
                 <div class="col-lg-9">
                     <span style="font-size: 16px;">{$url_notification}</span>
                     <p class="help-block">
-                        {l s='URL where PlacetoPay will send payment status to Prestashop.' mod='placetopaypayment'}
+                        {l s='URL where Placetopay will send payment status to Prestashop.' mod='placetopaypayment'}
                     </p>
                 </div>
             </div>
