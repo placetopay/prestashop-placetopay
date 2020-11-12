@@ -2181,17 +2181,18 @@ class PlacetoPayPayment extends PaymentModule
     {
         // By default is pending so make a query for it later (see information.php example)
         $status = PaymentStatus::PENDING;
-        $lastPayment = $response->lastTransaction();
+        //$lastPayment = $response->lastTransaction();
+        $lastStatus = $response->status();
 
-        if ($response->isSuccessful() && !empty($lastPayment)) {
+        if ($response->isSuccessful() && !empty($lastStatus)) {
             // In order to use the functions please refer to the RedirectInformation class
-            if ($lastPayment->status()->isApproved()) {
+            if ($lastStatus->isApproved()) {
                 // Approved status
                 $status = PaymentStatus::APPROVED;
-            } elseif ($lastPayment->status()->isRejected()) {
+            } elseif ($lastStatus->isRejected()) {
                 // This is why it has been reject
                 $status = PaymentStatus::REJECTED;
-            } elseif ($lastPayment->status()->isFailed()) {
+            } elseif ($lastStatus->isFailed()) {
                 // This is why it has been fail
                 $status = PaymentStatus::FAILED;
             }
