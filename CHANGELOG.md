@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.4.6] - 2021-02-02
+
+### Updated
+- dnetix/redirection package
+
 ## [3.4.5] - 2020-09-04
 
 ### Updated
