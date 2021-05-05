@@ -35,7 +35,6 @@ use Configuration;
 use Context;
 use Country;
 use Currency;
-use CurrencyCore;
 use Customer;
 use Db;
 use Dnetix\Redirection\Message\Notification;
@@ -121,6 +120,7 @@ class PlacetoPayPayment extends PaymentModule
     const SHOW_ON_RETURN_DEFAULT = 'default';
     const SHOW_ON_RETURN_PSE_LIST = 'pse_list';
     const SHOW_ON_RETURN_DETAILS = 'details';
+    const SHOW_ON_RETURN_HOME = 'home';
 
     const CONNECTION_TYPE_SOAP = 'soap';
     const CONNECTION_TYPE_REST = 'rest';
@@ -135,9 +135,10 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_ORDER_CONFIRMATION = 'order-confirmation.php';
     const PAGE_ORDER_HISTORY = 'history.php';
     const PAGE_ORDER_DETAILS = 'index.php?controller=order-detail';
+    const PAGE_HOME = '';
 
     const MIN_VERSION_PS = '1.6.0.5';
-    const MAX_VERSION_PS = '1.7.6.7';
+    const MAX_VERSION_PS = '1.7.7.2';
 
     /**
      * @var string
@@ -155,7 +156,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.4.6';
+        $this->version = '3.4.7';
         $this->author = 'EGM Ingeniería Sin Fronteras S.A.S';
         $this->tab = 'payments_gateways';
 
@@ -437,6 +438,8 @@ class PlacetoPayPayment extends PaymentModule
             return null;
         }
 
+        $this->createOrderState();
+
         $content = $this->displayBrandMessage();
         $action = $this->getUrl('redirect.php');
         $lastPendingTransaction = $this->getLastPendingTransaction($params['cart']->id_customer);
@@ -485,9 +488,7 @@ class PlacetoPayPayment extends PaymentModule
             return null;
         }
 
-        $order = isset($params['objOrder'])
-            ? $params['objOrder']
-            : $params['order'];
+        $order = $params['objOrder'] ?? $params['order'];
 
         if ($order->module != getModuleName()) {
             return null;
@@ -1176,6 +1177,7 @@ class PlacetoPayPayment extends PaymentModule
             $orderState->unremovable = true;
 
             if ($orderState->save()) {
+                // This is for multiples stores
                 Configuration::updateValue(self::ORDER_STATE, $orderState->id);
                 copy(
                     fixPath($this->getThisModulePath() . '/logo.png'),
@@ -1897,6 +1899,9 @@ class PlacetoPayPayment extends PaymentModule
                 case self::SHOW_ON_RETURN_PSE_LIST:
                     $redirectTo = self::PAGE_ORDER_HISTORY;
                     break;
+                case self:: SHOW_ON_RETURN_HOME:
+                    $redirectTo = self::PAGE_HOME;
+                    break;
                 case self::SHOW_ON_RETURN_DEFAULT:
                 default:
                     $redirectTo = self::PAGE_ORDER_CONFIRMATION;
@@ -1929,14 +1934,31 @@ class PlacetoPayPayment extends PaymentModule
         return !empty($rows[0]) ? $rows[0] : false;
     }
 
+    public function getIdByCartId($id_cart)
+    {
+        $sql = 'SELECT `id_order`
+            FROM `' . _DB_PREFIX_ . 'orders`
+            WHERE `id_cart` = ' . (int) $id_cart;
+
+        $result = Db::getInstance()->getValue($sql);
+
+        return !empty($result) ? (int) $result : false;
+    }
+
     /**
      * @param null $cartId
-     * @return Order
+     * @return Order|null
+     * @throws PrestaShopDatabaseException
+     * @throws \PrestaShopException
      */
     final private function getOrderByCartId($cartId = null)
     {
         if (versionComparePlaceToPay('1.7.1.0', '>=')) {
-            $orderId = Order::getIdByCartId($cartId);
+            if (!is_null(Shop::getTotalShops()) && Shop::getTotalShops() > 1) {
+                $orderId = $this->getIdByCartId($cartId);
+            } else {
+                $orderId = Order::getIdByCartId($cartId);
+            }
         } else {
             $orderId = Order::getOrderByCartId($cartId);
         }
@@ -2371,6 +2393,7 @@ class PlacetoPayPayment extends PaymentModule
             self::SHOW_ON_RETURN_DEFAULT => $this->ll('PrestaShop View'),
             self::SHOW_ON_RETURN_DETAILS => $this->ll('Payment Details'),
             self::SHOW_ON_RETURN_PSE_LIST => $this->ll('PSE List'),
+            self::SHOW_ON_RETURN_HOME => $this->ll('Home'),
         ];
 
         return $this->getOptionList($options);
