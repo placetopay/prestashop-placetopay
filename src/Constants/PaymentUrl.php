@@ -11,7 +11,7 @@ abstract class PaymentUrl
     /**
      * @return array
      */
-    public static function getDefaultEndpoints()
+    public static function getDefaultEndpoints(): array
     {
         return [
             Environment::PRODUCTION => 'https://checkout.placetopay.com',
@@ -24,7 +24,7 @@ abstract class PaymentUrl
      * @param string $countryCode Value of Constants\CountryCode
      * @return array
      */
-    public static function getEndpointsTo($countryCode)
+    public static function getEndpointsTo(string $countryCode): array
     {
         switch ($countryCode) {
             case CountryCode::ECUADOR:
@@ -32,6 +32,13 @@ abstract class PaymentUrl
                     Environment::PRODUCTION => 'https://checkout.placetopay.ec',
                     Environment::TEST => 'https://test.placetopay.ec/redirection',
                     Environment::DEVELOPMENT => 'https://dev.placetopay.ec/redirection',
+                ];
+                break;
+            case CountryCode::CHILE:
+                $endpoints = [
+                    Environment::PRODUCTION => 'https://checkout-getnet-cl.placetopay.com',
+                    Environment::TEST => 'https://uat-checkout.placetopay.ws/redirection',
+                    Environment::DEVELOPMENT => 'https://uat-checkout.placetopay.ws/redirection',
                 ];
                 break;
             case CountryCode::MEXICO:

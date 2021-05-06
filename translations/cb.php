@@ -62,6 +62,8 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c9cc8cce247e49bae79f1
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_93cba07454f06a4a960172bbd6e2a435'] = 'Si';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_bafd7322c6e97d25b6299b5d6fe8920b'] = 'No';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6aeabdd64048318ca8c79647564ba969'] = 'Este módulo no ha sido probado con tu versión de PrestaShop [%s].';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_5932ec01231e4ec6ba6b4a3a7691de53'] = 'Imagen Botón de Pago';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c8b48868eb21f2d35301ba4d05720257'] = 'Puede ser una URL, un nombre de imagen (proporcione la imagen al equipo de placetopay en formato svg para que esto funcione) o una ruta local (guarde la imagen en la carpeta img).';
 $_MODULE['<{placetopaypayment}prestashop>payment_a905b48f56e4462afa66e3b3da6eb091'] = 'Paga con Placetopay';
 $_MODULE['<{placetopaypayment}prestashop>payment_e32463bd40f6c2c482dcc7383484e503'] = '(Tarjeta de Crédito y Débito a cuentas)';
 $_MODULE['<{placetopaypayment}prestashop>payment_d213d9f6558da5e72e3348aaf5bf4970'] = 'El sitio web seguro de PlacetoPay se mostrará cuando seleccione este método de pago.';
@@ -142,6 +144,3 @@ $_MODULE['<{placetopaypayment}prestashop>pending_payment_373ee24274eb806bef2ef57
 $_MODULE['<{placetopaypayment}prestashop>pending_payment_5c5bbfeeda36c97c247a2d8f7c622373'] = 'y preguntar por el estado de la transacción:';
 $_MODULE['<{placetopaypayment}prestashop>brand_payment_a905b48f56e4462afa66e3b3da6eb091'] = 'Paga con Placetopay';
 $_MODULE['<{placetopaypayment}prestashop>brand_payment_d213d9f6558da5e72e3348aaf5bf4970'] = 'El sitio web seguro de PlacetoPay se mostrará cuando seleccione este método de pago.';
-// PS <= 1.7
-$_MODULE['<{placetopaypayment}prestashop>brand_payment_bca22c1fc0054ffe1b1fef823dbb2318'] = 'Paga con PlacetoPay';
-$_MODULE['<{placetopaypayment}prestashop>brand_payment_f77653895afd18bd2b51465e1304e7ed'] = 'Puedes pagar usando tus tarjetas crédito o débito de forma rápida y segura.';

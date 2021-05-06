@@ -110,6 +110,7 @@ class PlacetoPayPayment extends PaymentModule
     const COUNTRY = 'PLACETOPAY_COUNTRY';
     const ENVIRONMENT = 'PLACETOPAY_ENVIRONMENT';
     const CUSTOM_CONNECTION_URL = 'PLACETOPAY_CUSTOM_CONNECTION_URL';
+    const PAYMENT_BUTTON_IMAGE = 'PLACETOPAY_PAYMENT_BUTTON_IMAGE';
     const LOGIN = 'PLACETOPAY_LOGIN';
     const TRAN_KEY = 'PLACETOPAY_TRANKEY';
     const CONNECTION_TYPE = 'PLACETOPAY_CONNECTION_TYPE';
@@ -138,7 +139,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_HOME = '';
 
     const MIN_VERSION_PS = '1.6.0.5';
-    const MAX_VERSION_PS = '1.7.7.2';
+    const MAX_VERSION_PS = '1.7.7.4';
 
     /**
      * @var string
@@ -156,7 +157,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.4.7';
+        $this->version = '3.5.0';
         $this->author = 'EGM Ingeniería Sin Fronteras S.A.S';
         $this->tab = 'payments_gateways';
 
@@ -262,6 +263,7 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::LOGIN, '');
             Configuration::updateValue(self::TRAN_KEY, '');
             Configuration::updateValue(self::CONNECTION_TYPE, self::CONNECTION_TYPE_REST);
+            Configuration::updateValue(self::PAYMENT_BUTTON_IMAGE, '');
 
             return true;
         } else {
@@ -300,6 +302,7 @@ class PlacetoPayPayment extends PaymentModule
             || !Configuration::deleteByName(self::LOGIN)
             || !Configuration::deleteByName(self::TRAN_KEY)
             || !Configuration::deleteByName(self::CONNECTION_TYPE)
+            || !Configuration::deleteByName(self::PAYMENT_BUTTON_IMAGE)
             || !parent::uninstall()
         ) {
             return false;
@@ -1423,6 +1426,7 @@ class PlacetoPayPayment extends PaymentModule
             }
 
             Configuration::updateValue(self::CONNECTION_TYPE, Tools::getValue(self::CONNECTION_TYPE));
+            Configuration::updateValue(self::PAYMENT_BUTTON_IMAGE, Tools::getValue(self::PAYMENT_BUTTON_IMAGE));
         }
     }
 
@@ -1486,20 +1490,49 @@ class PlacetoPayPayment extends PaymentModule
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook/message_payment.tpl'));
     }
 
+    protected function getImage(): string
+    {
+        $url = $this->getImageUrl();
+
+        if (is_null($url) || empty($url)) {
+            $image = 'https://static.placetopay.com/placetopay-logo.svg';
+        } elseif ($this->checkValidUrl($url)) {
+            $image = $url;
+        } elseif ($this->checkDirectory($url)) {
+            $image = $this->context->shop->getBaseURL(true).$url;
+        } else {
+            $image = 'https://static.placetopay.com/'.$url.'.svg';
+        }
+
+        return $image;
+    }
+
+    protected function checkDirectory(string $path): bool
+    {
+        return substr($path, 0, 1) === '/';
+    }
+
+    protected function checkValidUrl(string $url): bool
+    {
+        return filter_var($url, FILTER_VALIDATE_URL);
+    }
+
     /**
      * Show warning pending payment
      *
      * @return string
      */
-    final private function displayBrandMessage()
+    private function displayBrandMessage(): string
     {
+        $this->context->smarty->assign('url', $this->getImage());
+
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook/brand_payment.tpl'));
     }
 
     /**
      * @return array
      */
-    final private function getConfigFieldsValues()
+    private function getConfigFieldsValues():array
     {
         return [
             self::COMPANY_DOCUMENT => $this->getCompanyDocument(),
@@ -1525,6 +1558,7 @@ class PlacetoPayPayment extends PaymentModule
             self::LOGIN => $this->getLogin(),
             self::TRAN_KEY => $this->getTranKey(),
             self::CONNECTION_TYPE => $this->getConnectionType(),
+            self::PAYMENT_BUTTON_IMAGE => $this->getImageUrl(),
         ];
     }
 
@@ -1833,6 +1867,14 @@ class PlacetoPayPayment extends PaymentModule
     final private function getTranKey()
     {
         return $this->getCurrentValueOf(self::TRAN_KEY);
+    }
+
+    /**
+     * @return string|null
+     */
+    private function getImageUrl(): ?string
+    {
+        return $this->getCurrentValueOf(self::PAYMENT_BUTTON_IMAGE);
     }
 
     /**
@@ -2402,12 +2444,13 @@ class PlacetoPayPayment extends PaymentModule
     /**
      * @return array
      */
-    final private function getOptionListCountries()
+    final private function getOptionListCountries(): array
     {
         $options = [
             CountryCode::COLOMBIA => $this->ll('Colombia'),
             CountryCode::ECUADOR => $this->ll('Ecuador'),
             CountryCode::COSTA_RICA => $this->ll('Costa Rica'),
+            CountryCode::CHILE => $this->ll('Chile'),
         ];
 
         return $this->getOptionList($options);
@@ -2564,7 +2607,7 @@ class PlacetoPayPayment extends PaymentModule
     /**
      * @return array
      */
-    final private function getFieldsConnection()
+    final private function getFieldsConnection():array
     {
         return [
             [
@@ -2628,6 +2671,13 @@ class PlacetoPayPayment extends PaymentModule
                     'query' => $this->getOptionListConnectionTypes(),
                 ],
             ],
+            [
+                'type' => 'text',
+                'label' => $this->ll('Payment button image'),
+                'desc' => $this->ll('It can be a URL, an image name (provide the image to the placetopay team as svg format for this to work) or a local path (save the image to the img folder).'),
+                'name' => self::PAYMENT_BUTTON_IMAGE,
+                'autocomplete' => 'off',
+            ]
         ];
     }
 

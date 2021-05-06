@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Support to Chile country
+- Custom payment button image
+
 ## [3.4.6] - 2021-02-02
 
 ### Updated

@@ -13,4 +13,5 @@ interface CountryCode
     const PERU = 'pe';
     const MEXICO = 'mx';
     const COSTA_RICA = 'cr';
+    const CHILE = 'cl';
 }
