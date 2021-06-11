@@ -158,7 +158,7 @@ class PlacetoPayPayment extends PaymentModule
     {
         $this->name = getModuleName();
         $this->version = '3.5.0';
-        $this->author = 'EGM Ingeniería Sin Fronteras S.A.S';
+
         $this->tab = 'payments_gateways';
 
         $this->limited_countries = [
@@ -184,6 +184,7 @@ class PlacetoPayPayment extends PaymentModule
 
         parent::__construct();
 
+        $this->author = $this->ll('EGM Ingeniería Sin Fronteras S.A.S');
         $this->displayName = $this->ll('Placetopay');
         $this->description = $this->ll('Accept payments by credit cards and debits account.');
 

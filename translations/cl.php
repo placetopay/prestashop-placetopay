@@ -4,6 +4,7 @@ global $_MODULE;
 $_MODULE = array();
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_8f3342a23e5b86860501e8bea9902b09'] = 'Getnet';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4a84fa314d025e9515472cc472202a81'] = 'Acepta pagos con tarjetas de crédito y débito.';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_673f7d4d25a1ba09d9458aa892107a43'] = 'Getnet';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_876f23178c29dc2552c0b48bf23cd9bd'] = 'Estás seguro de querer des-instalar el módulo?';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_a02758d758e8bec77a33d7f392eb3f8a'] = 'No se ha configurado una moneda para este módulo.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_e9de72febed9759b1979fa572b2b8eb1'] = 'Necesitas configurar tu cuenta Getnet antes de usar este módulo.';
@@ -70,7 +71,7 @@ $_MODULE['<{placetopaypayment}prestashop>payment_d213d9f6558da5e72e3348aaf5bf497
 $_MODULE['<{placetopaypayment}prestashop>payment_0eaadb4fcb48a0a0ed7bc9868be9fbaa'] = 'Alerta';
 $_MODULE['<{placetopaypayment}prestashop>payment_23ab9d23650891426fe6a81e038cfade'] = 'En este momento su orden';
 $_MODULE['<{placetopaypayment}prestashop>payment_6810b4142fbd38d9e9e2f67c616d1368'] = 'presenta un proceso de pago cuya transacción se encuentra PENDIENTE de recibir confirmación por parte de su entidad financiera, por favor espere unos minutos y vuelva a consultar más tarde para verificar si su pago fue confirmado de forma exitosa';
-$_MODULE['<{placetopaypayment}prestashop>payment_f0023db864e79a8378611899008c11d4'] = 'Si desea mayor información sobre el estado actual de su operación puede comunicarse a nuestras líneas de atención al cliente ';
+$_MODULE['<{placetopaypayment}prestashop>payment_f0023db864e79a8378611899008c11d4'] = 'Si desea mayor información sobre el estado actual de su operación puede comunicarse a nuestras líneas de atención al cliente';
 $_MODULE['<{placetopaypayment}prestashop>payment_373ee24274eb806bef2ef57bb12ffe85'] = 'o enviar un correo electronico a ';
 $_MODULE['<{placetopaypayment}prestashop>payment_5c5bbfeeda36c97c247a2d8f7c622373'] = 'y preguntar por el estado de la transacción: ';
 $_MODULE['<{placetopaypayment}prestashop>payment_7f432fd9dab12810bf868e0915e308f6'] = 'Cualquier persona que realice un compra en el sitio';

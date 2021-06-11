@@ -1,5 +1,6 @@
 {l s='Placetopay' mod='placetopaypayment'}
 {l s='Accept payments by credit cards and debits account.' mod='placetopaypayment'}
+{l s='EGM Ingeniería Sin Fronteras S.A.S' mod='placetopaypayment'}
 {l s='Are you sure you want to uninstall?' mod='placetopaypayment'}
 {l s='No currency has been set for this module.' mod='placetopaypayment'}
 {l s='You need to configure your Placetopay account before using this module.' mod='placetopaypayment'}
