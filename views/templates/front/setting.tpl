@@ -1,7 +1,6 @@
 <div class="panel">
     <div class="alert alert-info">
-        <a href="https://www.placetopay.com/"><img src="https://static.placetopay.com/placetopay-logo.svg"
-             style="float:left; margin-right:15px;" alt="Placetopay" height="48"></a>
+        <img src="{l s='https://static.placetopay.com/placetopay-logo.svg' mod='placetopaypayment'}" style="float:left; margin-right:15px;" alt="Placetopay" height="48">
         <p>
             <strong>
                 {l s='This module allows you to accept payments by Placetopay.' mod='placetopaypayment'}
