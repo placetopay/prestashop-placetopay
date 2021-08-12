@@ -57,7 +57,7 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_08fc2add263dba5610ca5
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_842defa666a224eda21bb1a0e9800bef'] = 'Pago rechazado';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_8a644475a8ff34cd3e78f91386fbcecb'] = 'Sin información';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_b09f3a4de8a82e9b5779561e30cdce69'] = 'Métodos de pago habilitados';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4acada81dbd1d69e35f77da728da419c'] = 'IMPORTANTE: Los métodos de pago en PlacetoPay serán restringidos por esta selección. Usa [Ctrl + Clic] para seleccionar varios';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4acada81dbd1d69e35f77da728da419c'] = 'IMPORTANTE: Los métodos de pago en Getnet serán restringidos por esta selección. Usa [Ctrl + Clic] para seleccionar varios';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_b1c94ca2fbc3e78fc30069c8d0f01680'] = 'Todos';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c9cc8cce247e49bae79f15173ce97354'] = 'Guardar';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_93cba07454f06a4a960172bbd6e2a435'] = 'Si';
