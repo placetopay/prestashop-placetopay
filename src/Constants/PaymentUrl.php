@@ -36,9 +36,9 @@ abstract class PaymentUrl
                 break;
             case CountryCode::CHILE:
                 $endpoints = [
-                    Environment::PRODUCTION => 'https://checkout-getnet-cl.placetopay.com',
-                    Environment::TEST => 'https://cl-uat-checkout.placetopay.com',
-                    Environment::DEVELOPMENT => 'https://cl-qa-checkout.placetopay.com',
+                    Environment::PRODUCTION => 'https://checkout.getnet.cl',
+                    Environment::TEST => 'https://checkout.uat.getnet.cl',
+                    Environment::DEVELOPMENT => 'https://dev.placetopay.com/redirection',
                 ];
                 break;
             case CountryCode::MEXICO:
