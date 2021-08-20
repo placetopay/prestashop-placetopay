@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.5.3] - 2021-08-20
+
+### Updated
+- Chile endpoints
+- dnetix/redirection package
+
 ## [3.5.0] - 2021-05-06
 
 ### Added
