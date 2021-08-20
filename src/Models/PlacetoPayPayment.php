@@ -512,6 +512,26 @@ class PlacetoPayPayment extends PaymentModule
         return $viewOnReturn;
     }
 
+    protected static function getLocale(string $language = 'co'): string
+    {
+        switch ($language) {
+            case 'co':
+                $locale = 'es_CO';
+                break;
+            case 'cl':
+                $locale = 'es_CL';
+                break;
+            case 'ec':
+                $locale = 'es_EC';
+                break;
+            case 'en':
+            default:
+                $locale = 'en_US';
+        }
+
+        return $locale;
+    }
+
     /**
      * Redirect to PlacetoPay Platform
      *
@@ -601,7 +621,7 @@ class PlacetoPayPayment extends PaymentModule
 
             // Request payment
             $request = [
-                'locale' => ($language == 'en') ? 'en_US' : 'es_CO',
+                'locale' => self::getLocale($language),
                 'returnUrl' => $returnUrl,
                 'noBuyerFill' => !(bool)$this->getFillBuyerInformation(),
                 'skipResult' => (bool)$this->getSkipResult(),
