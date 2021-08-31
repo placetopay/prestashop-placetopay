@@ -157,7 +157,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.5.3';
+        $this->version = '3.5.4';
 
         $this->tab = 'payments_gateways';
 
@@ -166,7 +166,8 @@ class PlacetoPayPayment extends PaymentModule
             'us',
             CountryCode::COLOMBIA,
             CountryCode::ECUADOR,
-            CountryCode::COSTA_RICA
+            CountryCode::COSTA_RICA,
+            CountryCode::CHILE,
         ];
 
         $this->ps_versions_compliancy = [
@@ -184,7 +185,7 @@ class PlacetoPayPayment extends PaymentModule
 
         parent::__construct();
 
-        $this->author = $this->ll('EGM Ingeniería Sin Fronteras S.A.S');
+        $this->author = $this->ll('Evertec PlacetoPay S.A.S.');
         $this->displayName = $this->ll('Placetopay');
         $this->description = $this->ll('Accept payments by credit cards and debits account.');
 

@@ -5,7 +5,7 @@
         {l s=', acting freely and voluntarily consent to' mod='placetopaypayment'}
         <b>{$company_name}</b>
         {l s=', through the service provider' mod='placetopaypayment'}
-        <b>{l s='EGM Ingeniería Sin Fronteras S.A.S' mod='placetopaypayment'}</b>
+        <b>{l s='Evertec PlacetoPay S.A.S.' mod='placetopaypayment'}</b>
         {l s=' and / or ' mod='placetopaypayment'}
         <b>{l s='Placetopay' mod='placetopaypayment'}</b>
         {l s='to consult and ask for ' mod='placetopaypayment'}

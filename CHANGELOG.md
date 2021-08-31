@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.5.4] - 2021-08-31
+
+### Changed
+- Branding name
+
 ## [3.5.3] - 2021-08-20
 
 ### Updated

@@ -91,7 +91,7 @@
 				{l s=', through the service provider' mod='placetopaypayment'}
 			</small>
 
-			<b>{l s='EGM Ingeniería Sin Fronteras S.A.S' mod='placetopaypayment'}</b>
+			<b>{l s='Evertec PlacetoPay S.A.S.' mod='placetopaypayment'}</b>
 
 			<small>
 				{l s=' and / or ' mod='placetopaypayment'}

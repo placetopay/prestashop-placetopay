@@ -74,7 +74,7 @@ $_MODULE['<{placetopaypayment}prestashop>payment_5c5bbfeeda36c97c247a2d8f7c62237
 $_MODULE['<{placetopaypayment}prestashop>payment_7f432fd9dab12810bf868e0915e308f6'] = 'Anyone who make a purchase on the site';
 $_MODULE['<{placetopaypayment}prestashop>payment_ccaf60f3194e23d493abd857318195ed'] = ', acting freely and voluntarily consent to';
 $_MODULE['<{placetopaypayment}prestashop>payment_fc37c7fe93fdd08848d7728f3fe620a1'] = ', through the service provider';
-$_MODULE['<{placetopaypayment}prestashop>payment_673f7d4d25a1ba09d9458aa892107a43'] = 'EGM Ingeniería Sin Fronteras S.A.S';
+$_MODULE['<{placetopaypayment}prestashop>payment_673f7d4d25a1ba09d9458aa892107a43'] = 'Evertec PlacetoPay S.A.S.';
 $_MODULE['<{placetopaypayment}prestashop>payment_fbcc5af1de84b2eac78ae7ebe8a367b8'] = 'and / or';
 $_MODULE['<{placetopaypayment}prestashop>payment_8f3342a23e5b86860501e8bea9902b09'] = 'Placetopay';
 $_MODULE['<{placetopaypayment}prestashop>payment_f27eb14238eb38b33e14177abdf48a67'] = 'to consult and ask for';
@@ -124,7 +124,7 @@ $_MODULE['<{placetopaypayment}prestashop>setting_8e52de0d4b03d5fe87dc88da09616c7
 $_MODULE['<{placetopaypayment}prestashop>message_payment_7f432fd9dab12810bf868e0915e308f6'] = 'Anyone who make a purchase on the site';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_ccaf60f3194e23d493abd857318195ed'] = ', acting freely and voluntarily consent to';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_fc37c7fe93fdd08848d7728f3fe620a1'] = ', through the service provider';
-$_MODULE['<{placetopaypayment}prestashop>message_payment_673f7d4d25a1ba09d9458aa892107a43'] = 'EGM Ingeniería Sin Fronteras S.A.S';
+$_MODULE['<{placetopaypayment}prestashop>message_payment_673f7d4d25a1ba09d9458aa892107a43'] = 'Evertec PlacetoPay S.A.S.';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_fbcc5af1de84b2eac78ae7ebe8a367b8'] = 'and / or';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_8f3342a23e5b86860501e8bea9902b09'] = 'Placetopay';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_f27eb14238eb38b33e14177abdf48a67'] = 'to consult and ask for';
