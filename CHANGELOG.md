@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.5.5] - 2021-08-31
+
 ### Added
 - Panama and Puerto Rico country codes.
 
