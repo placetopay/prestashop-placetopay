@@ -14,4 +14,6 @@ interface CountryCode
     const MEXICO = 'mx';
     const COSTA_RICA = 'cr';
     const CHILE = 'cl';
+    const PUERTO_RICO = 'pr';
+    const PANAMA = 'pa';
 }

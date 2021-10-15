@@ -15,8 +15,8 @@ abstract class PaymentUrl
     {
         return [
             Environment::PRODUCTION => 'https://checkout.placetopay.com',
-            Environment::TEST => 'https://test.placetopay.com/redirection',
-            Environment::DEVELOPMENT => 'https://dev.placetopay.com/redirection',
+            Environment::TEST => 'https://checkout-test.placetopay.com',
+            Environment::DEVELOPMENT => 'https://checkout-co.placetopay.dev',
         ];
     }
 
@@ -31,16 +31,18 @@ abstract class PaymentUrl
                 $endpoints = [
                     Environment::PRODUCTION => 'https://checkout.placetopay.ec',
                     Environment::TEST => 'https://test.placetopay.ec/redirection',
-                    Environment::DEVELOPMENT => 'https://dev.placetopay.ec/redirection',
+                    Environment::DEVELOPMENT => 'https://checkout-ec.placetopay.dev',
                 ];
                 break;
             case CountryCode::CHILE:
                 $endpoints = [
                     Environment::PRODUCTION => 'https://checkout.getnet.cl',
                     Environment::TEST => 'https://checkout.uat.getnet.cl',
-                    Environment::DEVELOPMENT => 'https://dev.placetopay.com/redirection',
+                    Environment::DEVELOPMENT => 'https://checkout-cl.placetopay.dev',
                 ];
                 break;
+            case CountryCode::PUERTO_RICO:
+            case CountryCode::PANAMA:
             case CountryCode::MEXICO:
             case CountryCode::PERU:
             case CountryCode::COLOMBIA:

@@ -139,7 +139,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_HOME = '';
 
     const MIN_VERSION_PS = '1.6.0.5';
-    const MAX_VERSION_PS = '1.7.7.6';
+    const MAX_VERSION_PS = '1.7.7.8';
 
     /**
      * @var string
@@ -157,7 +157,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.5.4';
+        $this->version = '3.5.5';
 
         $this->tab = 'payments_gateways';
 
@@ -516,14 +516,23 @@ class PlacetoPayPayment extends PaymentModule
     protected static function getLocale(string $language = 'co'): string
     {
         switch ($language) {
-            case 'co':
+            case CountryCode::COLOMBIA:
                 $locale = 'es_CO';
                 break;
-            case 'cl':
+            case CountryCode::CHILE:
                 $locale = 'es_CL';
                 break;
-            case 'ec':
+            case CountryCode::COSTA_RICA:
+                $locale = 'es_CR';
+                break;
+            case CountryCode::ECUADOR:
                 $locale = 'es_EC';
+                break;
+            case CountryCode::PUERTO_RICO:
+                $locale = 'es_PR';
+                break;
+            case CountryCode::PANAMA:
+                $locale = 'es_PA';
                 break;
             case 'en':
             default:
@@ -876,13 +885,11 @@ class PlacetoPayPayment extends PaymentModule
 
     /**
      * Update status order in background
-     * @param int $minutes
      */
-    public function resolvePendingPayments($minutes = 12)
+    public function resolvePendingPayments()
     {
         if ($this->isEnableShowSetup()) {
             echo $this->getSetup();
-            $minutes = 0;
         }
 
         if (!isConsole() && !isDebugEnable()) {
@@ -899,11 +906,9 @@ class PlacetoPayPayment extends PaymentModule
 
         echo 'Begins ' . date('Ymd H:i:s') . '.' . breakLine();
 
-        $date = date('Y-m-d H:i:s', time() - ($minutes * 60));
         $sql = "SELECT * 
             FROM `{$this->tablePayment}`
-            WHERE `date` < '{$date}' 
-              AND `status` = " . PaymentStatus::PENDING;
+            WHERE `status` = " . PaymentStatus::PENDING;
 
         if (isDebugEnable()) {
             PaymentLogger::log($sql, PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
@@ -932,6 +937,9 @@ class PlacetoPayPayment extends PaymentModule
                     $response = $paymentRedirection->query($requestId);
                     $status = $this->getStatusPayment($response);
                     $order = $this->getOrderByCartId($cartId);
+                    $cart = Cart::getCartByOrderId($order->id);
+                    $currency = new Currency(($cart->id_currency));
+                    Context::getContext()->currency = $currency;
 
                     if (!$order) {
                         echo 'Order not found: ' . $cartId . breakLine(2);
