@@ -30,7 +30,7 @@ abstract class PaymentUrl
             case CountryCode::ECUADOR:
                 $endpoints = [
                     Environment::PRODUCTION => 'https://checkout.placetopay.ec',
-                    Environment::TEST => 'https://test.placetopay.ec/redirection',
+                    Environment::TEST => 'https://checkout-test.placetopay.ec',
                     Environment::DEVELOPMENT => 'https://checkout-ec.placetopay.dev',
                 ];
                 break;
