@@ -139,7 +139,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_HOME = '';
 
     const MIN_VERSION_PS = '1.6.0.5';
-    const MAX_VERSION_PS = '1.7.8.3';
+    const MAX_VERSION_PS = '1.7.8.4';
 
     /**
      * @var string
@@ -157,7 +157,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.5.7';
+        $this->version = '3.5.8';
 
         $this->tab = 'payments_gateways';
 
@@ -178,8 +178,8 @@ class PlacetoPayPayment extends PaymentModule
 
         parent::__construct();
 
-        $this->author = $this->ll('Evertec PlacetoPay S.A.S.');
-        $this->displayName = $this->ll('PlacetoPay');
+        $this->author = $this->ll('Evertec Placetopay S.A.S.');
+        $this->displayName = $this->ll('Placetopay');
         $this->description = $this->ll('Accept payments by credit cards and debits account.');
 
         $this->confirmUninstall = $this->ll('Are you sure you want to uninstall?');

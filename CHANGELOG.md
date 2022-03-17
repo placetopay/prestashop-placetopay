@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.5.8] - 2022-03-03
+
+### Fixed
+- Error with base tax total
+
 ## [3.5.7] - 2022-03-03
 
 ### Changed

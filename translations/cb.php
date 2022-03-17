@@ -4,7 +4,7 @@ global $_MODULE;
 $_MODULE = array();
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_8f3342a23e5b86860501e8bea9902b09'] = 'Placetopay';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4a84fa314d025e9515472cc472202a81'] = 'Acepta pagos con tarjetas de crédito y débito.';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_506852acddff49d5301613f585fd5bc6'] = 'Evertec PlacetoPay S.A.S.';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_506852acddff49d5301613f585fd5bc6'] = 'Evertec Placetopay S.A.S.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_876f23178c29dc2552c0b48bf23cd9bd'] = 'Estás seguro de querer des-instalar el módulo?';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_a02758d758e8bec77a33d7f392eb3f8a'] = 'No se ha configurado una moneda para este módulo.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_e9de72febed9759b1979fa572b2b8eb1'] = 'Necesitas configurar tu cuenta Placetopay antes de usar este módulo.';
@@ -20,7 +20,7 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_fcc334a736f4de2d397a3
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_961b9a68822e8a47a046b0ef80bb8196'] = 'Descripción de pago';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_254f642527b45bc260048e30704edb39'] = 'Configuración';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_7e07e9e90c97ced358b7191599066be6'] = 'Tiempo de expiración del pago en minutos';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_7cb035b7a69b159cf733884472d3d4d7'] = 'Al regresar de PlacetoPay mostrar';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_7cb035b7a69b159cf733884472d3d4d7'] = 'Al regresar de Placetopay mostrar';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6c13a05f626c6bb8b29ab2757fbeebaa'] = 'Si aceptas pago por PSE, por favor selecciona: Listado de pagos';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_589d213944623dd93012c9f0b314442a'] = 'Predeterminado';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_accea76d09b0193c332cf51c646a205c'] = 'Detalle del pago';
@@ -50,14 +50,14 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d0afed67605524c711753
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4de91f0fcb9cd3a20b6b1d64610a0a3d'] = 'SOAP';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_50780f47f6839d47d60bc4555ee00c3f'] = 'REST';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_3abef33a00b140885afcca3a53a56881'] = 'Pagar con Placetopay';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d213d9f6558da5e72e3348aaf5bf4970'] = 'El sitio web seguro de PlacetoPay se mostrará cuando seleccione este método de pago.';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d213d9f6558da5e72e3348aaf5bf4970'] = 'El sitio web seguro de Placetopay se mostrará cuando seleccione este método de pago.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_e59458c2ad3850466357a1cd342adc51'] = 'Pago pendiente';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_5d5c4a24285e79624af97a58941965cf'] = 'Pago realizado';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_08fc2add263dba5610ca59b67ec43346'] = 'Pago fallido';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_842defa666a224eda21bb1a0e9800bef'] = 'Pago rechazado';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_8a644475a8ff34cd3e78f91386fbcecb'] = 'Sin información';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_b09f3a4de8a82e9b5779561e30cdce69'] = 'Métodos de pago habilitados';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4acada81dbd1d69e35f77da728da419c'] = 'IMPORTANTE: Los métodos de pago en PlacetoPay serán restringidos por esta selección. Usa [Ctrl + Clic] para seleccionar varios';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4acada81dbd1d69e35f77da728da419c'] = 'IMPORTANTE: Los métodos de pago en Placetopay serán restringidos por esta selección. Usa [Ctrl + Clic] para seleccionar varios';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_b1c94ca2fbc3e78fc30069c8d0f01680'] = 'Todos';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c9cc8cce247e49bae79f15173ce97354'] = 'Guardar';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_93cba07454f06a4a960172bbd6e2a435'] = 'Si';
@@ -67,7 +67,7 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_5932ec01231e4ec6ba6b4
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c8b48868eb21f2d35301ba4d05720257'] = 'Puede ser una URL, un nombre de imagen (proporcione la imagen al equipo de placetopay en formato svg para que esto funcione) o una ruta local (guarde la imagen en la carpeta img).';
 $_MODULE['<{placetopaypayment}prestashop>payment_a905b48f56e4462afa66e3b3da6eb091'] = 'Paga con Placetopay';
 $_MODULE['<{placetopaypayment}prestashop>payment_e32463bd40f6c2c482dcc7383484e503'] = '(Tarjeta de Crédito y Débito a cuentas)';
-$_MODULE['<{placetopaypayment}prestashop>payment_d213d9f6558da5e72e3348aaf5bf4970'] = 'El sitio web seguro de PlacetoPay se mostrará cuando seleccione este método de pago.';
+$_MODULE['<{placetopaypayment}prestashop>payment_d213d9f6558da5e72e3348aaf5bf4970'] = 'El sitio web seguro de Placetopay se mostrará cuando seleccione este método de pago.';
 $_MODULE['<{placetopaypayment}prestashop>payment_0eaadb4fcb48a0a0ed7bc9868be9fbaa'] = 'Alerta';
 $_MODULE['<{placetopaypayment}prestashop>payment_23ab9d23650891426fe6a81e038cfade'] = 'En este momento su orden';
 $_MODULE['<{placetopaypayment}prestashop>payment_6810b4142fbd38d9e9e2f67c616d1368'] = 'presenta un proceso de pago cuya transacción se encuentra PENDIENTE de recibir confirmación por parte de su entidad financiera, por favor espere unos minutos y vuelva a consultar más tarde para verificar si su pago fue confirmado de forma exitosa';
@@ -77,7 +77,7 @@ $_MODULE['<{placetopaypayment}prestashop>payment_5c5bbfeeda36c97c247a2d8f7c62237
 $_MODULE['<{placetopaypayment}prestashop>payment_7f432fd9dab12810bf868e0915e308f6'] = 'Cualquier persona que realice un compra en el sitio';
 $_MODULE['<{placetopaypayment}prestashop>payment_ccaf60f3194e23d493abd857318195ed'] = ', actuando libre y voluntariamente, autoriza a';
 $_MODULE['<{placetopaypayment}prestashop>payment_fc37c7fe93fdd08848d7728f3fe620a1'] = ', a través del proveedor de servicios';
-$_MODULE['<{placetopaypayment}prestashop>payment_506852acddff49d5301613f585fd5bc6'] = 'Evertec PlacetoPay S.A.S.';
+$_MODULE['<{placetopaypayment}prestashop>payment_506852acddff49d5301613f585fd5bc6'] = 'Evertec Placetopay S.A.S.';
 $_MODULE['<{placetopaypayment}prestashop>payment_fbcc5af1de84b2eac78ae7ebe8a367b8'] = 'y/o';
 $_MODULE['<{placetopaypayment}prestashop>payment_8f3342a23e5b86860501e8bea9902b09'] = 'Placetopay';
 $_MODULE['<{placetopaypayment}prestashop>payment_f27eb14238eb38b33e14177abdf48a67'] = 'para que consulte y solicite';
@@ -128,7 +128,7 @@ $_MODULE['<{placetopaypayment}prestashop>setting_8e52de0d4b03d5fe87dc88da09616c7
 $_MODULE['<{placetopaypayment}prestashop>message_payment_7f432fd9dab12810bf868e0915e308f6'] = 'Cualquier persona que realice un compra en el sitio';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_ccaf60f3194e23d493abd857318195ed'] = ', actuando libre y voluntariamente, autoriza a';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_fc37c7fe93fdd08848d7728f3fe620a1'] = ', a través del proveedor de servicios';
-$_MODULE['<{placetopaypayment}prestashop>message_payment_506852acddff49d5301613f585fd5bc6'] = 'Evertec PlacetoPay S.A.S.';
+$_MODULE['<{placetopaypayment}prestashop>message_payment_506852acddff49d5301613f585fd5bc6'] = 'Evertec Placetopay S.A.S.';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_fbcc5af1de84b2eac78ae7ebe8a367b8'] = 'y/o';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_8f3342a23e5b86860501e8bea9902b09'] = 'Placetopay';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_f27eb14238eb38b33e14177abdf48a67'] = 'para que consulte y solicite';
@@ -145,4 +145,4 @@ $_MODULE['<{placetopaypayment}prestashop>pending_payment_f0023db864e79a837861189
 $_MODULE['<{placetopaypayment}prestashop>pending_payment_373ee24274eb806bef2ef57bb12ffe85'] = 'o enviar un correo electrónico a';
 $_MODULE['<{placetopaypayment}prestashop>pending_payment_5c5bbfeeda36c97c247a2d8f7c622373'] = 'y preguntar por el estado de la transacción:';
 $_MODULE['<{placetopaypayment}prestashop>brand_payment_a905b48f56e4462afa66e3b3da6eb091'] = 'Paga con Placetopay';
-$_MODULE['<{placetopaypayment}prestashop>brand_payment_d213d9f6558da5e72e3348aaf5bf4970'] = 'El sitio web seguro de PlacetoPay se mostrará cuando seleccione este método de pago.';
+$_MODULE['<{placetopaypayment}prestashop>brand_payment_d213d9f6558da5e72e3348aaf5bf4970'] = 'El sitio web seguro de Placetopay se mostrará cuando seleccione este método de pago.';
