@@ -559,14 +559,21 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         $language = Language::getIsoById((int)($cart->id_lang));
-        $customer = new Customer((int)($cart->id_customer));
-        $currency = new Currency((int)($cart->id_currency));
-        $invoiceAddress = new Address((int)($cart->id_address_invoice));
-        $deliveryAddress = new Address((int)($cart->id_address_delivery));
-
+        $customer = new Customer($cart->id_customer);
+        $currency = new Currency($cart->id_currency);
+        $invoiceAddress = new Address($cart->id_address_invoice);
+        $deliveryAddress = new Address($cart->id_address_delivery);
         $totalAmount = (float)$cart->getOrderTotal(true);
         $totalAmountWithoutTaxes = (float)$cart->getOrderTotal(false);
-        $taxAmount = (float)($totalAmount - $totalAmountWithoutTaxes);
+        $base = 0;
+
+        foreach ($cart->getProducts() as $product) {
+            if ($product['rate']) {
+                $base += $product['price_without_reduction_without_tax'];
+            }
+        }
+
+        $taxAmount = $totalAmount - $totalAmountWithoutTaxes;
 
         if (!Validate::isLoadedObject($customer)) {
             throw new PaymentException('Invalid customer', 301);
@@ -661,7 +668,7 @@ class PlacetoPayPayment extends PaymentModule
                     [
                         'kind' => 'valueAddedTax',
                         'amount' => $taxAmount,
-                        'base' => $totalAmount - $taxAmount,
+                        'base' => $base,
                     ]
                 ];
             }
