@@ -139,7 +139,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_HOME = '';
 
     const MIN_VERSION_PS = '1.6.0.5';
-    const MAX_VERSION_PS = '1.7.8.4';
+    const MAX_VERSION_PS = '1.7.8.5';
 
     /**
      * @var string
@@ -157,7 +157,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.5.8';
+        $this->version = '3.5.9';
 
         $this->tab = 'payments_gateways';
 
@@ -394,6 +394,7 @@ class PlacetoPayPayment extends PaymentModule
         $this->context->smarty->assign('cifin_message', $this->getTransUnionMessage());
         $this->context->smarty->assign('company_name', $this->getCompanyName());
         $this->context->smarty->assign('allow_payment', $allowPayment);
+        $this->context->smarty->assign('url', $this->getImage());
 
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook_1_6/payment.tpl'));
     }
@@ -1525,7 +1526,17 @@ class PlacetoPayPayment extends PaymentModule
         $url = $this->getImageUrl();
 
         if (is_null($url) || empty($url)) {
-            $image = 'https://static.placetopay.com/placetopay-logo.svg';
+            switch ($this->getCountry()) {
+                case CountryCode::CHILE:
+                    $image = 'https://banco.santander.cl/uploads/000/029/870/0620f532-9fc9-4248-b99e-78bae9f13e1d/original/Logo_WebCheckout_Getnet.svg';
+                    break;
+                case CountryCode::COLOMBIA:
+                case CountryCode::ECUADOR:
+                case CountryCode::PUERTO_RICO:
+                case CountryCode::COSTA_RICA:
+                default:
+                    $image = 'https://static.placetopay.com/placetopay-logo.svg';
+            }
         } elseif ($this->checkValidUrl($url)) {
             $image = $url;
         } elseif ($this->checkDirectory($url)) {

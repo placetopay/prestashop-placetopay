@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.5.9] - 2022-03-03
+
+### Changed
+- Payment button image on prestashop 1.6
+
 ## [3.5.8] - 2022-03-03
 
 ### Fixed

@@ -35,14 +35,9 @@
 </style>
 <p class="payment_module">
     <a class="placetopay" href="{$payment_url}">
-        <img src="https://static.placetopay.com/admin/custom/application-logo.svg" width="170px"
-             alt="{l s='Pay with Placetopay' mod='placetopaypayment'}"/>
+		<img src="{$url}" width="170px" alt="{l s='Pay with Placetopay' mod='placetopaypayment'}"/>
 
         <b>{l s='Pay with Placetopay' mod='placetopaypayment'}</b>
-
-        <span>
-		{l s='(credit cards and debits account)' mod='placetopaypayment'}
-		</span>
 
         <br/>
 
