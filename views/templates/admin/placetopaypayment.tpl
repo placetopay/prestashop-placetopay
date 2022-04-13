@@ -67,3 +67,14 @@
 {l s='This plugin don\'t has been tested with your PrestaShop version [%s].' mod='placetopaypayment'}
 {l s='Payment button image' mod='placetopaypayment'}
 {l s='It can be a URL, an image name (provide the image to the placetopay team as svg format for this to work) or a local path (save the image to the img folder).' mod='placetopaypayment'}
+{l s='Transaction Date' mod='placetopaypayment'}
+{l s='Payment Type' mod='placetopaypayment'}
+{l s='Installments Type' mod='placetopaypayment'}
+{l s='Installments' mod='placetopaypayment'}
+{l s='Card last Digits' mod='placetopaypayment'}
+{l s='Amount' mod='placetopaypayment'}
+{l s='Authorization Code' mod='placetopaypayment'}
+{l s='Status' mod='placetopaypayment'}
+{l s='Receipt' mod='placetopaypayment'}
+{l s='Reason' mod='placetopaypayment'}
+{l s='%s installments' mod='placetopaypayment'}

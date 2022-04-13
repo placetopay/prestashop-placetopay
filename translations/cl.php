@@ -65,6 +65,17 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_bafd7322c6e97d25b6299
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6aeabdd64048318ca8c79647564ba969'] = 'Este módulo no ha sido probado con tu versión de PrestaShop [%s].';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_5932ec01231e4ec6ba6b4a3a7691de53'] = 'Imagen Botón de Pago';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c8b48868eb21f2d35301ba4d05720257'] = 'Puede ser una URL, un nombre de imagen (proporcione la imagen al equipo de getnet en formato svg para que esto funcione) o una ruta local (guarde la imagen en la carpeta img).';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4586804ab38920a6f7ea434c8bd939f4'] = 'Fecha de Transacción';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_7c9a3504dd4ce74b8021267ae1802968'] = 'Tipo de pago';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_f1b3fafd1a209b1536ea1e1afed7032f'] = 'Tipo de cuotas';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_ba5376b5ba3216a7a51eabb18265d921'] = 'Cuotas';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_2bf38c24991cf486c9043ca4ece907b5'] = 'Últimos dígitos de la tarjeta';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_b2f40690858b404ed10e62bdf422c704'] = 'Monto';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_980ee3bcda7f62fa056fb579ec70fb93'] = 'Código de Autorización';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_ec53a8c4f07baed5d8825072c89799be'] = 'Estado';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d6d7c5a3f130174a472f0768c912a796'] = 'Recibo';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_fffcb4d1e12c96b2f571f77ad25878b8'] = 'Razón';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_317430223ce9695fb4b112d4d432a9a6'] = '%s Cuotas';
 $_MODULE['<{placetopaypayment}prestashop>payment_a905b48f56e4462afa66e3b3da6eb091'] = 'Tarjeta de crédito, débito o prepago.';
 $_MODULE['<{placetopaypayment}prestashop>payment_e32463bd40f6c2c482dcc7383484e503'] = '(tarjeta de crédito y débito a cuentas)';
 $_MODULE['<{placetopaypayment}prestashop>payment_d213d9f6558da5e72e3348aaf5bf4970'] = 'Paga seguro todo lo que necesitas con Getnet utilizando tus tarjetas de crédito, débito y prepago, de todos los emisores nacionales e internacionales.';

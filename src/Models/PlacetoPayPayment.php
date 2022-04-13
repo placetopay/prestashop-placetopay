@@ -139,7 +139,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_HOME = '';
 
     const MIN_VERSION_PS = '1.6.0.5';
-    const MAX_VERSION_PS = '1.7.8.5';
+    const MAX_VERSION_PS = '1.7.8.4';
 
     /**
      * @var string
@@ -157,7 +157,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.5.9';
+        $this->version = '3.6.0';
 
         $this->tab = 'payments_gateways';
 
@@ -221,6 +221,7 @@ class PlacetoPayPayment extends PaymentModule
             || !$this->addColumnEmail()
             || !$this->addColumnRequestId()
             || !$this->addColumnReference()
+            || !$this->addInstallmentLastDigitsColumns()
         ) {
             $error = 'Error on install module';
         }
@@ -233,6 +234,12 @@ class PlacetoPayPayment extends PaymentModule
 
         if (empty($error) && !$this->registerHook($hookPaymentName)) {
             $error = sprintf('Error on install registering %s hook', $hookPaymentName);
+        }
+
+        $hookOrderName = versionComparePlaceToPay('1.7.0.0', '>=') ? 'displayAdminOrderMainBottom' : 'displayAdminOrderLeft';
+
+        if (empty($error) && !$this->registerHook($hookOrderName)) {
+            $error = sprintf('Error on install registering %s hook', $hookOrderName);
         }
 
         if (empty($error)) {
@@ -1113,6 +1120,8 @@ class PlacetoPayPayment extends PaymentModule
         $receipt = '';
         $conversion = '';
         $payerEmail = '';
+        $installments = '';
+        $lastDigits = '';
 
         if (!empty($payment = $response->lastTransaction())
             && !empty($paymentStatus = $payment->status())
@@ -1124,11 +1133,13 @@ class PlacetoPayPayment extends PaymentModule
 
             if (!$paymentStatus->isFailed()) {
                 $bank = pSQL($payment->issuerName());
-                $franchise = pSQL($payment->paymentMethod());
+                $franchise = pSQL($payment->franchise());
                 $franchiseName = pSQL($payment->paymentMethodName());
                 $authCode = pSQL($payment->authorization());
                 $receipt = pSQL($payment->receipt());
                 $conversion = pSQL($payment->amount()->factor());
+                $installments = pSQL($payment->additionalData()['installments']);
+                $lastDigits = pSQL(str_replace('*', '', $payment->additionalData()['lastDigits']));
             }
         }
 
@@ -1150,7 +1161,9 @@ class PlacetoPayPayment extends PaymentModule
                 `authcode` = '{$authCode}',
                 `receipt` = '{$receipt}',
                 `conversion` = '{$conversion}',
-                `payer_email` = '{$payerEmail}'
+                `payer_email` = '{$payerEmail}',
+                `installments` = '{$installments}',
+                `card_last_digits` = '{$lastDigits}'
             WHERE `id_payment` = {$paymentId}
         ";
 
@@ -1343,6 +1356,25 @@ class PlacetoPayPayment extends PaymentModule
     }
 
     /**
+     * @return bool
+     */
+    final private function addInstallmentLastDigitsColumns()
+    {
+        $sql = "ALTER TABLE `{$this->tablePayment}` ADD `installments` VARCHAR(10) NULL, ADD `card_last_digits` VARCHAR(4) NULL;";
+
+        try {
+            Db::getInstance()->Execute($sql);
+        } catch (PrestaShopDatabaseException $e) {
+            PaymentLogger::log($e->getMessage(), PaymentLogger::INFO, 0, $e->getFile(), $e->getLine());
+        } catch (Exception $e) {
+            PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 4, $e->getFile(), $e->getLine());
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Validation data from post settings form
      * @return array
      */
@@ -1492,12 +1524,8 @@ class PlacetoPayPayment extends PaymentModule
     final private function displayPendingPaymentMessage($lastPendingTransaction)
     {
         $this->smarty->assign([
-            'last_order' => isset($lastPendingTransaction['reference'])
-                ? $lastPendingTransaction['reference']
-                : '########',
-            'last_authorization' => isset($lastPendingTransaction['authcode'])
-                ? $lastPendingTransaction['authcode']
-                : null,
+            'last_order' => $lastPendingTransaction['reference'] ?? '########',
+            'last_authorization' => $lastPendingTransaction['authcode'] ?? null,
             'telephone_contact' => $this->getTelephoneContact(),
             'email_contact' => $this->getEmailContact(),
             'allow_payment' => $this->getAllowBuyWithPendingPayments(),
@@ -1521,11 +1549,101 @@ class PlacetoPayPayment extends PaymentModule
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook/message_payment.tpl'));
     }
 
+    public function hookDisplayAdminOrderLeft($params)
+    {
+        return $this->orderDetails($params);
+    }
+
+    public function hookDisplayAdminOrderMainBottom($params)
+    {
+        return $this->orderDetails($params);
+    }
+
+    public function orderDetails($params)
+    {
+        if (!$this->active) {
+            return null;
+        }
+
+        $orderId = $params['id_order'];
+        $bsOrder = new Order((int)$orderId);
+
+        if ($bsOrder->module != 'placetopaypayment') {
+            return null;
+        }
+
+        $result = Db::getInstance()->ExecuteS(
+            "SELECT * FROM `{$this->tablePayment}` WHERE `id_order` = {$orderId}"
+        );
+
+        if (!empty($result)) {
+            $result = $result[0];
+
+            $paymentTypeCode = $result['franchise'] ? $this->ll('Credit') : $this->ll('Debit');
+            $installmentType = $result['installments'] > 0
+                ? sprintf($this->ll('%s installments'), $result['installments'])
+                : $this->ll('No installments');
+
+            $details = [
+                [
+                    'key' => $this->ll('Transaction Date'),
+                    'value' => $result['date'],
+                ],
+                [
+                    'key' => $this->ll('Payment Type'),
+                    'value' => $paymentTypeCode,
+                ],
+                [
+                    'key' => $this->ll('Installments Type'),
+                    'value' => $installmentType,
+                ],
+                [
+                    'key' => $this->ll('Installments'),
+                    'value' => $result['installments'],
+                ],
+                [
+                    'key' => $this->ll('Card last Digits'),
+                    'value' => $result['card_last_digits'],
+                ],
+                [
+                    'key' => $this->ll('Amount'),
+                    'value' => '$' . number_format($result['amount'], 0, ',', '.'),
+                ],
+                [
+                    'key' => $this->ll('Authorization Code'),
+                    'value' => $result['authcode'],
+                ],
+                [
+                    'key' => $this->ll('Status'),
+                    'value' => PaymentStatus::STATUS[$result['status']],
+                ],
+                [
+                    'key' => $this->ll('Receipt'),
+                    'value' => $result['receipt'],
+                ],
+                [
+                    'key' => $this->ll('Reason'),
+                    'value' => $result['reason'],
+                ],
+            ];
+
+            $this->context->smarty->assign([
+                'icon' => $this->getImage(),
+                'title' => $this->ll('Placetopay'),
+                'details' => $details,
+            ]);
+
+            return $this->display($this->getThisModulePath(), fixPath('/views/templates/admin/admin_order.tpl'));
+        }
+
+        return null;
+    }
+
     protected function getImage(): string
     {
         $url = $this->getImageUrl();
 
-        if (is_null($url) || empty($url)) {
+        if (empty($url)) {
             switch ($this->getCountry()) {
                 case CountryCode::CHILE:
                     $image = 'https://banco.santander.cl/uploads/000/029/870/0620f532-9fc9-4248-b99e-78bae9f13e1d/original/Logo_WebCheckout_Getnet.svg';

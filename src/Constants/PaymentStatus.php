@@ -32,4 +32,11 @@ interface PaymentStatus
      * Transaction DUPLICATE (before APPROVED)
      */
     const DUPLICATE = 4;
+
+    const STATUS = [
+        self::FAILED => 'FAILED',
+        self::APPROVED => 'APPROVED',
+        self::REJECTED => 'REJECTED',
+        self::PENDING => 'PENDING',
+    ];
 }

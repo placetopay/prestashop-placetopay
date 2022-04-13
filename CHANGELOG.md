@@ -6,7 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [3.5.9] - 2022-03-03
+## [3.6.0] - 2022-04-12
+
+### Added
+- Hook to display payment details on the order admin
+
+## [3.5.9] - 2022-04-08
 
 ### Changed
 - Payment button image on prestashop 1.6
