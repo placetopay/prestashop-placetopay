@@ -37,7 +37,7 @@ abstract class PaymentUrl
             case CountryCode::CHILE:
                 $endpoints = [
                     Environment::PRODUCTION => 'https://checkout.getnet.cl',
-                    Environment::TEST => 'https://checkout.uat.getnet.cl',
+                    Environment::TEST => 'https://checkout.test.getnet.cl',
                     Environment::DEVELOPMENT => 'https://checkout-cl.placetopay.dev',
                 ];
                 break;

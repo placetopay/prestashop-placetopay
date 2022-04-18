@@ -157,7 +157,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.6.0';
+        $this->version = '3.6.1';
 
         $this->tab = 'payments_gateways';
 
@@ -1579,7 +1579,6 @@ class PlacetoPayPayment extends PaymentModule
         if (!empty($result)) {
             $result = $result[0];
 
-            $paymentTypeCode = $result['franchise'] ? $this->ll('Credit') : $this->ll('Debit');
             $installmentType = $result['installments'] > 0
                 ? sprintf($this->ll('%s installments'), $result['installments'])
                 : $this->ll('No installments');
@@ -1591,7 +1590,7 @@ class PlacetoPayPayment extends PaymentModule
                 ],
                 [
                     'key' => $this->ll('Payment Type'),
-                    'value' => $paymentTypeCode,
+                    'value' => $result['franchise_name'],
                 ],
                 [
                     'key' => $this->ll('Installments Type'),
@@ -1599,7 +1598,7 @@ class PlacetoPayPayment extends PaymentModule
                 ],
                 [
                     'key' => $this->ll('Installments'),
-                    'value' => $result['installments'],
+                    'value' => $result['installments'] ?? 0,
                 ],
                 [
                     'key' => $this->ll('Card last Digits'),
