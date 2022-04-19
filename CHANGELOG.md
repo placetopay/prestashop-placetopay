@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.6.2] - 2022-04-19
+
+### Changed
+- Update translations for chile
+
 ## [3.6.1] - 2022-04-18
 
 ### Changed

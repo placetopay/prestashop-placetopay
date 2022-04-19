@@ -157,7 +157,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.6.1';
+        $this->version = '3.6.2';
 
         $this->tab = 'payments_gateways';
 
@@ -464,6 +464,7 @@ class PlacetoPayPayment extends PaymentModule
         $form = $this->generateForm($action, $content);
 
         $newOption = new PaymentOption();
+        // TODO: It's here! Chenge the payment button name!
         $newOption->setCallToActionText($this->ll('Pay by Placetopay'))
             ->setAdditionalInformation('')
             ->setForm($form);

@@ -4,7 +4,7 @@ global $_MODULE;
 $_MODULE = array();
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_8f3342a23e5b86860501e8bea9902b09'] = 'Getnet';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4a84fa314d025e9515472cc472202a81'] = 'Acepta pagos con tarjetas de crédito y débito.';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_673f7d4d25a1ba09d9458aa892107a43'] = 'Getnet';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_506852acddff49d5301613f585fd5bc6'] = 'Evertec PlacetoPay S.A.S.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_876f23178c29dc2552c0b48bf23cd9bd'] = 'Estás seguro de querer des-instalar el módulo?';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_a02758d758e8bec77a33d7f392eb3f8a'] = 'No se ha configurado una moneda para este módulo.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_e9de72febed9759b1979fa572b2b8eb1'] = 'Necesitas configurar tu cuenta Getnet antes de usar este módulo.';
@@ -77,7 +77,6 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d6d7c5a3f130174a472f0
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_fffcb4d1e12c96b2f571f77ad25878b8'] = 'Razón';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_317430223ce9695fb4b112d4d432a9a6'] = '%s Cuotas';
 $_MODULE['<{placetopaypayment}prestashop>payment_a905b48f56e4462afa66e3b3da6eb091'] = 'Tarjeta de crédito, débito o prepago.';
-$_MODULE['<{placetopaypayment}prestashop>payment_e32463bd40f6c2c482dcc7383484e503'] = '(tarjeta de crédito y débito a cuentas)';
 $_MODULE['<{placetopaypayment}prestashop>payment_d213d9f6558da5e72e3348aaf5bf4970'] = 'Paga seguro todo lo que necesitas con Getnet utilizando tus tarjetas de crédito, débito y prepago, de todos los emisores nacionales e internacionales.';
 $_MODULE['<{placetopaypayment}prestashop>payment_0eaadb4fcb48a0a0ed7bc9868be9fbaa'] = 'Alerta';
 $_MODULE['<{placetopaypayment}prestashop>payment_23ab9d23650891426fe6a81e038cfade'] = 'En este momento su orden';
@@ -88,7 +87,7 @@ $_MODULE['<{placetopaypayment}prestashop>payment_5c5bbfeeda36c97c247a2d8f7c62237
 $_MODULE['<{placetopaypayment}prestashop>payment_7f432fd9dab12810bf868e0915e308f6'] = 'Cualquier persona que realice un compra en el sitio';
 $_MODULE['<{placetopaypayment}prestashop>payment_ccaf60f3194e23d493abd857318195ed'] = ', actuando libre y voluntariamente, autoriza a';
 $_MODULE['<{placetopaypayment}prestashop>payment_fc37c7fe93fdd08848d7728f3fe620a1'] = ', a través del proveedor de servicios';
-$_MODULE['<{placetopaypayment}prestashop>payment_673f7d4d25a1ba09d9458aa892107a43'] = 'Getnet';
+$_MODULE['<{placetopaypayment}prestashop>payment_506852acddff49d5301613f585fd5bc6'] = 'Evertec PlacetoPay S.A.S.';
 $_MODULE['<{placetopaypayment}prestashop>payment_fbcc5af1de84b2eac78ae7ebe8a367b8'] = 'y/o';
 $_MODULE['<{placetopaypayment}prestashop>payment_8f3342a23e5b86860501e8bea9902b09'] = 'Getnet';
 $_MODULE['<{placetopaypayment}prestashop>payment_f27eb14238eb38b33e14177abdf48a67'] = 'para que consulte y solicite';
@@ -139,7 +138,7 @@ $_MODULE['<{placetopaypayment}prestashop>setting_8e52de0d4b03d5fe87dc88da09616c7
 $_MODULE['<{placetopaypayment}prestashop>message_payment_7f432fd9dab12810bf868e0915e308f6'] = 'Cualquier persona que realice un compra en el sitio';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_ccaf60f3194e23d493abd857318195ed'] = ', actuando libre y voluntariamente, autoriza a';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_fc37c7fe93fdd08848d7728f3fe620a1'] = ', a través del proveedor de servicios';
-$_MODULE['<{placetopaypayment}prestashop>message_payment_673f7d4d25a1ba09d9458aa892107a43'] = 'Getnet';
+$_MODULE['<{placetopaypayment}prestashop>message_payment_506852acddff49d5301613f585fd5bc6'] = 'Evertec PlacetoPay S.A.S.';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_fbcc5af1de84b2eac78ae7ebe8a367b8'] = 'y/o';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_8f3342a23e5b86860501e8bea9902b09'] = 'Getnet';
 $_MODULE['<{placetopaypayment}prestashop>message_payment_f27eb14238eb38b33e14177abdf48a67'] = 'para que consulte y solicite';
@@ -155,5 +154,5 @@ $_MODULE['<{placetopaypayment}prestashop>pending_payment_6810b4142fbd38d9e9e2f67
 $_MODULE['<{placetopaypayment}prestashop>pending_payment_f0023db864e79a8378611899008c11d4'] = 'Si desea mayor información sobre el estado actual de su operación puede comunicarse a nuestras líneas de atención al cliente';
 $_MODULE['<{placetopaypayment}prestashop>pending_payment_373ee24274eb806bef2ef57bb12ffe85'] = 'o enviar un correo electrónico a';
 $_MODULE['<{placetopaypayment}prestashop>pending_payment_5c5bbfeeda36c97c247a2d8f7c622373'] = 'y preguntar por el estado de la transacción:';
-$_MODULE['<{placetopaypayment}prestashop>brand_payment_a905b48f56e4462afa66e3b3da6eb091'] = 'Paga con Getnet';
-$_MODULE['<{placetopaypayment}prestashop>brand_payment_d213d9f6558da5e72e3348aaf5bf4970'] = 'El sitio web seguro de Getnet se mostrará cuando seleccione este método de pago.';
+$_MODULE['<{placetopaypayment}prestashop>brand_payment_a905b48f56e4462afa66e3b3da6eb091'] = 'Tarjeta de crédito, débito o prepago.';
+$_MODULE['<{placetopaypayment}prestashop>brand_payment_d213d9f6558da5e72e3348aaf5bf4970'] = 'Paga seguro todo lo que necesitas con Getnet utilizando tus tarjetas de crédito, débito y prepago, de todos los emisores nacionales e internacionales.';
