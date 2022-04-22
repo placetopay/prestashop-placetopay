@@ -49,7 +49,13 @@ abstract class PaymentMethod
             'ID_AM' => 'American Express',
             'ID_CR' => 'Credencial Banco de Occidente',
             'ID_VE' => 'Visa Electron',
-        ]
+        ],
+        CountryCode::CHILE => [
+            'PS_VS' => 'Visa',
+            'PS_MC' => 'MasterCard',
+            'PS_AM' => 'American Express',
+            'PS_MS' => 'Maestro',
+        ],
     ];
 
     /**

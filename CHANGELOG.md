@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.6.3] - 2022-04-22
+
+### Changed
+- Update image url on return payment view (details)
+
 ## [3.6.2] - 2022-04-19
 
 ### Changed

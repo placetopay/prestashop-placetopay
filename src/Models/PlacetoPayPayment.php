@@ -157,7 +157,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.6.2';
+        $this->version = '3.6.3';
 
         $this->tab = 'payments_gateways';
 
@@ -2342,6 +2342,7 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         $attributes = [
+                'url' => $this->getImage(),
                 'company_document' => $this->getCompanyDocument(),
                 'company_name' => $this->getCompanyName(),
                 'payment_description' => sprintf($this->getDescription(), $transaction['reference']),
