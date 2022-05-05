@@ -157,7 +157,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.6.3';
+        $this->version = '3.6.4';
 
         $this->tab = 'payments_gateways';
 
@@ -1585,6 +1585,10 @@ class PlacetoPayPayment extends PaymentModule
                 : $this->ll('No installments');
 
             $details = [
+                [
+                    'key' => $this->ll('Buying order'),
+                    'value' => $bsOrder->reference,
+                ],
                 [
                     'key' => $this->ll('Transaction Date'),
                     'value' => $result['date'],
