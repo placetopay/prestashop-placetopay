@@ -65,6 +65,7 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_bafd7322c6e97d25b6299
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6aeabdd64048318ca8c79647564ba969'] = 'Este módulo no ha sido probado con tu versión de PrestaShop [%s].';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_5932ec01231e4ec6ba6b4a3a7691de53'] = 'Imagen Botón de Pago';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c8b48868eb21f2d35301ba4d05720257'] = 'Puede ser una URL, un nombre de imagen (proporcione la imagen al equipo de placetopay en formato svg para que esto funcione) o una ruta local (guarde la imagen en la carpeta img).';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_06fb7edd97bcc4cf6184f352dc32ff59'] = 'Orden de compra';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4586804ab38920a6f7ea434c8bd939f4'] = 'Fecha de Transacción';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_7c9a3504dd4ce74b8021267ae1802968'] = 'Tipo de pago';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_f1b3fafd1a209b1536ea1e1afed7032f'] = 'Tipo de cuotas';
@@ -125,7 +126,7 @@ $_MODULE['<{placetopaypayment}prestashop>response_bacd494fa77f84ab85ea0b4f5b3326
 $_MODULE['<{placetopaypayment}prestashop>response_13dba24862cf9128167a59100e154c8d'] = 'Imprimir';
 $_MODULE['<{placetopaypayment}prestashop>response_5f7ae98bdc36ea2686daed151216abf6'] = 'Reintentar pago';
 $_MODULE['<{placetopaypayment}prestashop>response_91a1bd08a417cbd1ce9ee50d8c67bab6'] = 'Historico de pagos';
-$_MODULE['<{placetopaypayment}prestashop>setting_88fe4c12770cc2911a905c7c454de197'] = ' https://static.placetopay.com/placetopay-logo.svg';
+$_MODULE['<{placetopaypayment}prestashop>setting_88fe4c12770cc2911a905c7c454de197'] = 'https://static.placetopay.com/placetopay-logo.svg';
 $_MODULE['<{placetopaypayment}prestashop>setting_207f9e8c830e934530ea457ddad0f09e'] = 'Este módulo le permite aceptar pagos con tarjetas de crédito y débito usando Placetopay.';
 $_MODULE['<{placetopaypayment}prestashop>setting_e9de72febed9759b1979fa572b2b8eb1'] = 'Debes configurar tu cuenta Placetopay antes de usar este módulo.';
 $_MODULE['<{placetopaypayment}prestashop>setting_a2b787ad97ab6f553dded04fc19dab01'] = 'URL de notificación';

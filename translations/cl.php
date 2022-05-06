@@ -65,6 +65,7 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_bafd7322c6e97d25b6299
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6aeabdd64048318ca8c79647564ba969'] = 'Este módulo no ha sido probado con tu versión de PrestaShop [%s].';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_5932ec01231e4ec6ba6b4a3a7691de53'] = 'Imagen Botón de Pago';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c8b48868eb21f2d35301ba4d05720257'] = 'Puede ser una URL, un nombre de imagen (proporcione la imagen al equipo de getnet en formato svg para que esto funcione) o una ruta local (guarde la imagen en la carpeta img).';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_06fb7edd97bcc4cf6184f352dc32ff59'] = 'Orden de compra';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4586804ab38920a6f7ea434c8bd939f4'] = 'Fecha de Transacción';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_7c9a3504dd4ce74b8021267ae1802968'] = 'Tipo de pago';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_f1b3fafd1a209b1536ea1e1afed7032f'] = 'Tipo de cuotas';
