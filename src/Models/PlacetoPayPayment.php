@@ -927,7 +927,7 @@ class PlacetoPayPayment extends PaymentModule
             if ($result = Db::getInstance()->ExecuteS($sql)) {
                 echo "Found (" . count($result) . ") payments pending." . breakLine(2);
 
-                $paymentRedirection = $this->instanceRedirection();
+                $paymentRedirection = $this->instanceRedirection(true);
 
                 foreach ($result as $row) {
                     $reference = $row['reference'];
@@ -2968,17 +2968,28 @@ class PlacetoPayPayment extends PaymentModule
             : base64_decode($string);
     }
 
-    /**
-     * @return PaymentRedirection
-     * @throws \Dnetix\Redirection\Exceptions\PlacetoPayException
-     */
-    final private function instanceRedirection()
+    final private function getHeaders(): array
     {
-        return new PaymentRedirection(
-            $this->getLogin(),
-            $this->getTranKey(),
-            $this->getUri(),
-            $this->getConnectionType()
-        );
+        $domain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'];
+        $userAgent = "$this->name/{$this->getPluginVersion()} - $domain";
+        return [
+            'User-Agent' => $userAgent,
+        ];
+    }
+
+    final private function instanceRedirection(bool $callback = false): PaymentRedirection
+    {
+        $settings = [
+            'login' => $this->getLogin(),
+            'tranKey' => $this->getTranKey(),
+            'baseUrl' => $this->getUri(),
+            'type' => $this->getConnectionType(),
+        ];
+
+        if ($callback) {
+            $settings['headers'] = $this->getHeaders();
+        }
+
+        return new PaymentRedirection($settings);
     }
 }

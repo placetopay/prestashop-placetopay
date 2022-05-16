@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.6.5] - 2022-05-05
+
+### Added
+- Headers when processing pending transactions
+- Override dnetix package due to conflicts with guzzle (v5 ~ v7)
+
 ## [3.6.4] - 2022-05-05
 
 ### Added

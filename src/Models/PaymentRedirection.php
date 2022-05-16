@@ -1,59 +1,63 @@
 <?php
-/**
- * MIT License
- *
- * Copyright (c) 2018 Freddie Gar
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- * @author Freddie Gar <freddie.gar@outlook.com>
- * @copyright 2018
- * @license https://github.com/freddiegar/prestashop-gateway/blob/master/LICENSE
- */
 
 namespace PlacetoPay\Models;
 
-use Dnetix\Redirection\PlacetoPay;
+use Dnetix\Redirection\Exceptions\PlacetoPayException;
+use PlacetoPay\Helpers\Settings;
+use Dnetix\Redirection\Message\CollectRequest;
+use Dnetix\Redirection\Message\Notification;
+use Dnetix\Redirection\Message\RedirectInformation;
+use Dnetix\Redirection\Message\RedirectRequest;
+use Dnetix\Redirection\Message\RedirectResponse;
+use Dnetix\Redirection\Message\ReverseResponse;
 
-/**
- * Class PaymentRedirection
- * @package PlacetoPay\Models
- */
-class PaymentRedirection extends PlacetoPay
+class PaymentRedirection
 {
-    /**
-     * Instantiates a PlacetoPay object providing the login and tranKey,
-     * also the url that will be used for the service
-     *
-     * @param string $login
-     * @param string $tranKey
-     * @param string $uriService
-     * @param string $type soap|rest
-     * @throws \Dnetix\Redirection\Exceptions\PlacetoPayException
-     */
-    public function __construct($login, $tranKey, $uriService = '', $type = 'rest')
+    protected Settings $settings;
+
+    public function __construct(array $data)
     {
-        parent::__construct([
-            'login' => $login,
-            'tranKey' => $tranKey,
-            'url' => $uriService,
-            'type' => $type,
-        ]);
+        $this->settings = new Settings($data);
+    }
+
+    public function request($redirectRequest): RedirectResponse
+    {
+        if (is_array($redirectRequest)) {
+            $redirectRequest = new RedirectRequest($redirectRequest);
+        }
+
+        if (!($redirectRequest instanceof RedirectRequest)) {
+            throw new PlacetoPayException('Wrong class request');
+        }
+
+        return $this->settings->carrier()->request($redirectRequest);
+    }
+
+    public function query(int $requestId): RedirectInformation
+    {
+        return $this->settings->carrier()->query($requestId);
+    }
+
+    public function collect($collectRequest): RedirectInformation
+    {
+        if (is_array($collectRequest)) {
+            $collectRequest = new CollectRequest($collectRequest);
+        }
+
+        if (!($collectRequest instanceof CollectRequest)) {
+            throw new PlacetoPayException('Wrong collect request');
+        }
+
+        return $this->settings->carrier()->collect($collectRequest);
+    }
+
+    public function reverse(string $internalReference): ReverseResponse
+    {
+        return $this->settings->carrier()->reverse($internalReference);
+    }
+
+    public function readNotification(array $data): Notification
+    {
+        return new Notification($data, $this->settings->tranKey());
     }
 }
