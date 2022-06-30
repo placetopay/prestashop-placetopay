@@ -2,7 +2,7 @@
 
 <div class="panel">
     <div>
-        <img src="{$url}" style="float:left; margin-right:15px;" alt="Placetopay" height="48">
+        <img src="{$url}" style="float:left; margin-right:15px;" alt="PlacetoPay" height="48">
         {if $status eq 'ok'}
             <h2>{l s='Completed payment' mod='placetopaypayment'}</h2>
             <p>{l s='Dear customer, your payment has been approved, thank you for your purchase.' mod='placetopaypayment'}</p>

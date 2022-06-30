@@ -2,7 +2,7 @@
 
 global $_MODULE;
 $_MODULE = array();
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_8f3342a23e5b86860501e8bea9902b09'] = 'Getnet';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_8f3342a23e5b86860501e8bea9902b09'] = 'Trgarg';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4a84fa314d025e9515472cc472202a81'] = 'Acepta pagos con tarjetas de crédito y débito.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_506852acddff49d5301613f585fd5bc6'] = 'Evertec PlacetoPay S.A.S.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_876f23178c29dc2552c0b48bf23cd9bd'] = 'Estás seguro de querer des-instalar el módulo?';
@@ -10,7 +10,7 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_a02758d758e8bec77a33d
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_e9de72febed9759b1979fa572b2b8eb1'] = 'Necesitas configurar tu cuenta Getnet antes de usar este módulo.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_ee66f9c9930cb33d2a5dde9b240d3f7e'] = 'es obligatorio.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_b0f2aa53ca75f7cb21943f01e6cf22ff'] = 'no es válido.';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_028433155457c3ff334b52050808c643'] = 'Configuración de Getnet actualizada';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_028433155457c3ff334b52050808c643'] = 'Configuración actualizada';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_a5239217cade6840bdf6bad4790c2405'] = '¿Restaurar el stock cuando el pago sea declinado?';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_60daa6e5d5cf70fa4b01349f1d3209e9'] = 'Datos del Comercio';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_229a7ec501323b94db7ff3157a7623c9'] = 'Número de documento';
@@ -43,7 +43,7 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_0cbc6611f5540bd0809a3
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_330f49df8243756a8a4dc7f7f7ee6dfe'] = 'Desarrollo';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_90589c47f06eb971d548591f23c285af'] = 'Personalizado';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4850de8e1473d6fdff990513019892a4'] = 'URL de conexión personalizada';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_493dd466db7a5801ac705ec8b7c1f453'] = 'Por ejemplo: \\\"https://alternative.getnet.com\\\". Es obligatiorio cuando seleccionas en';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_493dd466db7a5801ac705ec8b7c1f453'] = 'Por ejemplo: \\\"https://other.alternative.url\\\". Es obligatiorio cuando seleccionas en';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_99dea78007133396a7b8ed70578ac6ae'] = 'Login';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6332f3778e6c3ae54d794cc851ce95c0'] = 'TranKey';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d0afed67605524c7117536fe92ce3da8'] = 'Conectarme usando';
@@ -64,7 +64,7 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_93cba07454f06a4a96017
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_bafd7322c6e97d25b6299b5d6fe8920b'] = 'No';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6aeabdd64048318ca8c79647564ba969'] = 'Este módulo no ha sido probado con tu versión de PrestaShop [%s].';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_5932ec01231e4ec6ba6b4a3a7691de53'] = 'Imagen Botón de Pago';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c8b48868eb21f2d35301ba4d05720257'] = 'Puede ser una URL, un nombre de imagen (proporcione la imagen al equipo de getnet en formato svg para que esto funcione) o una ruta local (guarde la imagen en la carpeta img).';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c8b48868eb21f2d35301ba4d05720257'] = 'Puede ser una URL, un nombre de imagen (en formato SVG) o una ruta local (imagen en la carpeta: ' . _PS_IMG_ . ').';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_06fb7edd97bcc4cf6184f352dc32ff59'] = 'Orden de compra';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4586804ab38920a6f7ea434c8bd939f4'] = 'Fecha de Transacción';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_7c9a3504dd4ce74b8021267ae1802968'] = 'Tipo de pago';

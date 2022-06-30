@@ -204,7 +204,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Add validation in notification to signature
 - Add extra security, to show setup is necesary send last 5 characteres of login to show data
 - Add skipResult setup to skip last screen in payment process on payment
-- Add Placetopay brand in PS >= 1.7 in payment options form
+- Add PlacetoPay brand in PS >= 1.7 in payment options form
 - Add validation to execute sonda process, from browser not is available, only CLI
 
 ### Fixed
@@ -236,7 +236,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Fix bug in utf8 translations in spanish in some installations in Prestashop < 1.7
- 
+
 ## [3.0.0] - 2017-12-06
 
 ### Added

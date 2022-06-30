@@ -1,6 +1,6 @@
-# Prestashop Gateway to Placetopay
+# Prestashop Gateway to PlacetoPay
 
-[Placetopay][link-placetopay] Plugin Payment for [Prestashop][link-prestashop] 1.5, 1.6 and 1.7 Stable
+[PlacetoPay][link-placetopay] Plugin Payment for [Prestashop][link-prestashop] 1.5, 1.6 and 1.7 Stable
 
 ## Prerequisites
 
@@ -30,16 +30,16 @@ mkdir /var/www/html/modules/placetopaypayment
 ```
 
 Clone Project in modules
- 
+
 ```bash
-git clone https://github.com/freddiegar/prestashop-gateway.git /var/www/html/modules/placetopaypayment
+git clone https://github.com/placetopay/prestashop-gateway.git /var/www/html/modules/placetopaypayment
 ```
 
 Set permissions and install dependencies with composer
 
 ```bash
-cd /var/www/html/modules/placetopaypayment \ 
-    && sudo setfacl -dR -m u:www-data:rwX -m u:`whoami`:rwX `pwd` \ 
+cd /var/www/html/modules/placetopaypayment \
+    && sudo setfacl -dR -m u:www-data:rwX -m u:`whoami`:rwX `pwd` \
     && sudo setfacl -R -m u:www-data:rwX -m u:`whoami`:rwX `pwd` \
     && composer install
 ```
@@ -47,14 +47,14 @@ cd /var/www/html/modules/placetopaypayment \
 ## Docker Installation
 
 Install PrestaShop 1.6 (latest in 1.6 branch) with PHP 5.6 (and MySQL 5.7). In folder of project;
- 
+
 ```bash
 cd /var/www/html/modules/placetopaypayment
 make install
 ```
 
 Then... (Please wait few minutes, while install ALL and load Apache :D to continue), you can go to
- 
+
 - [store](http://localhost:8787)
 - [admin](http://localhost:8787/adminstore)
 
@@ -65,7 +65,7 @@ make logs-prestashop
 ```
 
 __Preshtashop Admin Access__
- 
+
 - email: demo@prestashop.com
 - password: prestashop_demo
 
@@ -225,7 +225,7 @@ be. My checklist for package development includes:
 
 [link-placetopay]: https://www.placetopay.com
 [link-prestashop]: https://www.prestashop.com
-[link-releases]: https://github.com/freddiegar/prestashop-gateway/releases
+[link-releases]: https://github.com/placetopay/prestashop-gateway/releases
 [link-docker-prestashop]: https://store.docker.com/community/images/prestashop/prestashop/tags
 [link-mailtrap]: https://mailtrap.io/
 [link-psr-1]: https://www.php-fig.org/psr/psr-1/
