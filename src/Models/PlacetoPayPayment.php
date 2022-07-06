@@ -248,7 +248,7 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::COMPANY_NAME, '');
             Configuration::updateValue(self::EMAIL_CONTACT, '');
             Configuration::updateValue(self::TELEPHONE_CONTACT, '');
-            Configuration::updateValue(self::DESCRIPTION, 'Pago en Placetopay No: %s');
+            Configuration::updateValue(self::DESCRIPTION, $this->getDefaultDescription());
 
             Configuration::updateValue(self::EXPIRATION_TIME_MINUTES, self::EXPIRATION_TIME_MINUTES_DEFAULT);
             Configuration::updateValue(self::SHOW_ON_RETURN, self::SHOW_ON_RETURN_PSE_LIST);
@@ -259,7 +259,7 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::SKIP_RESULT, self::OPTION_DISABLED);
             Configuration::updateValue(self::PAYMENT_METHODS_ENABLED, self::PAYMENT_METHODS_ENABLED_DEFAULT);
 
-            Configuration::updateValue(self::COUNTRY, CountryCode::COLOMBIA);
+            Configuration::updateValue(self::COUNTRY, $this->getDefaultCountry());
             Configuration::updateValue(self::ENVIRONMENT, Environment::TEST);
             Configuration::updateValue(self::CUSTOM_CONNECTION_URL, '');
             Configuration::updateValue(self::LOGIN, '');
@@ -1982,7 +1982,7 @@ class PlacetoPayPayment extends PaymentModule
         $country = $this->getCurrentValueOf(self::COUNTRY);
 
         return empty($country)
-            ? CountryCode::COLOMBIA
+            ? $this->getDefaultCountry()
             : $country;
     }
 
@@ -2979,5 +2979,27 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         return new PaymentRedirection($settings);
+    }
+
+    final private function getDefaultDescription(): string
+    {
+        $country = $this->getDefaultCountry();
+
+        if ($country === CountryCode::CHILE) {
+            return 'Pago en Getnet No: %s';
+        }
+
+        return 'Pago en PlacetoPay No: %s';
+    }
+
+    final private function getDefaultCountry(): string
+    {
+        $isoCode = $this->getCurrentValueOf('PS_LOCALE_COUNTRY');
+
+        if (is_string($isoCode)) {
+            return substr($isoCode, 0, 2);
+        }
+
+        return CountryCode::COLOMBIA;
     }
 }
