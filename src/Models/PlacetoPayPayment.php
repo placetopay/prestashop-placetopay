@@ -178,7 +178,7 @@ class PlacetoPayPayment extends PaymentModule
 
         parent::__construct();
 
-        $this->author = $this->ll('Evertec Placetopay S.A.S.');
+        $this->author = $this->ll('Evertec PlacetoPay S.A.S.');
         $this->displayName = $this->ll('Placetopay');
         $this->description = $this->ll('Accept payments by credit cards and debits account.');
 
@@ -598,7 +598,7 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         if (!CurrencyValidator::isValidCurrency($currency->iso_code)) {
-            $message = sprintf('Currency ISO Code [%s] is not supported by Placetopay', $currency->iso_code);
+            $message = sprintf('Currency ISO Code [%s] is not supported by PlacetoPay', $currency->iso_code);
             throw new PaymentException($message, 304);
         }
 
@@ -915,7 +915,7 @@ class PlacetoPayPayment extends PaymentModule
 
         echo 'Begins ' . date('Ymd H:i:s') . '.' . breakLine();
 
-        $sql = "SELECT * 
+        $sql = "SELECT *
             FROM `{$this->tablePayment}`
             WHERE `status` = " . PaymentStatus::PENDING;
 
@@ -1510,6 +1510,7 @@ class PlacetoPayPayment extends PaymentModule
                 'schedule_task' => $this->getScheduleTaskPath(),
                 'log_file' => $this->getLogFilePath(),
                 'log_database' => $this->context->link->getAdminLink('AdminLogs'),
+                'url_logo' => $this->getImage(),
             ]
         );
 
@@ -1643,22 +1644,12 @@ class PlacetoPayPayment extends PaymentModule
         return null;
     }
 
-    protected function getImage(): string
+    final private function getImage(): string
     {
         $url = $this->getImageUrl();
 
         if (empty($url)) {
-            switch ($this->getCountry()) {
-                case CountryCode::CHILE:
-                    $image = 'https://banco.santander.cl/uploads/000/029/870/0620f532-9fc9-4248-b99e-78bae9f13e1d/original/Logo_WebCheckout_Getnet.svg';
-                    break;
-                case CountryCode::COLOMBIA:
-                case CountryCode::ECUADOR:
-                case CountryCode::PUERTO_RICO:
-                case CountryCode::COSTA_RICA:
-                default:
-                    $image = 'https://static.placetopay.com/placetopay-logo.svg';
-            }
+            $image = $this->getImageByCountry($this->getCountry());
         } elseif ($this->checkValidUrl($url)) {
             $image = $url;
         } elseif ($this->checkDirectory($url)) {
@@ -1670,12 +1661,21 @@ class PlacetoPayPayment extends PaymentModule
         return $image;
     }
 
-    protected function checkDirectory(string $path): bool
+    final private function getImageByCountry(string $country): string
+    {
+        if ($country === CountryCode::CHILE) {
+            return 'https://banco.santander.cl/uploads/000/029/870/0620f532-9fc9-4248-b99e-78bae9f13e1d/original/Logo_WebCheckout_Getnet.svg';
+        }
+
+        return 'https://static.placetopay.com/placetopay-logo.svg';
+    }
+
+    final private function checkDirectory(string $path): bool
     {
         return substr($path, 0, 1) === '/';
     }
 
-    protected function checkValidUrl(string $url): bool
+    final private function checkValidUrl(string $url): bool
     {
         return filter_var($url, FILTER_VALIDATE_URL);
     }
@@ -1685,17 +1685,14 @@ class PlacetoPayPayment extends PaymentModule
      *
      * @return string
      */
-    private function displayBrandMessage(): string
+    final private function displayBrandMessage(): string
     {
         $this->context->smarty->assign('url', $this->getImage());
 
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook/brand_payment.tpl'));
     }
 
-    /**
-     * @return array
-     */
-    private function getConfigFieldsValues():array
+    final private function getConfigFieldsValues(): array
     {
         return [
             self::COMPANY_DOCUMENT => $this->getCompanyDocument(),
@@ -1980,10 +1977,7 @@ class PlacetoPayPayment extends PaymentModule
             : $paymentMethods;
     }
 
-    /**
-     * @return string
-     */
-    final private function getCountry()
+    final private function getCountry(): string
     {
         $country = $this->getCurrentValueOf(self::COUNTRY);
 
@@ -2024,18 +2018,12 @@ class PlacetoPayPayment extends PaymentModule
         return $this->getCurrentValueOf(self::LOGIN);
     }
 
-    /**
-     * @return string
-     */
-    final private function getTranKey()
+    final private function getTranKey(): string
     {
         return $this->getCurrentValueOf(self::TRAN_KEY);
     }
 
-    /**
-     * @return string|null
-     */
-    private function getImageUrl(): ?string
+    final private function getImageUrl(): ?string
     {
         return $this->getCurrentValueOf(self::PAYMENT_BUTTON_IMAGE);
     }
@@ -2139,7 +2127,7 @@ class PlacetoPayPayment extends PaymentModule
         return !empty($rows[0]) ? $rows[0] : false;
     }
 
-    public function getIdByCartId($id_cart)
+    final private function getIdByCartId($id_cart)
     {
         $sql = 'SELECT `id_order`
             FROM `' . _DB_PREFIX_ . 'orders`
@@ -2210,11 +2198,11 @@ class PlacetoPayPayment extends PaymentModule
 
         try {
             $result = Db::getInstance()->ExecuteS("
-                SELECT p.* 
+                SELECT p.*
                 FROM `{$this->tablePayment}` p
                     INNER JOIN `{$this->tableOrder}` o ON o.id_cart = p.id_order
-                WHERE o.`id_customer` = {$customerId} 
-                    AND p.`status` = {$status} 
+                WHERE o.`id_customer` = {$customerId}
+                    AND p.`status` = {$status}
                 LIMIT 1
             ");
         } catch (Exception $e) {
@@ -2242,10 +2230,10 @@ class PlacetoPayPayment extends PaymentModule
             $context = Context::getContext();
         }
 
-        $sql = 'SELECT o.`id_order`, o.`id_currency`, o.`payment`, o.`invoice_number`, pp.`date` date_add, 
-                      pp.`reference`, pp.`amount` total_paid, pp.`authcode` cus, 
-                      (SELECT SUM(od.`product_quantity`) 
-                      FROM `' . _DB_PREFIX_ . 'order_detail` od 
+        $sql = 'SELECT o.`id_order`, o.`id_currency`, o.`payment`, o.`invoice_number`, pp.`date` date_add,
+                      pp.`reference`, pp.`amount` total_paid, pp.`authcode` cus,
+                      (SELECT SUM(od.`product_quantity`)
+                      FROM `' . _DB_PREFIX_ . 'order_detail` od
                       WHERE od.`id_order` = o.`id_order`) nb_products
         FROM `' . $this->tableOrder . '` o
             JOIN `' . $this->tablePayment . '` pp ON pp.id_order = o.id_cart
