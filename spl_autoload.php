@@ -3,7 +3,11 @@
 require_once 'helpers.php';
 
 if (versionComparePlaceToPay('1.7.0.0', '<')) {
-    require_once __DIR__ . '/vendor/autoload.php';
+    if (is_file(__DIR__ . '/vendor/autoload.php')) {
+        return require_once __DIR__ . '/vendor/autoload.php';
+    }
+
+    die('You need run: composer install, before to continue');
 } else {
     /**
      * TODO IMPORTANT: This autoload was create because PS 1.7 has a composer GuzzleHttp INCOMPATIBLE.
