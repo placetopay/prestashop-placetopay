@@ -110,8 +110,8 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_ORDER_DETAILS = 'index.php?controller=order-detail';
     const PAGE_HOME = '';
 
-    const MIN_VERSION_PS = '1.6.0.5';
-    const MAX_VERSION_PS = '1.7.8.4';
+    const MIN_VERSION_PS = '1.6.1.0';
+    const MAX_VERSION_PS = '1.7.8.6';
 
     /**
      * @var string
