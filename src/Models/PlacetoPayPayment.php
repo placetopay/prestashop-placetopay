@@ -1085,7 +1085,7 @@ class PlacetoPayPayment extends PaymentModule
                 $authCode = pSQL($payment->authorization());
                 $receipt = pSQL($payment->receipt());
                 $conversion = pSQL($payment->amount()->factor());
-                $installments = pSQL($payment->additionalData()['installments']);
+                $installments = pSQL($payment->additionalData()['installments'] ?? 0);
                 $lastDigits = pSQL(str_replace('*', '', $payment->additionalData()['lastDigits']));
             }
         }
