@@ -881,7 +881,7 @@ class PlacetoPayPayment extends PaymentModule
             if ($result = Db::getInstance()->ExecuteS($sql)) {
                 echo "Found (" . count($result) . ") payments pending." . breakLine(2);
 
-                $paymentRedirection = $this->instanceRedirection(true);
+                $paymentRedirection = $this->instanceRedirection();
 
                 foreach ($result as $row) {
                     $reference = $row['reference'];
@@ -2719,25 +2719,23 @@ class PlacetoPayPayment extends PaymentModule
     final private function getHeaders(): array
     {
         $domain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'];
-        $userAgent = "$this->name/{$this->getPluginVersion()} - $domain";
+        $userAgent = "$this->name/{$this->getPluginVersion()} (origin:$domain; vr:" . _PS_VERSION_ . ')';
 
         return [
             'User-Agent' => $userAgent,
+            'X-Source-Platform' => 'prestashop',
         ];
     }
 
-    final private function instanceRedirection(bool $callback = false): PaymentRedirection
+    final private function instanceRedirection(): PaymentRedirection
     {
         $settings = [
             'login' => $this->getLogin(),
             'tranKey' => $this->getTranKey(),
             'baseUrl' => $this->getUri(),
             'type' => $this->getConnectionType(),
+            'headers' => $this->getHeaders(),
         ];
-
-        if ($callback) {
-            $settings['headers'] = $this->getHeaders();
-        }
 
         return new PaymentRedirection($settings);
     }
