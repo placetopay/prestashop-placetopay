@@ -46,7 +46,7 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_0cbc6611f5540bd0809a3
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_330f49df8243756a8a4dc7f7f7ee6dfe'] = 'Desarrollo';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_90589c47f06eb971d548591f23c285af'] = 'Personalizado';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4850de8e1473d6fdff990513019892a4'] = 'URL de conexión personalizada';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_493dd466db7a5801ac705ec8b7c1f453'] = 'Por ejemplo: \\\"https://other.alternative.url\\\". Es obligatiorio cuando seleccionas en';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_493dd466db7a5801ac705ec8b7c1f453'] = 'Por ejemplo: \"https://other.alternative.url\". Es obligatiorio cuando seleccionas en';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_99dea78007133396a7b8ed70578ac6ae'] = 'Login';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6332f3778e6c3ae54d794cc851ce95c0'] = 'TranKey';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d0afed67605524c7117536fe92ce3da8'] = 'Conectarme usando';

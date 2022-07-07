@@ -473,42 +473,10 @@ class PlacetoPayPayment extends PaymentModule
         return $viewOnReturn;
     }
 
-    protected static function getLocale(string $language = 'co'): string
-    {
-        switch ($language) {
-            case CountryCode::COLOMBIA:
-                $locale = 'es_CO';
-                break;
-            case CountryCode::CHILE:
-                $locale = 'es_CL';
-                break;
-            case CountryCode::COSTA_RICA:
-                $locale = 'es_CR';
-                break;
-            case CountryCode::ECUADOR:
-                $locale = 'es_EC';
-                break;
-            case CountryCode::PUERTO_RICO:
-                $locale = 'es_PR';
-                break;
-            case CountryCode::PANAMA:
-                $locale = 'es_PA';
-                break;
-            case 'en':
-            default:
-                $locale = 'en_US';
-        }
-
-        return $locale;
-    }
-
     /**
-     * Redirect to Gateway
-     *
-     * @param Cart $cart
      * @throws PaymentException
      */
-    public function redirect(Cart $cart)
+    public function redirect(Cart $cart): void
     {
         if (empty($cart->id)) {
             $message = 'Cart cannot be loaded or an order has already been placed using this cart';
@@ -598,7 +566,7 @@ class PlacetoPayPayment extends PaymentModule
 
             // Request payment
             $request = [
-                'locale' => self::getLocale($language),
+                'locale' => $this->getLocale($language),
                 'returnUrl' => $returnUrl,
                 'noBuyerFill' => !(bool)$this->getFillBuyerInformation(),
                 'skipResult' => (bool)$this->getSkipResult(),
@@ -703,13 +671,10 @@ class PlacetoPayPayment extends PaymentModule
     }
 
     /**
-     * Process response from Gateway
-     *
-     * @param null $_reference
      * @throws PaymentException
      * @throws \Dnetix\Redirection\Exceptions\PlacetoPayException
      */
-    public function process($_reference = null)
+    public function process(?string $_reference = null): void
     {
         $paymentPlaceToPay = [];
 
@@ -930,6 +895,27 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         echo 'Finished ' . date('Ymd H:i:s') . '.' . breakLine();
+    }
+
+    final private function getLocale(string $language): string
+    {
+        $locale = 'en_US';
+
+        switch ($language) {
+            case CountryCode::BELIZE:
+            case CountryCode::CHILE:
+            case CountryCode::COLOMBIA:
+            case CountryCode::COSTA_RICA:
+            case CountryCode::ECUADOR:
+            case CountryCode::HONDURAS:
+            case CountryCode::PANAMA:
+            case CountryCode::PUERTO_RICO:
+                $locale = 'es_' . strtoupper($language);
+
+                break;
+        }
+
+        return $locale;
     }
 
     /**

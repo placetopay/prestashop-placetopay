@@ -23,21 +23,24 @@ abstract class PaymentUrl
                 ];
 
                 break;
-            case CountryCode::PUERTO_RICO:
-            case CountryCode::PANAMA:
-            case CountryCode::MEXICO:
-            case CountryCode::PERU:
-            case CountryCode::COLOMBIA:
-            case CountryCode::COSTA_RICA:
-            default:
+            case CountryCode::HONDURAS:
                 $endpoints = [
-                    Environment::PRODUCTION => 'https://checkout.placetopay.com',
-                    Environment::TEST => 'https://checkout-test.placetopay.com',
-                    Environment::DEVELOPMENT => 'https://checkout-co.placetopay.dev',
+                    Environment::PRODUCTION => 'https://pagoenlinea.bancatlan.hn',
                 ];
+
+                break;
+            case CountryCode::BELIZE:
+                $endpoints = [
+                    Environment::PRODUCTION => 'https://abgateway.atlabank.com',
+                ];
+
                 break;
         }
 
-        return $endpoints;
+        return array_merge([
+            Environment::PRODUCTION => 'https://checkout.placetopay.com',
+            Environment::TEST => 'https://checkout-test.placetopay.com',
+            Environment::DEVELOPMENT => 'https://checkout-co.placetopay.dev',
+        ], $endpoints);
     }
 }

@@ -7,6 +7,8 @@ namespace PlacetoPay\Constants;
  */
 interface CountryCode
 {
+    public const BELIZE = 'bz';
+
     public const CHILE = 'cl';
 
     public const COLOMBIA = 'co';
@@ -15,11 +17,9 @@ interface CountryCode
 
     public const ECUADOR = 'ec';
 
+    public const HONDURAS = 'hn';
+
     public const PANAMA = 'pa';
 
     public const PUERTO_RICO = 'pr';
-
-    public const HONDURAS = 'hn';
-
-    public const BELIZE = 'bz';
 }
