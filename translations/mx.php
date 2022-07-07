@@ -34,9 +34,12 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_78e59f1b3612db0fbf1be
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_59716c97497eb9694541f7c3d37b1a4d'] = 'Estoy en';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_ef3388cc5659bccb742fb8af762f1bfd'] = 'Colombia';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4d5d85af33ec2aaedb674d2d6a7d53b6'] = 'Ecuador';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_84c8fa2341f7d052a1ee3a36ff043798'] = 'Peru';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_8dbb07a18d46f63d8b3c8994d5ccc351'] = 'Mexico';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_2e6507f70a9cc26fb50f5fd82a83c7ef'] = 'Chile';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_5882b568d8a010ef48a6896f53b6eddb'] = 'Costa Rica';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6bec347f256837d3539ad619bd489de7'] = 'Panamá';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_f76257271129c703d6c0442c8ac00dae'] = 'Puerto Rico';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_f4270ce39e7e926052e097a0e4e63bde'] = 'Honduras';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_20bca6785240fa722edb5c85d055a93d'] = 'Belice';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_0ba29c6a1afacf586b03a26162c72274'] = 'En modo';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_756d97bb256b8580d4d71ee0c547804e'] = 'Producción';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_0cbc6611f5540bd0809a388dc95a615b'] = 'Pruebas';

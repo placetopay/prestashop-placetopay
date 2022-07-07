@@ -30,9 +30,12 @@
 {l s='Country' mod='placetopaypayment'}
 {l s='Colombia' mod='placetopaypayment'}
 {l s='Ecuador' mod='placetopaypayment'}
-{l s='Peru' mod='placetopaypayment'}
-{l s='Mexico' mod='placetopaypayment'}
+{l s='Chile' mod='placetopaypayment'}
 {l s='Costa Rica' mod='placetopaypayment'}
+{l s='Panama' mod='placetopaypayment'}
+{l s='Puerto Rico' mod='placetopaypayment'}
+{l s='Honduras' mod='placetopaypayment'}
+{l s='Belize' mod='placetopaypayment'}
 {l s='Environment' mod='placetopaypayment'}
 {l s='Production' mod='placetopaypayment'}
 {l s='Test' mod='placetopaypayment'}
