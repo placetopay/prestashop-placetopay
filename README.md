@@ -97,7 +97,7 @@ cd /var/www/html/modules/placetopaypayment \
 | 601  | Update status payment PlacetoPay fail          |
 | 801  | Get order by id failed                         |
 | 901  | Get last pending transaction failed            |
-| 999  | Un-know error                                  |
+| 999  | Un-know error, details in: Database Logs       |
 
 ## Installation in Development
 

@@ -148,7 +148,7 @@ class PlacetoPayPayment extends PaymentModule
         parent::__construct();
 
         $this->author = $this->ll('Evertec PlacetoPay S.A.S.');
-        $this->displayName = $this->ll('Placetopay');
+        $this->displayName = unmaskString($this->ll('Placetopay'));
         $this->description = $this->ll('Accept payments by credit cards and debits account.');
 
         $this->confirmUninstall = $this->ll('Are you sure you want to uninstall?');
@@ -422,8 +422,8 @@ class PlacetoPayPayment extends PaymentModule
         $form = $this->generateForm($action, $content);
 
         $newOption = new PaymentOption();
-        // TODO: It's here! Chenge the payment button name!
-        $newOption->setCallToActionText($this->ll('Pay by Placetopay'))
+
+        $newOption->setCallToActionText(unmaskString($this->ll('Pay by Placetopay')))
             ->setAdditionalInformation('')
             ->setForm($form);
 
@@ -1561,7 +1561,7 @@ class PlacetoPayPayment extends PaymentModule
 
             $this->context->smarty->assign([
                 'icon' => $this->getImage(),
-                'title' => $this->ll('Placetopay'),
+                'title' => unmaskString($this->ll('Placetopay')),
                 'details' => $details,
             ]);
 
@@ -1591,7 +1591,7 @@ class PlacetoPayPayment extends PaymentModule
     final private function getImageByCountry(string $country): string
     {
         if ($country === CountryCode::CHILE) {
-            return 'https://banco.santander.cl/uploads/000/029/870/0620f532-9fc9-4248-b99e-78bae9f13e1d/original/Logo_WebCheckout_Getnet.svg';
+            return unmaskString('uggcf://onapb.fnagnaqre.py/hcybnqf/000/029/870/0620s532-9sp9-4248-o99r-78onr9s13r1q/bevtvany/Ybtb_JroPurpxbhg_Trgarg.fit');
         }
 
         return 'https://static.placetopay.com/placetopay-logo.svg';
@@ -2747,7 +2747,7 @@ class PlacetoPayPayment extends PaymentModule
         $country = $this->getDefaultCountry();
 
         if ($country === CountryCode::CHILE) {
-            return 'Pago en Getnet No: %s';
+            return unmaskString('Cntb ra Trgarg Ab: %f');
         }
 
         return 'Pago en PlacetoPay No: %s';
