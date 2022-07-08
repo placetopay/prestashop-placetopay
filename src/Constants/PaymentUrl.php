@@ -41,6 +41,6 @@ abstract class PaymentUrl
             Environment::PRODUCTION => 'https://checkout.placetopay.com',
             Environment::TEST => 'https://checkout-test.placetopay.com',
             Environment::DEVELOPMENT => 'https://checkout-co.placetopay.dev',
-        ], $endpoints);
+        ], $endpoints ?? []);
     }
 }

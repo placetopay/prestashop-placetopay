@@ -305,7 +305,7 @@ class PlacetoPayPayment extends PaymentModule
     {
         if (isDebugEnable()) {
             PaymentLogger::log(
-                'Trigger ' . __METHOD__ . ' en PS vr. ' . _PS_VERSION_,
+                'Trigger ' . __METHOD__ . ' in PS vr. ' . _PS_VERSION_,
                 PaymentLogger::DEBUG,
                 0,
                 __FILE__,
@@ -374,7 +374,7 @@ class PlacetoPayPayment extends PaymentModule
     {
         if (isDebugEnable()) {
             PaymentLogger::log(
-                'Trigger ' . __METHOD__ . ' en PS vr. ' . _PS_VERSION_,
+                'Trigger ' . __METHOD__ . ' in PS vr. ' . _PS_VERSION_,
                 PaymentLogger::DEBUG,
                 0,
                 __FILE__,
@@ -441,7 +441,7 @@ class PlacetoPayPayment extends PaymentModule
     {
         if (isDebugEnable()) {
             PaymentLogger::log(
-                'Trigger ' . __METHOD__ . ' en PS vr. ' . _PS_VERSION_,
+                'Trigger ' . __METHOD__ . ' in PS vr. ' . _PS_VERSION_,
                 PaymentLogger::DEBUG,
                 0,
                 __FILE__,
