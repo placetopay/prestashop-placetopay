@@ -147,8 +147,16 @@ compile:
         && sudo rm -Rf ~/Downloads/placetopaypayment/.env* \
         && sudo rm -Rf ~/Downloads/placetopaypayment/docker* \
         && sudo rm -Rf ~/Downloads/placetopaypayment/composer.* \
+        && sudo rm -Rf ~/Downloads/placetopaypayment/.php_cs.cache \
         && sudo rm -Rf ~/Downloads/placetopaypayment/*.md \
-        && sudo rm -Rf ~/Downloads/placetopaypayment/LICENSE \
+        && sudo rm -Rf ~/Downloads/placetopaypayment/vendor/bin \
+        && sudo rm -Rf ~/Downloads/placetopaypayment/vendor/dnetix/redirection/tests \
+        && sudo rm -Rf ~/Downloads/placetopaypayment/vendor/dnetix/redirection/examples \
+        && sudo rm -Rf ~/Downloads/placetopaypayment/vendor/guzzlehttp/ringphp/docs \
+        && sudo rm -Rf ~/Downloads/placetopaypayment/vendor/guzzlehttp/ringphp/tests \
+        && sudo rm -Rf ~/Downloads/placetopaypayment/vendor/guzzlehttp/guzzle/docs \
+        && sudo rm -Rf ~/Downloads/placetopaypayment/vendor/guzzlehttp/guzzle/tests \
+        && sudo rm -Rf ~/Downloads/placetopaypayment/vendor/guzzlehttp/streams/tests \
         && cd ~/Downloads \
         && sudo zip -r -q -o $(MODULE_NAME_VR).zip placetopaypayment \
         && sudo chown $(UID):$(UID) $(MODULE_NAME_VR).zip \
