@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.7.0 (2022-07-07)](https://github.com/placetopay/prestashop-placetopay/compare/3.6.5...3.7.0)
+
 ### Added
 - Add new countries in Settings: HN and BZ
 - Add header for platform source
