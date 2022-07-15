@@ -6,10 +6,6 @@ use Exception;
 use \FileLogger;
 use \PrestaShopLogger;
 
-/**
- * Class PaymentLogger
- * @package PlacetoPay\Loggers
- */
 class PaymentLogger
 {
     const DEBUG = 0;
@@ -18,21 +14,8 @@ class PaymentLogger
     const ERROR = 3;
     const NOTIFY = 99;
 
-    /**
-     * @param string $message
-     * @param int $severity
-     * @param null $errorCode
-     * @param null $file
-     * @param null $line
-     * @return bool
-     */
-    public static function log(
-        $message = '',
-        $severity = self::INFO,
-        $errorCode = null,
-        $file = null,
-        $line = null
-    ) {
+    public static function log(string $message, int $severity, int $errorCode, string $file, string $line): bool
+    {
         $format = sprintf("[%s:%d] => [%d]\n %s", $file, $line, $errorCode, $message);
 
         if (self::getLogInstance()) {
@@ -50,13 +33,7 @@ class PaymentLogger
         return true;
     }
 
-    /**
-     * @param $message
-     * @param int $severity
-     * @param null $errorCode
-     * @return bool
-     */
-    public static function logInDatabase($message, $severity = self::INFO, $errorCode = null)
+    public static function logInDatabase(string $message, int $severity = self::INFO, int $errorCode = null): bool
     {
         try {
             $errorCode = $errorCode > 0 ? $errorCode : 999;
@@ -69,10 +46,7 @@ class PaymentLogger
         return true;
     }
 
-    /**
-     * @return string
-     */
-    public static function getLogFilename()
+    public static function getLogFilename(): string
     {
         static $logfile = null;
 
@@ -104,6 +78,10 @@ class PaymentLogger
         if (is_null($logger)) {
             $logger = false;
             $logfile = self::getLogFilename();
+
+            if (!is_file($logfile) && is_writable(dirname($logfile))) {
+                file_put_contents($logfile, '');
+            }
 
             if (is_writable($logfile)) {
                 $logger = new FileLogger(0);

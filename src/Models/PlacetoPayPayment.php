@@ -1,31 +1,4 @@
 <?php
-/**
- * MIT License
- *
- * Copyright (c) 2018 Freddie Gar
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all
- * copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
- *
- * @author Freddie Gar <freddie.gar@outlook.com>
- * @copyright 2018
- * @license https://github.com/freddiegar/prestashop-gateway/blob/master/LICENSE
- */
 
 namespace PlacetoPay\Models;
 
@@ -86,12 +59,11 @@ use Validate;
  * @property array limited_countries
  * @property string tab
  * @property string author
+ *
+ * @see https://devdocs.prestashop.com/1.7/modules/creation/tutorial/
  */
 class PlacetoPayPayment extends PaymentModule
 {
-    /**
-     * Configuration module vars
-     */
     const COMPANY_DOCUMENT = 'PLACETOPAY_COMPANYDOCUMENT';
     const COMPANY_NAME = 'PLACETOPAY_COMPANYNAME';
     const EMAIL_CONTACT = 'PLACETOPAY_EMAILCONTACT';
@@ -138,8 +110,8 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_ORDER_DETAILS = 'index.php?controller=order-detail';
     const PAGE_HOME = '';
 
-    const MIN_VERSION_PS = '1.6.0.5';
-    const MAX_VERSION_PS = '1.7.8.4';
+    const MIN_VERSION_PS = '1.6.1.0';
+    const MAX_VERSION_PS = '1.7.8.6';
 
     /**
      * @var string
@@ -151,13 +123,10 @@ class PlacetoPayPayment extends PaymentModule
      */
     private $tableOrder = _DB_PREFIX_ . 'orders';
 
-    /**
-     * PlacetoPayPayment constructor.
-     */
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.6.4';
+        $this->version = '3.7.0';
 
         $this->tab = 'payments_gateways';
 
@@ -178,8 +147,8 @@ class PlacetoPayPayment extends PaymentModule
 
         parent::__construct();
 
-        $this->author = $this->ll('Evertec Placetopay S.A.S.');
-        $this->displayName = $this->ll('Placetopay');
+        $this->author = $this->ll('Evertec PlacetoPay S.A.S.');
+        $this->displayName = unmaskString($this->ll('Placetopay'));
         $this->description = $this->ll('Accept payments by credit cards and debits account.');
 
         $this->confirmUninstall = $this->ll('Are you sure you want to uninstall?');
@@ -205,11 +174,6 @@ class PlacetoPayPayment extends PaymentModule
         @date_default_timezone_set(Configuration::get('PS_TIMEZONE'));
     }
 
-    /**
-     * Create payments table and status order
-     *
-     * @return bool
-     */
     public function install()
     {
         $error = '';
@@ -243,12 +207,12 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         if (empty($error)) {
-            // Default values
+            // Set default values
             Configuration::updateValue(self::COMPANY_DOCUMENT, '');
             Configuration::updateValue(self::COMPANY_NAME, '');
             Configuration::updateValue(self::EMAIL_CONTACT, '');
             Configuration::updateValue(self::TELEPHONE_CONTACT, '');
-            Configuration::updateValue(self::DESCRIPTION, 'Pago en Placetopay No: %s');
+            Configuration::updateValue(self::DESCRIPTION, $this->getDefaultDescription());
 
             Configuration::updateValue(self::EXPIRATION_TIME_MINUTES, self::EXPIRATION_TIME_MINUTES_DEFAULT);
             Configuration::updateValue(self::SHOW_ON_RETURN, self::SHOW_ON_RETURN_PSE_LIST);
@@ -259,7 +223,7 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::SKIP_RESULT, self::OPTION_DISABLED);
             Configuration::updateValue(self::PAYMENT_METHODS_ENABLED, self::PAYMENT_METHODS_ENABLED_DEFAULT);
 
-            Configuration::updateValue(self::COUNTRY, CountryCode::COLOMBIA);
+            Configuration::updateValue(self::COUNTRY, $this->getDefaultCountry());
             Configuration::updateValue(self::ENVIRONMENT, Environment::TEST);
             Configuration::updateValue(self::CUSTOM_CONNECTION_URL, '');
             Configuration::updateValue(self::LOGIN, '');
@@ -268,19 +232,13 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::PAYMENT_BUTTON_IMAGE, '');
 
             return true;
-        } else {
-            PaymentLogger::log($error, PaymentLogger::ERROR, 100, __FILE__, __LINE__);
-
-            return false;
         }
+
+        PaymentLogger::log($error, PaymentLogger::ERROR, 100, __FILE__, __LINE__);
+
+        return false;
     }
 
-    /**
-     * Delete configuration vars
-     * This not delete tables and status order
-     *
-     * @return bool
-     */
     public function uninstall()
     {
         if (!Configuration::deleteByName(self::COMPANY_DOCUMENT)
@@ -347,7 +305,7 @@ class PlacetoPayPayment extends PaymentModule
     {
         if (isDebugEnable()) {
             PaymentLogger::log(
-                'Trigger ' . __METHOD__ . ' en PS vr. ' . _PS_VERSION_,
+                'Trigger ' . __METHOD__ . ' in PS vr. ' . _PS_VERSION_,
                 PaymentLogger::DEBUG,
                 0,
                 __FILE__,
@@ -407,7 +365,7 @@ class PlacetoPayPayment extends PaymentModule
     }
 
     /**
-     * PrestaShop 1.7 or later
+     * PrestaShop 1.7
      * @param $params
      * @return array
      * @throws PaymentException
@@ -416,7 +374,7 @@ class PlacetoPayPayment extends PaymentModule
     {
         if (isDebugEnable()) {
             PaymentLogger::log(
-                'Trigger ' . __METHOD__ . ' en PS vr. ' . _PS_VERSION_,
+                'Trigger ' . __METHOD__ . ' in PS vr. ' . _PS_VERSION_,
                 PaymentLogger::DEBUG,
                 0,
                 __FILE__,
@@ -464,8 +422,8 @@ class PlacetoPayPayment extends PaymentModule
         $form = $this->generateForm($action, $content);
 
         $newOption = new PaymentOption();
-        // TODO: It's here! Chenge the payment button name!
-        $newOption->setCallToActionText($this->ll('Pay by Placetopay'))
+
+        $newOption->setCallToActionText(unmaskString($this->ll('Pay by Placetopay')))
             ->setAdditionalInformation('')
             ->setForm($form);
 
@@ -483,7 +441,7 @@ class PlacetoPayPayment extends PaymentModule
     {
         if (isDebugEnable()) {
             PaymentLogger::log(
-                'Trigger ' . __METHOD__ . ' en PS vr. ' . _PS_VERSION_,
+                'Trigger ' . __METHOD__ . ' in PS vr. ' . _PS_VERSION_,
                 PaymentLogger::DEBUG,
                 0,
                 __FILE__,
@@ -515,42 +473,10 @@ class PlacetoPayPayment extends PaymentModule
         return $viewOnReturn;
     }
 
-    protected static function getLocale(string $language = 'co'): string
-    {
-        switch ($language) {
-            case CountryCode::COLOMBIA:
-                $locale = 'es_CO';
-                break;
-            case CountryCode::CHILE:
-                $locale = 'es_CL';
-                break;
-            case CountryCode::COSTA_RICA:
-                $locale = 'es_CR';
-                break;
-            case CountryCode::ECUADOR:
-                $locale = 'es_EC';
-                break;
-            case CountryCode::PUERTO_RICO:
-                $locale = 'es_PR';
-                break;
-            case CountryCode::PANAMA:
-                $locale = 'es_PA';
-                break;
-            case 'en':
-            default:
-                $locale = 'en_US';
-        }
-
-        return $locale;
-    }
-
     /**
-     * Redirect to PlacetoPay Platform
-     *
-     * @param Cart $cart
      * @throws PaymentException
      */
-    public function redirect(Cart $cart)
+    public function redirect(Cart $cart): void
     {
         if (empty($cart->id)) {
             $message = 'Cart cannot be loaded or an order has already been placed using this cart';
@@ -598,7 +524,7 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         if (!CurrencyValidator::isValidCurrency($currency->iso_code)) {
-            $message = sprintf('Currency ISO Code [%s] is not supported by Placetopay', $currency->iso_code);
+            $message = sprintf('Currency ISO Code [%s] is not supported by PlacetoPay', $currency->iso_code);
             throw new PaymentException($message, 304);
         }
 
@@ -640,7 +566,7 @@ class PlacetoPayPayment extends PaymentModule
 
             // Request payment
             $request = [
-                'locale' => self::getLocale($language),
+                'locale' => $this->getLocale($language),
                 'returnUrl' => $returnUrl,
                 'noBuyerFill' => !(bool)$this->getFillBuyerInformation(),
                 'skipResult' => (bool)$this->getSkipResult(),
@@ -717,7 +643,6 @@ class PlacetoPayPayment extends PaymentModule
                 PaymentLogger::log($orderMessage, PaymentLogger::WARNING, 0, __FILE__, __LINE__);
             }
 
-
             // Register payment request
             $this->insertPaymentPlaceToPay(
                 $requestId,
@@ -746,13 +671,10 @@ class PlacetoPayPayment extends PaymentModule
     }
 
     /**
-     * Process response from PlacetoPay Platform
-     *
-     * @param null $_reference
      * @throws PaymentException
      * @throws \Dnetix\Redirection\Exceptions\PlacetoPayException
      */
-    public function process($_reference = null)
+    public function process(?string $_reference = null): void
     {
         $paymentPlaceToPay = [];
 
@@ -854,7 +776,7 @@ class PlacetoPayPayment extends PaymentModule
                 PaymentLogger::log($message, PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
             }
 
-            // Set status order in CMS
+            // Set status order in PrestaShop
             $this->settleTransaction($paymentId, $newStatus, $order, $paymentRedirection);
 
             if (!empty($input)) {
@@ -892,10 +814,7 @@ class PlacetoPayPayment extends PaymentModule
         }
     }
 
-    /**
-     * Update status order in background
-     */
-    public function resolvePendingPayments()
+    public function resolvePendingPayments(): void
     {
         if ($this->isEnableShowSetup()) {
             echo $this->getSetup();
@@ -915,7 +834,7 @@ class PlacetoPayPayment extends PaymentModule
 
         echo 'Begins ' . date('Ymd H:i:s') . '.' . breakLine();
 
-        $sql = "SELECT * 
+        $sql = "SELECT *
             FROM `{$this->tablePayment}`
             WHERE `status` = " . PaymentStatus::PENDING;
 
@@ -927,7 +846,7 @@ class PlacetoPayPayment extends PaymentModule
             if ($result = Db::getInstance()->ExecuteS($sql)) {
                 echo "Found (" . count($result) . ") payments pending." . breakLine(2);
 
-                $paymentRedirection = $this->instanceRedirection(true);
+                $paymentRedirection = $this->instanceRedirection();
 
                 foreach ($result as $row) {
                     $reference = $row['reference'];
@@ -976,6 +895,27 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         echo 'Finished ' . date('Ymd H:i:s') . '.' . breakLine();
+    }
+
+    final private function getLocale(string $language): string
+    {
+        $locale = 'en_US';
+
+        switch ($language) {
+            case CountryCode::BELIZE:
+            case CountryCode::CHILE:
+            case CountryCode::COLOMBIA:
+            case CountryCode::COSTA_RICA:
+            case CountryCode::ECUADOR:
+            case CountryCode::HONDURAS:
+            case CountryCode::PANAMA:
+            case CountryCode::PUERTO_RICO:
+                $locale = 'es_' . strtoupper($language);
+
+                break;
+        }
+
+        return $locale;
     }
 
     /**
@@ -1049,13 +989,9 @@ class PlacetoPayPayment extends PaymentModule
     }
 
     /**
-     * @param $paymentId
-     * @param $status
-     * @param Order $order
-     * @param RedirectInformation $response
      * @throws PaymentException
      */
-    final private function settleTransaction($paymentId, $status, Order $order, RedirectInformation $response)
+    final private function settleTransaction(int $paymentId, string $status, Order $order, RedirectInformation $response)
     {
         // Order not has been processed
         if ($order->getCurrentState() != (int)Configuration::get('PS_OS_PAYMENT')) {
@@ -1102,13 +1038,9 @@ class PlacetoPayPayment extends PaymentModule
     }
 
     /**
-     * @param $paymentId
-     * @param $status
-     * @param $response
-     * @return bool
      * @throws PaymentException
      */
-    final private function updateTransaction($paymentId, $status, RedirectInformation $response)
+    final private function updateTransaction(int $paymentId, string $status, RedirectInformation $response): bool
     {
         $date = pSQL($response->status()->date());
         $reason = pSQL($response->status()->reason());
@@ -1139,7 +1071,7 @@ class PlacetoPayPayment extends PaymentModule
                 $authCode = pSQL($payment->authorization());
                 $receipt = pSQL($payment->receipt());
                 $conversion = pSQL($payment->amount()->factor());
-                $installments = pSQL($payment->additionalData()['installments']);
+                $installments = pSQL($payment->additionalData()['installments'] ?? 0);
                 $lastDigits = pSQL(str_replace('*', '', $payment->additionalData()['lastDigits']));
             }
         }
@@ -1177,9 +1109,6 @@ class PlacetoPayPayment extends PaymentModule
         return true;
     }
 
-    /**
-     * Update order with error
-     */
     final private function updateCurrentOrderWithError()
     {
         $history = new OrderHistory();
@@ -1188,12 +1117,7 @@ class PlacetoPayPayment extends PaymentModule
         $history->save();
     }
 
-    /**
-     * Create status order to Place To Pay
-     *
-     * @return bool
-     */
-    final private function createOrderState()
+    final private function createOrderState(): bool
     {
         if (!$this->getOrderState()) {
             $orderState = new OrderState();
@@ -1239,12 +1163,7 @@ class PlacetoPayPayment extends PaymentModule
         return true;
     }
 
-    /**
-     * Create payment table
-     *
-     * @return bool
-     */
-    final private function createPaymentTable()
+    final private function createPaymentTable(): bool
     {
         $sql = "CREATE TABLE IF NOT EXISTS `{$this->tablePayment}` (
                 `id_payment` INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -1269,6 +1188,7 @@ class PlacetoPayPayment extends PaymentModule
             Db::getInstance()->Execute($sql);
         } catch (Exception $e) {
             PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 1, $e->getFile(), $e->getLine());
+
             return false;
         }
 
@@ -1278,7 +1198,7 @@ class PlacetoPayPayment extends PaymentModule
     /**
      * @return bool
      */
-    final private function addColumnEmail()
+    final private function addColumnEmail(): bool
     {
         $sql = "ALTER TABLE `{$this->tablePayment}` ADD `payer_email` VARCHAR(80) NULL;";
 
@@ -1289,16 +1209,14 @@ class PlacetoPayPayment extends PaymentModule
             PaymentLogger::log($e->getMessage(), PaymentLogger::INFO, 0, $e->getFile(), $e->getLine());
         } catch (Exception $e) {
             PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 2, $e->getFile(), $e->getLine());
+
             return false;
         }
 
         return true;
     }
 
-    /**
-     * @return bool
-     */
-    final private function addColumnRequestId()
+    final private function addColumnRequestId(): bool
     {
         $sql = "ALTER TABLE `{$this->tablePayment}` ADD `id_request` INT NULL;";
 
@@ -1309,16 +1227,14 @@ class PlacetoPayPayment extends PaymentModule
             PaymentLogger::log($e->getMessage(), PaymentLogger::INFO, 0, $e->getFile(), $e->getLine());
         } catch (Exception $e) {
             PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 3, $e->getFile(), $e->getLine());
+
             return false;
         }
 
         return true;
     }
 
-    /**
-     * @return bool
-     */
-    final private function addColumnReference()
+    final private function addColumnReference(): bool
     {
         $sql = "ALTER TABLE `{$this->tablePayment}` ADD `reference` VARCHAR(60) NULL;";
 
@@ -1329,16 +1245,14 @@ class PlacetoPayPayment extends PaymentModule
             PaymentLogger::log($e->getMessage(), PaymentLogger::INFO, 0, $e->getFile(), $e->getLine());
         } catch (Exception $e) {
             PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 4, $e->getFile(), $e->getLine());
+
             return false;
         }
 
         return true;
     }
 
-    /**
-     * @return bool
-     */
-    final private function alterColumnIpAddress()
+    final private function alterColumnIpAddress(): bool
     {
         // In all version < 2.0 this columns is bad name ipaddress => ip_address
         $sql = "ALTER TABLE `{$this->tablePayment}` CHANGE COLUMN `ipaddress` `ip_address` VARCHAR(30) NULL;";
@@ -1350,16 +1264,14 @@ class PlacetoPayPayment extends PaymentModule
             PaymentLogger::log($e->getMessage(), PaymentLogger::INFO, 0, $e->getFile(), $e->getLine());
         } catch (Exception $e) {
             PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 5, $e->getFile(), $e->getLine());
+
             return false;
         }
 
         return true;
     }
 
-    /**
-     * @return bool
-     */
-    final private function addInstallmentLastDigitsColumns()
+    final private function addInstallmentLastDigitsColumns(): bool
     {
         $sql = "ALTER TABLE `{$this->tablePayment}` ADD `installments` VARCHAR(10) NULL, ADD `card_last_digits` VARCHAR(4) NULL;";
 
@@ -1369,6 +1281,7 @@ class PlacetoPayPayment extends PaymentModule
             PaymentLogger::log($e->getMessage(), PaymentLogger::INFO, 0, $e->getFile(), $e->getLine());
         } catch (Exception $e) {
             PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 4, $e->getFile(), $e->getLine());
+
             return false;
         }
 
@@ -1510,6 +1423,7 @@ class PlacetoPayPayment extends PaymentModule
                 'schedule_task' => $this->getScheduleTaskPath(),
                 'log_file' => $this->getLogFilePath(),
                 'log_database' => $this->context->link->getAdminLink('AdminLogs'),
+                'url_logo' => $this->getImage(),
             ]
         );
 
@@ -1633,7 +1547,7 @@ class PlacetoPayPayment extends PaymentModule
 
             $this->context->smarty->assign([
                 'icon' => $this->getImage(),
-                'title' => $this->ll('Placetopay'),
+                'title' => unmaskString($this->ll('Placetopay')),
                 'details' => $details,
             ]);
 
@@ -1643,22 +1557,12 @@ class PlacetoPayPayment extends PaymentModule
         return null;
     }
 
-    protected function getImage(): string
+    final private function getImage(): string
     {
         $url = $this->getImageUrl();
 
         if (empty($url)) {
-            switch ($this->getCountry()) {
-                case CountryCode::CHILE:
-                    $image = 'https://banco.santander.cl/uploads/000/029/870/0620f532-9fc9-4248-b99e-78bae9f13e1d/original/Logo_WebCheckout_Getnet.svg';
-                    break;
-                case CountryCode::COLOMBIA:
-                case CountryCode::ECUADOR:
-                case CountryCode::PUERTO_RICO:
-                case CountryCode::COSTA_RICA:
-                default:
-                    $image = 'https://static.placetopay.com/placetopay-logo.svg';
-            }
+            $image = $this->getImageByCountry($this->getCountry());
         } elseif ($this->checkValidUrl($url)) {
             $image = $url;
         } elseif ($this->checkDirectory($url)) {
@@ -1670,12 +1574,21 @@ class PlacetoPayPayment extends PaymentModule
         return $image;
     }
 
-    protected function checkDirectory(string $path): bool
+    final private function getImageByCountry(string $country): string
+    {
+        if ($country === CountryCode::CHILE) {
+            return unmaskString('uggcf://onapb.fnagnaqre.py/hcybnqf/000/029/870/0620s532-9sp9-4248-o99r-78onr9s13r1q/bevtvany/Ybtb_JroPurpxbhg_Trgarg.fit');
+        }
+
+        return 'https://static.placetopay.com/placetopay-logo.svg';
+    }
+
+    final private function checkDirectory(string $path): bool
     {
         return substr($path, 0, 1) === '/';
     }
 
-    protected function checkValidUrl(string $url): bool
+    final private function checkValidUrl(string $url): bool
     {
         return filter_var($url, FILTER_VALIDATE_URL);
     }
@@ -1685,17 +1598,14 @@ class PlacetoPayPayment extends PaymentModule
      *
      * @return string
      */
-    private function displayBrandMessage(): string
+    final private function displayBrandMessage(): string
     {
         $this->context->smarty->assign('url', $this->getImage());
 
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook/brand_payment.tpl'));
     }
 
-    /**
-     * @return array
-     */
-    private function getConfigFieldsValues():array
+    final private function getConfigFieldsValues(): array
     {
         return [
             self::COMPANY_DOCUMENT => $this->getCompanyDocument(),
@@ -1725,10 +1635,7 @@ class PlacetoPayPayment extends PaymentModule
         ];
     }
 
-    /**
-     * @return string
-     */
-    final private function renderForm()
+    final private function renderForm(): string
     {
         $formCompany = [
             'form' => [
@@ -1774,12 +1681,7 @@ class PlacetoPayPayment extends PaymentModule
         return $helper->generateForm([$formCompany, $formConfiguration, $formConnection]);
     }
 
-    /**
-     * @param $action
-     * @param $content
-     * @return string
-     */
-    final private function generateForm($action, $content)
+    final private function generateForm(?string $action, string $content)
     {
         $action = is_null($action)
             ? "onsubmit='return false;'"
@@ -1790,26 +1692,17 @@ class PlacetoPayPayment extends PaymentModule
         return "<form accept-charset='UTF-8' {$action} id='payment-form'>{$content}</form>";
     }
 
-    /**
-     * @return string
-     */
-    final private function getPluginVersion()
+    final private function getPluginVersion(): string
     {
         return $this->version;
     }
 
-    /**
-     * @return bool
-     */
-    final private function isCompliancy()
+    final private function isCompliancy(): bool
     {
         return versionComparePlaceToPay(self::MAX_VERSION_PS, '<=');
     }
 
-    /**
-     * @return string
-     */
-    final private function getCompliancyMessage()
+    final private function getCompliancyMessage(): string
     {
         return sprintf(
             $this->ll('This plugin don\'t has been tested with your PrestaShop version [%s].'),
@@ -1818,64 +1711,43 @@ class PlacetoPayPayment extends PaymentModule
     }
 
     /**
-     * @param string $name
      * @return mixed|string
      */
-    final private function getCurrentValueOf($name)
+    final private function getCurrentValueOf(string $name)
     {
         return Tools::getValue($name)
             ? Tools::getValue($name)
             : Configuration::get($name);
     }
 
-    /**
-     * @param string $page process.php
-     * @param string $params Query string to add in URL, please include symbol (?), eg: ?var=foo
-     * @return string
-     */
-    final private function getUrl($page, $params = '')
+    final private function getUrl($page, $params = ''): string
     {
         $baseUrl = Context::getContext()->shop->getBaseURL(true);
 
         return $baseUrl . 'modules/' . getModuleName() . '/' . $page . $params;
     }
 
-    /**
-     * @return string
-     */
-    final private function getScheduleTaskPath()
+    final private function getScheduleTaskPath(): string
     {
         return fixPath($this->getThisModulePath() . '/sonda.php');
     }
 
-    /**
-     * @return string
-     */
-    final private function getLogFilePath()
+    final private function getLogFilePath(): string
     {
         return PaymentLogger::getLogFilename();
     }
 
-    /**
-     * @return string
-     */
-    final private function getCompanyDocument()
+    final private function getCompanyDocument(): ?string
     {
         return $this->getCurrentValueOf(self::COMPANY_DOCUMENT);
     }
 
-    /**
-     * @return string
-     */
-    final private function getCompanyName()
+    final private function getCompanyName(): ?string
     {
         return $this->getCurrentValueOf(self::COMPANY_NAME);
     }
 
-    /**
-     * @return string
-     */
-    final private function getEmailContact()
+    final private function getEmailContact(): ?string
     {
         $emailContact = $this->getCurrentValueOf(self::EMAIL_CONTACT);
 
@@ -1884,10 +1756,7 @@ class PlacetoPayPayment extends PaymentModule
             : $emailContact;
     }
 
-    /**
-     * @return string
-     */
-    final private function getTelephoneContact()
+    final private function getTelephoneContact(): ?string
     {
         $telephoneContact = $this->getCurrentValueOf(self::TELEPHONE_CONTACT);
 
@@ -1896,18 +1765,12 @@ class PlacetoPayPayment extends PaymentModule
             : $telephoneContact;
     }
 
-    /**
-     * @return string
-     */
-    final private function getDescription()
+    final private function getDescription(): string
     {
         return $this->getCurrentValueOf(self::DESCRIPTION);
     }
 
-    /**
-     * @return int
-     */
-    final private function getExpirationTimeMinutes()
+    final private function getExpirationTimeMinutes(): int
     {
         $minutes = $this->getCurrentValueOf(self::EXPIRATION_TIME_MINUTES);
 
@@ -1916,58 +1779,37 @@ class PlacetoPayPayment extends PaymentModule
             : $minutes;
     }
 
-    /**
-     * @return string
-     */
-    final private function getShowOnReturn()
+    final private function getShowOnReturn(): string
     {
         return $this->getCurrentValueOf(self::SHOW_ON_RETURN);
     }
 
-    /**
-     * @return bool
-     */
-    final private function getTransUnionMessage()
+    final private function getTransUnionMessage(): string
     {
         return $this->getCurrentValueOf(self::CIFIN_MESSAGE);
     }
 
-    /**
-     * @return bool
-     */
-    final private function getAllowBuyWithPendingPayments()
+    final private function getAllowBuyWithPendingPayments(): bool
     {
-        return (int)$this->getCurrentValueOf(self::ALLOW_BUY_WITH_PENDING_PAYMENTS);
+        return (bool)$this->getCurrentValueOf(self::ALLOW_BUY_WITH_PENDING_PAYMENTS);
     }
 
-    /**
-     * @return bool
-     */
-    final private function getFillTaxInformation()
+    final private function getFillTaxInformation(): bool
     {
-        return $this->getCurrentValueOf(self::FILL_TAX_INFORMATION);
+        return (bool)$this->getCurrentValueOf(self::FILL_TAX_INFORMATION);
     }
 
-    /**
-     * @return bool
-     */
-    final private function getFillBuyerInformation()
+    final private function getFillBuyerInformation(): bool
     {
-        return $this->getCurrentValueOf(self::FILL_BUYER_INFORMATION);
+        return (bool)$this->getCurrentValueOf(self::FILL_BUYER_INFORMATION);
     }
 
-    /**
-     * @return bool
-     */
-    final private function getSkipResult()
+    final private function getSkipResult(): bool
     {
-        return $this->getCurrentValueOf(self::SKIP_RESULT);
+        return (bool)$this->getCurrentValueOf(self::SKIP_RESULT);
     }
 
-    /**
-     * @return string
-     */
-    final private function getPaymentMethodsEnabled()
+    final private function getPaymentMethodsEnabled(): string
     {
         $paymentMethods = $this->getCurrentValueOf(self::PAYMENT_METHODS_ENABLED);
 
@@ -1980,22 +1822,16 @@ class PlacetoPayPayment extends PaymentModule
             : $paymentMethods;
     }
 
-    /**
-     * @return string
-     */
-    final private function getCountry()
+    final private function getCountry(): string
     {
         $country = $this->getCurrentValueOf(self::COUNTRY);
 
         return empty($country)
-            ? CountryCode::COLOMBIA
+            ? $this->getDefaultCountry()
             : $country;
     }
 
-    /**
-     * @return string
-     */
-    final private function getEnvironment()
+    final private function getEnvironment(): string
     {
         $environment = $this->getCurrentValueOf(self::ENVIRONMENT);
 
@@ -2004,10 +1840,7 @@ class PlacetoPayPayment extends PaymentModule
             : $environment;
     }
 
-    /**
-     * @return string
-     */
-    final private function getCustomConnectionUrl()
+    final private function getCustomConnectionUrl(): ?string
     {
         $customEnvironment = $this->getCurrentValueOf(self::CUSTOM_CONNECTION_URL);
 
@@ -2016,34 +1849,22 @@ class PlacetoPayPayment extends PaymentModule
             : $customEnvironment;
     }
 
-    /**
-     * @return string
-     */
-    final private function getLogin()
+    final private function getLogin(): ?string
     {
         return $this->getCurrentValueOf(self::LOGIN);
     }
 
-    /**
-     * @return string
-     */
-    final private function getTranKey()
+    final private function getTranKey(): ?string
     {
         return $this->getCurrentValueOf(self::TRAN_KEY);
     }
 
-    /**
-     * @return string|null
-     */
-    private function getImageUrl(): ?string
+    final private function getImageUrl(): ?string
     {
         return $this->getCurrentValueOf(self::PAYMENT_BUTTON_IMAGE);
     }
 
-    /**
-     * @return string
-     */
-    final private function getConnectionType()
+    final private function getConnectionType(): string
     {
         $connectionType = $this->getCurrentValueOf(self::CONNECTION_TYPE);
 
@@ -2055,10 +1876,7 @@ class PlacetoPayPayment extends PaymentModule
             : $connectionType;
     }
 
-    /**
-     * @return string
-     */
-    final private function getUri()
+    final private function getUri(): ?string
     {
         $uri = null;
         $endpoints = PaymentUrl::getEndpointsTo($this->getCountry());
@@ -2080,57 +1898,49 @@ class PlacetoPayPayment extends PaymentModule
         return Configuration::get(self::ORDER_STATE);
     }
 
-    /**
-     * @return string
-     */
-    final private function getThisModulePath()
+    final private function getThisModulePath(): string
     {
         return _PS_MODULE_DIR_ . getModuleName();
     }
 
-    /**
-     * @param $status
-     * @return string
-     */
-    final private function getRedirectPageFromStatus($status)
+    final private function getRedirectPageFromStatus(): string
     {
         if (!Context::getContext()->customer->isLogged()) {
-            $redirectTo = self::PAGE_ORDER_CONFIRMATION;
-        } else {
-            switch ($this->getShowOnReturn()) {
-                case self::SHOW_ON_RETURN_DETAILS:
-                    $redirectTo = self::PAGE_ORDER_DETAILS;
-                    break;
-                case self::SHOW_ON_RETURN_PSE_LIST:
-                    $redirectTo = self::PAGE_ORDER_HISTORY;
-                    break;
-                case self:: SHOW_ON_RETURN_HOME:
-                    $redirectTo = self::PAGE_HOME;
-                    break;
-                case self::SHOW_ON_RETURN_DEFAULT:
-                default:
-                    $redirectTo = self::PAGE_ORDER_CONFIRMATION;
-                    break;
-            }
+            return self::PAGE_ORDER_CONFIRMATION;
+        }
+
+        switch ($this->getShowOnReturn()) {
+            case self::SHOW_ON_RETURN_DETAILS:
+                $redirectTo = self::PAGE_ORDER_DETAILS;
+                break;
+            case self::SHOW_ON_RETURN_PSE_LIST:
+                $redirectTo = self::PAGE_ORDER_HISTORY;
+                break;
+            case self:: SHOW_ON_RETURN_HOME:
+                $redirectTo = self::PAGE_HOME;
+                break;
+            case self::SHOW_ON_RETURN_DEFAULT:
+            default:
+                $redirectTo = self::PAGE_ORDER_CONFIRMATION;
+                break;
         }
 
         return $redirectTo;
     }
 
     /**
-     * @param string $column You can any column from $this->tablePayment table
-     * @param int $value
+     * Get any column from $this->tablePayment table
      * @return array|bool
      */
-    final private function getPaymentPlaceToPayBy($column, $value = null)
+    final private function getPaymentPlaceToPayBy(string $column, $value)
     {
         try {
             if (!empty($column) && !empty($value)) {
                 $rows = Db::getInstance()->ExecuteS("
-                SELECT *
-                FROM  `{$this->tablePayment}`
-                WHERE {$column} = '{$value}'
-            ");
+                    SELECT *
+                    FROM  `{$this->tablePayment}`
+                    WHERE {$column} = '{$value}'
+                ");
             }
         } catch (Exception $e) {
             PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 15, $e->getFile(), $e->getLine());
@@ -2139,7 +1949,7 @@ class PlacetoPayPayment extends PaymentModule
         return !empty($rows[0]) ? $rows[0] : false;
     }
 
-    public function getIdByCartId($id_cart)
+    final private function getIdByCartId($id_cart): ?int
     {
         $sql = 'SELECT `id_order`
             FROM `' . _DB_PREFIX_ . 'orders`
@@ -2210,11 +2020,11 @@ class PlacetoPayPayment extends PaymentModule
 
         try {
             $result = Db::getInstance()->ExecuteS("
-                SELECT p.* 
+                SELECT p.*
                 FROM `{$this->tablePayment}` p
                     INNER JOIN `{$this->tableOrder}` o ON o.id_cart = p.id_order
-                WHERE o.`id_customer` = {$customerId} 
-                    AND p.`status` = {$status} 
+                WHERE o.`id_customer` = {$customerId}
+                    AND p.`status` = {$status}
                 LIMIT 1
             ");
         } catch (Exception $e) {
@@ -2242,10 +2052,10 @@ class PlacetoPayPayment extends PaymentModule
             $context = Context::getContext();
         }
 
-        $sql = 'SELECT o.`id_order`, o.`id_currency`, o.`payment`, o.`invoice_number`, pp.`date` date_add, 
-                      pp.`reference`, pp.`amount` total_paid, pp.`authcode` cus, 
-                      (SELECT SUM(od.`product_quantity`) 
-                      FROM `' . _DB_PREFIX_ . 'order_detail` od 
+        $sql = 'SELECT o.`id_order`, o.`id_currency`, o.`payment`, o.`invoice_number`, pp.`date` date_add,
+                      pp.`reference`, pp.`amount` total_paid, pp.`authcode` cus,
+                      (SELECT SUM(od.`product_quantity`)
+                      FROM `' . _DB_PREFIX_ . 'order_detail` od
                       WHERE od.`id_order` = o.`id_order`) nb_products
         FROM `' . $this->tableOrder . '` o
             JOIN `' . $this->tablePayment . '` pp ON pp.id_order = o.id_cart
@@ -2255,6 +2065,7 @@ class PlacetoPayPayment extends PaymentModule
         ORDER BY o.`date_add` DESC';
 
         $res = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
+
         if (!$res) {
             return [];
         }
@@ -2365,17 +2176,8 @@ class PlacetoPayPayment extends PaymentModule
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/front/response.tpl'));
     }
 
-    /**
-     * @param $status
-     * @return array
-     */
-    final private function getStatusDescription($status)
+    final private function getStatusDescription(string $status): array
     {
-        $description = [
-            'status' => 'pending',
-            'status_description' => $this->ll('Pending payment')
-        ];
-
         switch ($status) {
             case PaymentStatus::APPROVED:
             case PaymentStatus::DUPLICATE:
@@ -2383,33 +2185,38 @@ class PlacetoPayPayment extends PaymentModule
                     'status' => 'ok',
                     'status_description' => $this->ll('Completed payment')
                 ];
+
                 break;
             case PaymentStatus::FAILED:
                 $description = [
                     'status' => 'fail',
                     'status_description' => $this->ll('Failed payment')
                 ];
+
                 break;
             case PaymentStatus::REJECTED:
                 $description = [
                     'status' => 'rejected',
                     'status_description' => $this->ll('Rejected payment')
                 ];
+
+                break;
+            default:
+                $description = [
+                    'status' => 'pending',
+                    'status_description' => $this->ll('Pending payment')
+                ];
+
                 break;
         }
 
         return $description;
     }
 
-    /**
-     * @param RedirectInformation $response
-     * @return int
-     */
-    final private function getStatusPayment(RedirectInformation $response)
+    final private function getStatusPayment(RedirectInformation $response): int
     {
         // By default is pending so make a query for it later (see information.php example)
         $status = PaymentStatus::PENDING;
-        //$lastPayment = $response->lastTransaction();
         $lastStatus = $response->status();
 
         if ($response->isSuccessful() && !empty($lastStatus)) {
@@ -2459,10 +2266,7 @@ class PlacetoPayPayment extends PaymentModule
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/front/history.tpl'));
     }
 
-    /**
-     * @return string
-     */
-    final private function getSetup()
+    final private function getSetup(): string
     {
         $setup = $this->ll('Configuration') . breakLine();
         $setup .= sprintf('PHP [%s]', PHP_VERSION) . breakLine();
@@ -2535,10 +2339,7 @@ class PlacetoPayPayment extends PaymentModule
         return sprintf('%s[]', $name);
     }
 
-    /**
-     * @return array
-     */
-    final private function getOptionSwitch()
+    final private function getOptionSwitch(): array
     {
         return [
             [
@@ -2554,11 +2355,7 @@ class PlacetoPayPayment extends PaymentModule
         ];
     }
 
-    /**
-     * @param array $options
-     * @return array
-     */
-    final private function getOptionList($options)
+    final private function getOptionList(array $options): array
     {
         $listOption = [];
 
@@ -2573,11 +2370,7 @@ class PlacetoPayPayment extends PaymentModule
         return $listOption;
     }
 
-    /**
-     * Options payment methods
-     * @return array
-     */
-    final private function getOptionListPaymentMethods()
+    final private function getOptionListPaymentMethods(): array
     {
         $options = [
             self::PAYMENT_METHODS_ENABLED_DEFAULT => $this->ll('All'),
@@ -2590,10 +2383,7 @@ class PlacetoPayPayment extends PaymentModule
         return $this->getOptionList($options);
     }
 
-    /**
-     * Options to show when user return from payment
-     */
-    final private function getOptionListShowOnReturn()
+    final private function getOptionListShowOnReturn(): array
     {
         $options = [
             self::SHOW_ON_RETURN_DEFAULT => $this->ll('PrestaShop View'),
@@ -2605,9 +2395,6 @@ class PlacetoPayPayment extends PaymentModule
         return $this->getOptionList($options);
     }
 
-    /**
-     * @return array
-     */
     final private function getOptionListCountries(): array
     {
         $options = [
@@ -2620,10 +2407,7 @@ class PlacetoPayPayment extends PaymentModule
         return $this->getOptionList($options);
     }
 
-    /**
-     * @return array
-     */
-    final private function getOptionListEnvironments()
+    final private function getOptionListEnvironments(): array
     {
         $options = [
             Environment::PRODUCTION => $this->ll('Production'),
@@ -2635,10 +2419,7 @@ class PlacetoPayPayment extends PaymentModule
         return $this->getOptionList($options);
     }
 
-    /**
-     * @return array
-     */
-    final private function getOptionListConnectionTypes()
+    final private function getOptionListConnectionTypes(): array
     {
         $options = [
             self::CONNECTION_TYPE_SOAP => $this->ll('SOAP'),
@@ -2648,10 +2429,7 @@ class PlacetoPayPayment extends PaymentModule
         return $this->getOptionList($options);
     }
 
-    /**
-     * @return array
-     */
-    final private function getFieldsCompany()
+    final private function getFieldsCompany(): array
     {
         return [
             [
@@ -2692,10 +2470,7 @@ class PlacetoPayPayment extends PaymentModule
         ];
     }
 
-    /**
-     * @return array
-     */
-    final private function getFieldsConfiguration()
+    final private function getFieldsConfiguration(): array
     {
         return [
             [
@@ -2768,10 +2543,7 @@ class PlacetoPayPayment extends PaymentModule
         ];
     }
 
-    /**
-     * @return array
-     */
-    final private function getFieldsConnection():array
+    final private function getFieldsConnection(): array
     {
         return [
             [
@@ -2845,12 +2617,7 @@ class PlacetoPayPayment extends PaymentModule
         ];
     }
 
-    /**
-     * @param $title
-     * @param $icon
-     * @return array
-     */
-    final private function getLegendTo($title, $icon)
+    final private function getLegendTo(string $title, string $icon): array
     {
         return [
             'title' => $this->ll($title),
@@ -2858,76 +2625,47 @@ class PlacetoPayPayment extends PaymentModule
         ];
     }
 
-    /**
-     * @return array
-     */
-    final private function getSubmitButton()
+    final private function getSubmitButton(): array
     {
         return [
             'title' => $this->ll('Save'),
         ];
     }
 
-    /**
-     * @return bool
-     */
-    final private function isShowOnReturnDetails()
-    {
-        return in_array($this->getShowOnReturn(), [self::SHOW_ON_RETURN_DEFAULT, self::SHOW_ON_RETURN_DETAILS]);
-    }
-
-    /**
-     * @return bool
-     */
-    final private function isProduction()
+    final private function isProduction(): bool
     {
         return $this->getEnvironment() === Environment::PRODUCTION;
     }
 
-    /**
-     * @return bool
-     */
-    final private function isCustomEnvironment()
+    final private function isCustomEnvironment(): bool
     {
         return $this->getEnvironment() === Environment::CUSTOM;
     }
 
-    /**
-     * @return bool
-     */
-    final private function isSetCredentials()
+    final private function isSetCredentials(): bool
     {
         return !empty($this->getLogin()) && !empty($this->getTranKey());
     }
 
-    /**
-     * @return bool
-     */
-    final private function isEnableShowSetup()
+    final private function isEnableShowSetup(): bool
     {
         $force = Tools::getValue('f', null);
 
         return !$this->isProduction()
-        && !empty($force)
-        && Tools::strlen($force) === 5
-        && Tools::substr($this->getLogin(), -5) === $force;
+            && !empty($force)
+            && Tools::strlen($force) === 5
+            && Tools::substr($this->getLogin(), -5) === $force;
     }
 
     /**
-     * Manage translations
-     * @param $string
-     * @return string
+     * Manage translations in Plugin
      */
-    final private function ll($string)
+    final private function ll(string $string): string
     {
         return $this->l($string, getModuleName());
     }
 
-    /**
-     * @param array $errors
-     * @return mixed
-     */
-    final private function showError(array $errors)
+    final private function showError(array $errors): string
     {
         if (versionComparePlaceToPay('1.7.0.0', '<')) {
             $errors = implode('<br>', $errors);
@@ -2936,11 +2674,7 @@ class PlacetoPayPayment extends PaymentModule
         return $this->displayError($errors);
     }
 
-    /**
-     * @param $cart
-     * @return bool
-     */
-    final private function checkCurrency($cart)
+    final private function checkCurrency($cart): bool
     {
         $currency_order = new Currency($cart->id_currency);
         $currencies_module = $this->getCurrency($cart->id_currency);
@@ -2961,7 +2695,7 @@ class PlacetoPayPayment extends PaymentModule
      * @param bool $rollBack
      * @return string
      */
-    final private function reference($string, $rollBack = false)
+    final private function reference(string $string, bool $rollBack = false): string
     {
         return !$rollBack
             ? base64_encode($string)
@@ -2971,25 +2705,46 @@ class PlacetoPayPayment extends PaymentModule
     final private function getHeaders(): array
     {
         $domain = $_SERVER['HTTP_HOST'] ?? $_SERVER['SERVER_NAME'];
-        $userAgent = "$this->name/{$this->getPluginVersion()} - $domain";
+        $userAgent = "$this->name/{$this->getPluginVersion()} (origin:$domain; vr:" . _PS_VERSION_ . ')';
+
         return [
             'User-Agent' => $userAgent,
+            'X-Source-Platform' => 'prestashop',
         ];
     }
 
-    final private function instanceRedirection(bool $callback = false): PaymentRedirection
+    final private function instanceRedirection(): PaymentRedirection
     {
         $settings = [
             'login' => $this->getLogin(),
             'tranKey' => $this->getTranKey(),
             'baseUrl' => $this->getUri(),
             'type' => $this->getConnectionType(),
+            'headers' => $this->getHeaders(),
         ];
 
-        if ($callback) {
-            $settings['headers'] = $this->getHeaders();
+        return new PaymentRedirection($settings);
+    }
+
+    final private function getDefaultDescription(): string
+    {
+        $country = $this->getDefaultCountry();
+
+        if ($country === CountryCode::CHILE) {
+            return unmaskString('Cntb ra Trgarg Ab: %f');
         }
 
-        return new PaymentRedirection($settings);
+        return 'Pago en PlacetoPay No: %s';
+    }
+
+    final private function getDefaultCountry(): string
+    {
+        $isoCode = $this->getCurrentValueOf('PS_LOCALE_COUNTRY');
+
+        if (is_string($isoCode)) {
+            return substr($isoCode, 0, 2);
+        }
+
+        return CountryCode::COLOMBIA;
     }
 }

@@ -1,11 +1,7 @@
 <?php
 
 if (!function_exists('getPathCMS')) {
-    /**
-     * @param string $filename
-     * @return mixed|string
-     */
-    function getPathCMS($filename)
+    function getPathCMS(string $filename): string
     {
         $option = 'Default';
         $pathUsed = getcwd();
@@ -39,32 +35,21 @@ if (!function_exists('getPathCMS')) {
 }
 
 if (!function_exists('versionComparePlaceToPay')) {
-    /**
-     * @param string $version
-     * @param string $operator
-     * @return bool
-     */
-    function versionComparePlaceToPay($version, $operator)
+    function versionComparePlaceToPay(string $version, string $operator): bool
     {
         return version_compare(_PS_VERSION_, $version, $operator);
     }
 }
 
 if (!function_exists('isDebugEnable')) {
-    /**
-     * @return bool
-     */
-    function isDebugEnable()
+    function isDebugEnable(): bool
     {
         return defined('_PS_MODE_DEV_') && _PS_MODE_DEV_ === true;
     }
 }
 
 if (!function_exists('isConsole')) {
-    /**
-     * @return bool
-     */
-    function isConsole()
+    function isConsole(): bool
     {
         static $isConsole;
 
@@ -77,11 +62,7 @@ if (!function_exists('isConsole')) {
 }
 
 if (!function_exists('breakLine')) {
-    /**
-     * @param int $multiplier
-     * @return string
-     */
-    function breakLine($multiplier = 1)
+    function breakLine(int $multiplier = 1): string
     {
         static $breakLine;
 
@@ -94,25 +75,25 @@ if (!function_exists('breakLine')) {
 }
 
 if (!function_exists('getModuleName')) {
-    /**
-     * @return string
-     */
-    function getModuleName()
+    function getModuleName(): string
     {
         return 'placetopaypayment';
     }
 }
 
 if (!function_exists('fixPath')) {
-    /**
-     * @param string $path
-     * @return string
-     */
-    function fixPath($path)
+    function fixPath(string $path): string
     {
         // Case:
         // IIS:     \ (backslash)
         // Apache:  / (slash)
         return str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $path);
+    }
+}
+
+if (!function_exists('unmaskString')) {
+    function unmaskString(string $string): string
+    {
+        return str_rot13($string);
     }
 }

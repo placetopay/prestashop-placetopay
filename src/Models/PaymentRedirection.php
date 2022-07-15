@@ -13,7 +13,10 @@ use Dnetix\Redirection\Message\ReverseResponse;
 
 class PaymentRedirection
 {
-    protected Settings $settings;
+    /**
+     * @var Settings
+     */
+    protected $settings;
 
     public function __construct(array $data)
     {

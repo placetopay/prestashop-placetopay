@@ -1,15 +1,15 @@
 {
   "name": "placetopay/prestashop-gateway",
-  "description": "Plugin for integration Placetopay gateway with PrestaShop CMS",
+  "description": "Plugin for integration PlacetoPay gateway with PrestaShop CMS",
   "type": "plugin",
   "require": {
-    "php": "^5.5 || ^7.0",
+    "php": "^7.1",
     "ext-curl": "*",
     "ext-soap": "*",
     "ext-json": "*",
     "ext-mbstring": "*",
-    "guzzlehttp/guzzle": "~5.3",
-    "dnetix/redirection": "^1.0"
+    "dnetix/redirection": "^1.0",
+    "guzzlehttp/guzzle": "~5.3"
   },
   "license": "MIT",
   "authors": [
@@ -18,7 +18,6 @@
       "email": "desarrollo@placetopay.com"
     }
   ],
-  "minimum-stability": "dev",
   "prefer-stable": true,
   "autoload": {
     "files": [
@@ -33,10 +32,13 @@
   },
   "scripts": {
     "phpcs": "phpcs --standard=PSR2 src/ spl_autoload.php helpers.php index.php process.php redirect.php sonda.php",
-    "security-checker": "$(which security-checker) security:check composer.lock || exit 0",
     "test": [
-      "@phpcs",
-      "@security-checker"
+      "@phpcs"
     ]
+  },
+  "config": {
+    "platform": {
+      "php": "7.1.33"
+    }
   }
 }
