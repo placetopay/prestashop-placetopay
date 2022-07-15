@@ -135,23 +135,33 @@ restore-override:
 compile:
 	$(eval MODULE_NAME_VR=$(MODULE_NAME)$(PLUGIN_VERSION))
 	@touch ~/Downloads/placetopaypayment_test \
-        && sudo rm -Rf ~/Downloads/placetopaypayment* \
-        && sudo cp $(CURRENT_FOLDER) ~/Downloads/placetopaypayment -R \
-        && sudo find ~/Downloads/placetopaypayment/ -type d -name ".git*" -exec rm -Rf {} + \
-        && sudo find ~/Downloads/placetopaypayment/ -type d -name "squizlabs" -exec rm -Rf {} + \
-        && sudo rm -Rf ~/Downloads/placetopaypayment/.git* \
-        && sudo rm -Rf ~/Downloads/placetopaypayment/.idea \
-        && sudo rm -Rf ~/Downloads/placetopaypayment/config* \
-        && sudo rm -Rf ~/Downloads/placetopaypayment/Dockerfile \
-        && sudo rm -Rf ~/Downloads/placetopaypayment/Makefile \
-        && sudo rm -Rf ~/Downloads/placetopaypayment/.env* \
-        && sudo rm -Rf ~/Downloads/placetopaypayment/docker* \
-        && sudo rm -Rf ~/Downloads/placetopaypayment/composer.* \
-        && sudo rm -Rf ~/Downloads/placetopaypayment/*.md \
-        && sudo rm -Rf ~/Downloads/placetopaypayment/LICENSE \
+        && rm -Rf ~/Downloads/placetopaypayment* \
+        && cp -p $(CURRENT_FOLDER) ~/Downloads/placetopaypayment -R \
+        && cd ~/Downloads/placetopaypayment \
+        && composer install --no-dev \
+        && find ~/Downloads/placetopaypayment/ -type d -name ".git*" -exec rm -Rf {} + \
+        && find ~/Downloads/placetopaypayment/ -type d -name "squizlabs" -exec rm -Rf {} + \
+        && rm -Rf ~/Downloads/placetopaypayment/.git* \
+        && rm -Rf ~/Downloads/placetopaypayment/.idea \
+        && rm -Rf ~/Downloads/placetopaypayment/config* \
+        && rm -Rf ~/Downloads/placetopaypayment/Dockerfile \
+        && rm -Rf ~/Downloads/placetopaypayment/Makefile \
+        && rm -Rf ~/Downloads/placetopaypayment/.env* \
+        && rm -Rf ~/Downloads/placetopaypayment/docker* \
+        && rm -Rf ~/Downloads/placetopaypayment/composer.* \
+        && rm -Rf ~/Downloads/placetopaypayment/.php_cs.cache \
+        && rm -Rf ~/Downloads/placetopaypayment/*.md \
+        && rm -Rf ~/Downloads/placetopaypayment/vendor/bin \
+        && rm -Rf ~/Downloads/placetopaypayment/vendor/dnetix/redirection/tests \
+        && rm -Rf ~/Downloads/placetopaypayment/vendor/dnetix/redirection/examples \
+        && rm -Rf ~/Downloads/placetopaypayment/vendor/guzzlehttp/ringphp/docs \
+        && rm -Rf ~/Downloads/placetopaypayment/vendor/guzzlehttp/ringphp/tests \
+        && rm -Rf ~/Downloads/placetopaypayment/vendor/guzzlehttp/guzzle/docs \
+        && rm -Rf ~/Downloads/placetopaypayment/vendor/guzzlehttp/guzzle/tests \
+        && rm -Rf ~/Downloads/placetopaypayment/vendor/guzzlehttp/streams/tests \
         && cd ~/Downloads \
-        && sudo zip -r -q -o $(MODULE_NAME_VR).zip placetopaypayment \
-        && sudo chown $(UID):$(UID) $(MODULE_NAME_VR).zip \
-        && sudo chmod 644 $(MODULE_NAME_VR).zip \
-        && sudo rm -Rf ~/Downloads/placetopaypayment
+        && zip -r -q -o $(MODULE_NAME_VR).zip placetopaypayment \
+        && chown $(UID):$(UID) $(MODULE_NAME_VR).zip \
+        && chmod 644 $(MODULE_NAME_VR).zip \
+        && rm -Rf ~/Downloads/placetopaypayment
 	@echo "Compile file complete: ~/Downloads/$(MODULE_NAME_VR).zip"

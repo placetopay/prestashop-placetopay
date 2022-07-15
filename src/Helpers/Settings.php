@@ -16,14 +16,14 @@ class Settings extends Entity
 
     public const TP_REST = 'rest';
     public const TP_SOAP = 'soap';
-    protected string $type = self::TP_REST;
-    protected string $baseUrl = '';
-    protected int $timeout = 15;
-    protected bool $verifySsl = true;
-    protected string $login;
-    protected string $tranKey;
-    protected array $headers = [];
-    protected array $authAdditional = [];
+    protected $type = self::TP_REST;
+    protected $baseUrl = '';
+    protected $timeout = 15;
+    protected $verifySsl = true;
+    protected $login;
+    protected $tranKey;
+    protected $headers = [];
+    protected $authAdditional = [];
     protected $client = null;
     protected $carrier = null;
 

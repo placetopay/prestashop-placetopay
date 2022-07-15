@@ -1,27 +1,44 @@
-# Prestashop Gateway to Placetopay
+# Prestashop Gateway to PlacetoPay
 
-[Placetopay][link-placetopay] Plugin Payment for [Prestashop][link-prestashop] 1.5, 1.6 and 1.7 Stable
+[PlacetoPay][1] Plugin Payment for [Prestashop][2]
 
 ## Prerequisites
 
-- `php` >= 5.6.0
+- `prestashop` >= 1.6.1 _recommended: >= 1.7.8_
+- `php` >= 7.1 _recommended: >= 7.4_
 - `ext-curl`
 - `ext-soap`
 - `ext-json`
 - `ext-mbstring`
-- `prestashop` >= 1.5
 
 ## Compatibility Version
 
-| PrestaShop | Plugin   | Comments      |
-|------------|----------|---------------|
-| 1.5.x      | ~2.6.4   | `@deprecated` |
-| 1.6.x      | >=2.6.4  | From  1.6.0.5 |
-| 1.7.x      | 3.*      | Until 1.7.8.4 |
+| PrestaShop | Plugin   | PHP          | End of Life                                                                               | Comments                         |
+|------------|----------|--------------|-------------------------------------------------------------------------------------------|----------------------------------|
+| 1.5.x      | ~2.6.4   | ~5.6         | [July, 2016](https://www.prestashop.com/en/blog/prestashop-security-release)              | `@unmanteined`                    |
+| 1.6.0      | >=2.6.4  | ~5.6         | [June, 2019](https://www.prestashop.com/en/blog/maintenance-extension-prestashop-1-6)     | 1.6.0.5 / 1.6.0.14 `@unmanteined` |
+| 1.6.1      | >=2.6.4  | >=5.6 <= 7.1 | [June, 2019](https://www.prestashop.com/en/blog/maintenance-extension-prestashop-1-6)     | 1.6.1.0 / 1.6.1.24 `@deprecated` |
+| 1.7.0      | 3.*      | ~7.1         | [November, 2018](https://build.prestashop.com/news/announcing-our-2017-release-schedule/) | 1.7.0.0 / 1.7.0.6  `@deprecated` |
+| 1.7.1      | 3.*      | ~7.1         | [April, 2019](https://build.prestashop.com/howtos/misc/2017-release-schedule/)            | 1.7.1.0 / 1.7.1.2  `@deprecated` |
+| 1.7.2      | 3.*      | ~7.1         | [July, 2019](https://build.prestashop.com/howtos/misc/2017-release-schedule/)             | 1.7.2.0 / 1.7.2.5  `@deprecated` |
+| 1.7.3      | 3.*      | ~7.1         | [February, 2020](https://build.prestashop.com/howtos/misc/2017-release-schedule/)         | 1.7.3.0 / 1.7.3.4  `@deprecated` |
+| 1.7.4      | 3.*      | ~7.1         | [July, 2020][4]                                                                           | 1.7.4.0 / 1.7.4.4  `@deprecated` |
+| 1.7.5      | 3.*      | >=7.1 <= 7.2 | [December, 2020][4]                                                                       | 1.7.5.0 / 1.7.5.2  `@deprecated` |
+| 1.7.6      | 3.*      | >=7.1 <= 7.2 | [July, 2021][4]                                                                           | 1.7.6.0 / 1.7.6.9  `@deprecated` |
+| 1.7.7      | 3.*      | >=7.1 <= 7.3 | December, 2022                                                                            | 1.7.7.0 / 1.7.7.8  `@manteined`  |
+| 1.7.8      | 3.*      | >=7.1 <= 7.4 | Octuber, 2023                                                                             | 1.7.8.0 / 1.7.8.6  `@manteined`  |
 
-View releases [here][link-releases]
+> More information: [Prestashop End Support for obsolete PHP versions][4]
 
-## Manual Installation
+View releases [here][3]
+
+## Installation in Production
+
+### Without CLI
+
+Get module .zip from [https://dev.placetopay.com/web/plugins/](https://dev.placetopay.com/web/plugins/) and [see process in Prestashop](https://addons.prestashop.com/en/content/21-how-to)
+
+### With CLI and composer
 
 Create `placetopaypayment` folder (this is required, with this name)
 
@@ -30,31 +47,80 @@ mkdir /var/www/html/modules/placetopaypayment
 ```
 
 Clone Project in modules
- 
+
 ```bash
-git clone https://github.com/freddiegar/prestashop-gateway.git /var/www/html/modules/placetopaypayment
+git clone https://github.com/placetopay/prestashop-gateway.git /var/www/html/modules/placetopaypayment
 ```
 
 Set permissions and install dependencies with composer
 
 ```bash
-cd /var/www/html/modules/placetopaypayment \ 
-    && sudo setfacl -dR -m u:www-data:rwX -m u:`whoami`:rwX `pwd` \ 
+cd /var/www/html/modules/placetopaypayment \
+    && sudo setfacl -dR -m u:www-data:rwX -m u:`whoami`:rwX `pwd` \
     && sudo setfacl -R -m u:www-data:rwX -m u:`whoami`:rwX `pwd` \
-    && composer install
+    && composer install --no-dev
+```
+> Don't install dev dependencies
+
+## Error Codes
+
+| Code | Description                                    |
+|------|------------------------------------------------|
+| 1    | Create payments table failed                   |
+| 2    | Add email column failed                        |
+| 3    | Add id_request column failed                   |
+| 4    | Add reference column failed                    |
+| 5    | Update ipaddres column failed                  |
+| 6    | Login and TranKey is not set                   |
+| 7    | Payment is not allowed by pending transactions |
+| 8    | Payment process failed                         |
+| 9    | Reference (encrypt) was not found              |
+| 10   | Reference (decrypt) was not found              |
+| 11   | Id Request (decrypt) was not found             |
+| 12   | Try to change payment without status PENDING   |
+| 13   | PlacetoPay connection failed                   |
+| 14   | Order related with payment not found           |
+| 15   | Get payment in payment table failed            |
+| 16   | Command not available in this context          |
+| 17   | Access not allowed                             |
+| 18   | Cart empty or already used                     |
+| 99   | Un-known error, module not installed?          |
+| 100  | Install process failed                         |
+| 201  | Order id was not found                         |
+| 202  | Order was not loaded                           |
+| 301  | Customer was not loaded                        |
+| 302  | Address was not loaded                         |
+| 303  | Currency was not loaded                        |
+| 304  | Currency is not supported by PlacetoPay        |
+| 401  | Create payment PlacetoPay failed               |
+| 501  | Payload notification PlacetoPay was not valid  |
+| 601  | Update status payment PlacetoPay fail          |
+| 801  | Get order by id failed                         |
+| 901  | Get last pending transaction failed            |
+| 999  | Un-know error, details in: Database Logs       |
+
+## Installation in Development
+
+If you are a developer, please continue reading, else, that is all.
+
+### With CLI and composer
+
+```bash
+cd /var/www/html/modules/placetopaypayment \
+    && composer install --no-dev
 ```
 
-## Docker Installation
+### With Docker
 
 Install PrestaShop 1.6 (latest in 1.6 branch) with PHP 5.6 (and MySQL 5.7). In folder of project;
- 
+
 ```bash
 cd /var/www/html/modules/placetopaypayment
 make install
 ```
 
 Then... (Please wait few minutes, while install ALL and load Apache :D to continue), you can go to
- 
+
 - [store](http://localhost:8787)
 - [admin](http://localhost:8787/adminstore)
 
@@ -65,7 +131,7 @@ make logs-prestashop
 ```
 
 __Preshtashop Admin Access__
- 
+
 - email: demo@prestashop.com
 - password: prestashop_demo
 
@@ -77,7 +143,7 @@ __MySQL Access__
 
 See details in `docker-compose.yml` file or run `make config` command
 
-### Customize docker installation
+#### Customize docker installation
 
 Default versions
 
@@ -85,7 +151,7 @@ Default versions
 - PHP: 5.6
 - MySQL: 5.7
 
-Others installation options are [here][link-docker-prestashop], You can change versions in `.env` file
+Others installation options are [here][5], You can change versions in `.env` file
 
 ```bash
 # PrestaShop 1.7 with PHP 7.0
@@ -99,7 +165,7 @@ PS_VERSION=latest
 MYSQL_VERSION=5.5
 ```
 
-### Binding ports
+#### Binding ports
 
 Ports by default in this installation are
 
@@ -108,7 +174,7 @@ Ports by default in this installation are
 
 > You can change versions in `.env` file
 
-### Used another database in docker
+#### Used another database in docker
 
 You can override setup in docker, rename `docker-compose.override.example.yml` to `docker-compose.override.yml` and [customize](https://store.docker.com/community/images/prestashop/prestashop) your installation, by example
 
@@ -126,8 +192,7 @@ services:
       DB_SERVER: my_db
 ```
 
-
-## Setup Module
+### Setup Module
 
 Install and setup you `login` and `trankey` in your [store](http://localhost:8787/adminstore)!
 
@@ -137,7 +202,7 @@ Enjoy development and testing!
 
 ### SMTP Email
 
-Change email configuration to use [mailtrap.io][link-mailtrap] in development
+Change email configuration to use [mailtrap.io][6] in development
 
 ```mysql
 USE prestashop;
@@ -150,44 +215,7 @@ UPDATE ps_configuration SET value='off' where name = 'PS_MAIL_SMTP_ENCRYPTION';
 UPDATE ps_configuration SET value='2525' where name = 'PS_MAIL_SMTP_PORT';
 ```
 
-## Error Codes
-
-| Code | Description                                    |
-|------|------------------------------------------------|
-| 1    | Create payments table is failed                |
-| 2    | Add email column is failed                     |
-| 3    | Add id_request column is failed                |
-| 4    | Add reference column is failed                 |
-| 5    | Update ipaddres column is failed               |
-| 6    | Login and TranKey is not set                   |
-| 7    | Payment is not allowed by pending transactions |
-| 8    | Payment process is failed                      |
-| 9    | Reference (encrypt) is not found               |
-| 10   | Reference (decrypt) is not found               |
-| 11   | Id Request (decrypt) is not found              |
-| 12   | Try to change payment without status PENDING   |
-| 13   | PlacetoPay connection is failed                |
-| 14   | Order related with payment not found           |
-| 15   | Get payment in payment table is failed         |
-| 16   | Command not available in this context          |
-| 17   | Access not allowed                             |
-| 18   | Cart empty or already used                      |
-| 99   | Un-known error, module not installed?          |
-| 100  | Install process is failed                      |
-| 201  | Order id is not found                          |
-| 202  | Order is not loaded                            |
-| 301  | Customer is not loaded                         |
-| 302  | Address is not loaded                          |
-| 303  | Currency is not loaded                         |
-| 304  | Currency is not supported by PlacetoPay        |
-| 401  | Create payment PlacetoPay is failed            |
-| 501  | Payload notification PlacetoPay not is valid   |
-| 601  | Update status payment PlacetoPay fail          |
-| 801  | Get order by id is failed                      |
-| 901  | Get last pending transaction is failed         |
-| 999  | Un-know error                                  |
-
-## Troubleshooting
+### Troubleshooting
 
 If shop is not auto-installed, then rename folder `xinstall` in container and installed from [wizard](http://localhost:8787/install)
 
@@ -198,7 +226,7 @@ mv xinstall install
 
 > This apply to last versions from PrestaShop (>= 1.7)
 
-## Compile Module
+### Compress Plugin As Zip File
 
 In terminal run
 
@@ -206,7 +234,7 @@ In terminal run
 make compile
 ```
 
-Or adding version number in filename use
+Or adding version number in filename to use
 
 ```bash
 make compile PLUGIN_VERSION=_X.Y.Z
@@ -217,19 +245,20 @@ make compile PLUGIN_VERSION=_X.Y.Z
 During package development I try as best as possible to embrace good design and development practices, to help ensure that this package is as good as it can
 be. My checklist for package development includes:
 
-- Be fully [PSR1][link-psr-1], [PSR2][link-psr-2], and [PSR4][link-psr-1] compliant.
+- Be fully [PSR1][7], [PSR2][8], and [PSR4][7] compliant.
 - Include comprehensive documentation in README.md.
 - Provide an up-to-date CHANGELOG.md which adheres to the format outlined
-    at [keepachangelog][link-keepachangelog].
-- Have no [phpcs][link-phpcs] warnings throughout all code, use `composer test` command.
+    at [keepachangelog][10].
+- Have no [phpcs][11] warnings throughout all code, use `composer test` command.
 
-[link-placetopay]: https://www.placetopay.com
-[link-prestashop]: https://www.prestashop.com
-[link-releases]: https://github.com/freddiegar/prestashop-gateway/releases
-[link-docker-prestashop]: https://store.docker.com/community/images/prestashop/prestashop/tags
-[link-mailtrap]: https://mailtrap.io/
-[link-psr-1]: https://www.php-fig.org/psr/psr-1/
-[link-psr-2]: https://www.php-fig.org/psr/psr-2/
-[link-psr-4]: https://www.php-fig.org/psr/psr-4/
-[link-keepachangelog]: https://keepachangelog.com
-[link-phpcs]: http://pear.php.net/package/PHP_CodeSniffer
+[1]: https://www.placetopay.com
+[2]: https://www.prestashop.com
+[3]: https://github.com/placetopay/prestashop-gateway/releases
+[4]: https://build.prestashop.com/news/announcing-end-of-support-for-obsolete-php-versions/
+[5]: https://store.docker.com/community/images/prestashop/prestashop/tags
+[6]: https://mailtrap.io/
+[7]: https://www.php-fig.org/psr/psr-1/
+[8]: https://www.php-fig.org/psr/psr-2/
+[9]: https://www.php-fig.org/psr/psr-4/
+[10]: https://keepachangelog.com
+[11]: https://pear.php.net/package/PHP_CodeSniffer
