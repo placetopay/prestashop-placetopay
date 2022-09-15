@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- Add countries HN, BZ and PR as option in country list
+
 ### Fixed
 - Fix sonda resolution when order status new after payment approved has shipped flag enable
 
