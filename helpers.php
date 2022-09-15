@@ -54,7 +54,7 @@ if (!function_exists('isConsole')) {
         static $isConsole;
 
         if (is_null($isConsole)) {
-            $isConsole = 'cli' == php_sapi_name();
+            $isConsole = \Tools::isPHPCLI();
         }
 
         return $isConsole;
