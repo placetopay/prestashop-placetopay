@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+- Fix sonda resolution when order status new after payment approved has shipped flag enable
+
 ## [3.7.0 (2022-07-07)](https://github.com/placetopay/prestashop-placetopay/compare/3.6.5...3.7.0)
 
 ### Added
