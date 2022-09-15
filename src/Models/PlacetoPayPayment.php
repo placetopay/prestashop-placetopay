@@ -2402,6 +2402,9 @@ class PlacetoPayPayment extends PaymentModule
             CountryCode::ECUADOR => $this->ll('Ecuador'),
             CountryCode::COSTA_RICA => $this->ll('Costa Rica'),
             CountryCode::CHILE => $this->ll('Chile'),
+            CountryCode::PUERTO_RICO => $this->ll('Puerto Rico'),
+            CountryCode::BELIZE => $this->ll('Belice'),
+            CountryCode::HONDURAS => $this->ll('Honduras'),
         ];
 
         return $this->getOptionList($options);
