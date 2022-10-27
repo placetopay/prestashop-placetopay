@@ -500,7 +500,6 @@ class PlacetoPayPayment extends PaymentModule
         $deliveryAddress = new Address($cart->id_address_delivery);
         $totalAmount = (float)$cart->getOrderTotal(true);
         $totalAmountWithoutTaxes = (float)$cart->getOrderTotal(false);
-        $base = 0;
 
         $taxAmount = $totalAmount - $totalAmountWithoutTaxes;
 
