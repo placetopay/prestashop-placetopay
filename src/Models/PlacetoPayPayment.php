@@ -500,13 +500,6 @@ class PlacetoPayPayment extends PaymentModule
         $deliveryAddress = new Address($cart->id_address_delivery);
         $totalAmount = (float)$cart->getOrderTotal(true);
         $totalAmountWithoutTaxes = (float)$cart->getOrderTotal(false);
-        $base = 0;
-
-        foreach ($cart->getProducts() as $product) {
-            if ($product['rate']) {
-                $base += $product['price_without_reduction_without_tax'];
-            }
-        }
 
         $taxAmount = $totalAmount - $totalAmountWithoutTaxes;
 
@@ -603,7 +596,7 @@ class PlacetoPayPayment extends PaymentModule
                     [
                         'kind' => 'valueAddedTax',
                         'amount' => $taxAmount,
-                        'base' => $base,
+                        'base' => $totalAmountWithoutTaxes,
                     ]
                 ];
             }
