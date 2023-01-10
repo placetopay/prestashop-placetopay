@@ -26,7 +26,7 @@
 | 1.7.5      | 3.*      | >=7.1 <= 7.2 | [December, 2020][4]                                                                       | 1.7.5.0 / 1.7.5.2  `@deprecated` |
 | 1.7.6      | 3.*      | >=7.1 <= 7.2 | [July, 2021][4]                                                                           | 1.7.6.0 / 1.7.6.9  `@deprecated` |
 | 1.7.7      | 3.*      | >=7.1 <= 7.3 | December, 2022                                                                            | 1.7.7.0 / 1.7.7.8  `@manteined`  |
-| 1.7.8      | 3.*      | >=7.1 <= 7.4 | Octuber, 2023                                                                             | 1.7.8.0 / 1.7.8.6  `@manteined`  |
+| 1.7.8      | 3.*      | >=7.1 <= 7.4 | Octuber, 2023                                                                             | 1.7.8.0 / 1.7.8.7  `@manteined`  |
 
 > More information: [Prestashop End Support for obsolete PHP versions][4]
 
