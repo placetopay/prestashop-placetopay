@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.7.2 (2022-10-28)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.1...3.7.2)
+
 ### Fixed
 
 - Fix amount base of the payment. Now the base has the value of the shipping and the amount of the products.
