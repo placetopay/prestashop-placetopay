@@ -493,7 +493,6 @@ class PlacetoPayPayment extends PaymentModule
             Tools::redirect('authentication.php?back=order.php');
         }
 
-        $language = Language::getIsoById((int)($cart->id_lang));
         $customer = new Customer($cart->id_customer);
         $currency = new Currency($cart->id_currency);
         $invoiceAddress = new Address($cart->id_address_invoice);
@@ -559,7 +558,7 @@ class PlacetoPayPayment extends PaymentModule
 
             // Request payment
             $request = [
-                'locale' => $this->getLocale($language),
+                'locale' => $this->getLocale($cart),
                 'returnUrl' => $returnUrl,
                 'noBuyerFill' => !(bool)$this->getFillBuyerInformation(),
                 'skipResult' => (bool)$this->getSkipResult(),
@@ -890,22 +889,30 @@ class PlacetoPayPayment extends PaymentModule
         echo 'Finished ' . date('Ymd H:i:s') . '.' . breakLine();
     }
 
-    final private function getLocale(string $language): string
+    final private function getLocale($cart): string
     {
-        $locale = 'en_US';
+        if (versionComparePlaceToPay('1.7.8.0', '>=') && $locale = Language::getLocaleById((int)($cart->id_lang))) {
+            return str_replace('-', '_', $locale);
+        }
 
-        switch ($language) {
-            case CountryCode::BELIZE:
-            case CountryCode::CHILE:
-            case CountryCode::COLOMBIA:
-            case CountryCode::COSTA_RICA:
-            case CountryCode::ECUADOR:
-            case CountryCode::HONDURAS:
-            case CountryCode::PANAMA:
-            case CountryCode::PUERTO_RICO:
-                $locale = 'es_' . strtoupper($language);
+        return $this->getLocaleById((int)($cart->id_lang));
+    }
 
-                break;
+    /**
+     * @see https://github.com/PrestaShop/PrestaShop/blob/1.7.8.7/classes/Language.php#L772
+     */
+    private function getLocaleById(int $langId): string
+    {
+        try {
+            $locale = Db::getInstance()->getValue('
+                SELECT `language_code` FROM `' . _DB_PREFIX_ . 'lang` WHERE `id_lang` = ' . $langId
+            );
+
+            $lang = explode('-', $locale);
+
+            $locale = $lang[0] . '_' . strtoupper($lang[1]);
+        } catch (Exception $e) {
+            $locale = 'es_CO';
         }
 
         return $locale;
