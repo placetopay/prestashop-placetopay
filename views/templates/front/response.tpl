@@ -6,15 +6,22 @@
         {if $status eq 'ok'}
             <h2>{l s='Completed payment' mod='placetopaypayment'}</h2>
             <p>{l s='Dear customer, your payment has been approved, thank you for your purchase.' mod='placetopaypayment'}</p>
-        {elseif $status eq 'fail'}
-            <h2 style="color:red">{l s='Failed payment' mod='placetopaypayment'}</h2>
-            <p>{l s='We\'re sorry. Your payment has not been completed. You can try again or choose another payment method.' mod='placetopaypayment'}</p>
-        {elseif $status eq 'rejected'}
-            <h2 style="color:red">{l s='Rejected payment' mod='placetopaypayment'}</h2>
-            <p>{l s='We\'re sorry. Your payment has not been completed. You can try again or choose another payment method.' mod='placetopaypayment'}</p>
-        {elseif $status eq 'pending'}
-            <h2>{l s='Pending payment' mod='placetopaypayment'}</h2>
-            <p>{l s='Dear customer, your payment is being validated in the payment gateway, once this process has been completed will be informed of the operation.' mod='placetopaypayment'}</p>
+        {else}
+            <style>
+                #content-hook_order_confirmation {
+                    display: none;
+                }
+            </style>
+            {if $status eq 'fail'}
+                <h2 style="color:red">{l s='Failed payment' mod='placetopaypayment'}</h2>
+                <p>{l s='We\'re sorry. Your payment has not been completed. You can try again or choose another payment method.' mod='placetopaypayment'}</p>
+            {elseif $status eq 'rejected'}
+                <h2 style="color:red">{l s='Rejected payment' mod='placetopaypayment'}</h2>
+                <p>{l s='We\'re sorry. Your payment has not been completed. You can try again or choose another payment method.' mod='placetopaypayment'}</p>
+            {elseif $status eq 'pending'}
+                <h2>{l s='Pending payment' mod='placetopaypayment'}</h2>
+                <p>{l s='Dear customer, your payment is being validated in the payment gateway, once this process has been completed will be informed of the operation.' mod='placetopaypayment'}</p>
+            {/if}
         {/if}
     </div>
 
