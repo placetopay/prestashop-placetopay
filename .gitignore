@@ -1,6 +1,7 @@
 /node_modules
 /vendor
 /.idea
+composer.lock
 Homestead.json
 Homestead.yaml
 config*
