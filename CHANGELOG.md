@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Add Uruguay (Uy) country as option in country list.
+
 ## [3.7.3 (2022-03-10)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.2...3.7.3)
 
 ### Fixed
