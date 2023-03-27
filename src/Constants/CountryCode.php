@@ -22,4 +22,6 @@ interface CountryCode
     public const PANAMA = 'pa';
 
     public const PUERTO_RICO = 'pr';
+
+    public const URUGUAY = 'uy';
 }
