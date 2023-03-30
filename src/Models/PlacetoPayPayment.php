@@ -126,7 +126,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.7.3';
+        $this->version = '3.7.4';
 
         $this->tab = 'payments_gateways';
 
@@ -2412,6 +2412,7 @@ class PlacetoPayPayment extends PaymentModule
             CountryCode::PUERTO_RICO => $this->ll('Puerto Rico'),
             CountryCode::BELIZE => $this->ll('Belice'),
             CountryCode::HONDURAS => $this->ll('Honduras'),
+            CountryCode::URUGUAY => $this->ll('Uruguay'),
         ];
 
         return $this->getOptionList($options);
