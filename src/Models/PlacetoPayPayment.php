@@ -584,7 +584,7 @@ class PlacetoPayPayment extends PaymentModule
                     'description' => sprintf($this->getDescription(), $reference),
                     'amount' => [
                         'currency' => $currency->iso_code,
-                        'total' => $totalAmountWithoutTaxes,
+                        'total' => $totalAmount,
                     ]
                 ]
             ];
@@ -595,7 +595,7 @@ class PlacetoPayPayment extends PaymentModule
                     [
                         'kind' => 'valueAddedTax',
                         'amount' => $taxAmount,
-                        'base' => $base,
+                        'base' => $totalAmountWithoutTaxes,
                     ]
                 ];
             }
