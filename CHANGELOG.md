@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.7.6 (2022-05-30)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.5...3.7.6)
+
+### Fixed
+
+- Fix total amount and base amount of the payment.
+
 ## [3.7.5 (2022-04-24)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.4...3.7.5)
 
 ### Fixed
