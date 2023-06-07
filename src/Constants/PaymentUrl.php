@@ -4,6 +4,7 @@ namespace PlacetoPay\Constants;
 
 use PlacetoPay\Countries\BelizeCountryConfig;
 use PlacetoPay\Countries\ChileCountryConfig;
+use PlacetoPay\Countries\ColombiaCountryConfig;
 use PlacetoPay\Countries\CountryConfig;
 use PlacetoPay\Countries\CountryConfigInterface;
 use PlacetoPay\Countries\EcuadorCountryConfig;
@@ -18,6 +19,7 @@ abstract class PaymentUrl
         HondurasCountryConfig::class,
         BelizeCountryConfig::class,
         UruguayCountryConfig::class,
+        ColombiaCountryConfig::class,
         CountryConfig::class
     ];
     public static function getEndpointsTo(string $countryCode): array

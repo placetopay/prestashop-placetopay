@@ -2,6 +2,7 @@
 
 namespace PlacetoPay\Countries;
 
+use PlacetoPay\Constants\Client;
 use PlacetoPay\Constants\CountryCode;
 use PlacetoPay\Constants\Environment;
 
@@ -19,5 +20,12 @@ abstract class ChileCountryConfig extends CountryConfig
             Environment::TEST => unmaskString('uggcf://purpxbhg.grfg.trgarg.py'),
             Environment::DEVELOPMENT => 'https://checkout-cl.placetopay.dev',
         ]);
+    }
+
+    public static function getClient(): array
+    {
+        return [
+            unmaskString(Client::GT) => unmaskString(Client::GT)
+        ];
     }
 }
