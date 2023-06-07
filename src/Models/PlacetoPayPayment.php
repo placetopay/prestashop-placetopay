@@ -10,9 +10,11 @@ use Country;
 use Currency;
 use Customer;
 use Db;
+use Dnetix\Redirection\Entities\PaymentModifier;
+use Dnetix\Redirection\Entities\Status;
 use Dnetix\Redirection\Message\Notification;
 use Dnetix\Redirection\Message\RedirectInformation;
-use Dnetix\Redirection\Validators\Currency as CurrencyValidator;
+use Dnetix\Redirection\PlacetoPay;
 use Exception;
 use HelperForm;
 use Language;
@@ -20,11 +22,13 @@ use Order;
 use OrderHistory;
 use OrderState;
 use PaymentModule;
+use PlacetoPay\Constants\Client;
 use PlacetoPay\Constants\CountryCode;
+use PlacetoPay\Constants\Discount;
 use PlacetoPay\Constants\Environment;
-use PlacetoPay\Constants\PaymentMethod;
 use PlacetoPay\Constants\PaymentStatus;
 use PlacetoPay\Constants\PaymentUrl;
+use PlacetoPay\Countries\CountryConfigInterface;
 use PlacetoPay\Exceptions\PaymentException;
 use PlacetoPay\Loggers\PaymentLogger;
 use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
@@ -69,7 +73,6 @@ class PlacetoPayPayment extends PaymentModule
     const EMAIL_CONTACT = 'PLACETOPAY_EMAILCONTACT';
     const TELEPHONE_CONTACT = 'PLACETOPAY_TELEPHONECONTACT';
     const DESCRIPTION = 'PLACETOPAY_DESCRIPTION';
-
     const EXPIRATION_TIME_MINUTES = 'PLACETOPAY_EXPIRATION_TIME_MINUTES';
     const SHOW_ON_RETURN = 'PLACETOPAY_SHOWONRETURN';
     const CIFIN_MESSAGE = 'PLACETOPAY_CIFINMESSAGE';
@@ -77,16 +80,14 @@ class PlacetoPayPayment extends PaymentModule
     const FILL_TAX_INFORMATION = 'PLACETOPAY_FILL_TAX_INFORMATION';
     const FILL_BUYER_INFORMATION = 'PLACETOPAY_FILL_BUYER_INFORMATION';
     const SKIP_RESULT = 'PLACETOPAY_SKIP_RESULT';
-    const PAYMENT_METHODS_ENABLED = 'PLACETOPAY_PAYMENT_METHODS_ENABLED';
-
-    const COUNTRY = 'PLACETOPAY_COUNTRY';
+    const CLIENT = 'PLACETOPAY_CLIENT';
+    const DISCOUNT = 'PLACETOPAY_DISCOUNT';
+    const INVOICE = 'PLACETOPAY_INVOICE';
     const ENVIRONMENT = 'PLACETOPAY_ENVIRONMENT';
     const CUSTOM_CONNECTION_URL = 'PLACETOPAY_CUSTOM_CONNECTION_URL';
     const PAYMENT_BUTTON_IMAGE = 'PLACETOPAY_PAYMENT_BUTTON_IMAGE';
     const LOGIN = 'PLACETOPAY_LOGIN';
     const TRAN_KEY = 'PLACETOPAY_TRANKEY';
-    const CONNECTION_TYPE = 'PLACETOPAY_CONNECTION_TYPE';
-
     const EXPIRATION_TIME_MINUTES_DEFAULT = 120; // 2 Hours
     const EXPIRATION_TIME_MINUTES_MIN = 10; // 10 Minutes
 
@@ -94,15 +95,8 @@ class PlacetoPayPayment extends PaymentModule
     const SHOW_ON_RETURN_PSE_LIST = 'pse_list';
     const SHOW_ON_RETURN_DETAILS = 'details';
     const SHOW_ON_RETURN_HOME = 'home';
-
-    const CONNECTION_TYPE_SOAP = 'soap';
-    const CONNECTION_TYPE_REST = 'rest';
-
     const OPTION_ENABLED = '1';
     const OPTION_DISABLED = '0';
-
-    const PAYMENT_METHODS_ENABLED_DEFAULT = 'ALL';
-
     const ORDER_STATE = 'PS_OS_PLACETOPAY';
 
     const PAGE_ORDER_CONFIRMATION = 'order-confirmation.php';
@@ -148,7 +142,7 @@ class PlacetoPayPayment extends PaymentModule
         parent::__construct();
 
         $this->author = $this->ll('Evertec PlacetoPay S.A.S.');
-        $this->displayName = unmaskString($this->ll('Placetopay'));
+        $this->displayName = $this->getClient();
         $this->description = $this->ll('Accept payments by credit cards and debits account.');
 
         $this->confirmUninstall = $this->ll('Are you sure you want to uninstall?');
@@ -168,7 +162,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             $this->warning .= '<br> - '
-                . $this->ll('You need to configure your Placetopay account before using this module.');
+                . sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient());
         }
 
         @date_default_timezone_set(Configuration::get('PS_TIMEZONE'));
@@ -212,7 +206,6 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::COMPANY_NAME, '');
             Configuration::updateValue(self::EMAIL_CONTACT, '');
             Configuration::updateValue(self::TELEPHONE_CONTACT, '');
-            Configuration::updateValue(self::DESCRIPTION, $this->getDefaultDescription());
 
             Configuration::updateValue(self::EXPIRATION_TIME_MINUTES, self::EXPIRATION_TIME_MINUTES_DEFAULT);
             Configuration::updateValue(self::SHOW_ON_RETURN, self::SHOW_ON_RETURN_PSE_LIST);
@@ -221,14 +214,14 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::FILL_TAX_INFORMATION, self::OPTION_ENABLED);
             Configuration::updateValue(self::FILL_BUYER_INFORMATION, self::OPTION_ENABLED);
             Configuration::updateValue(self::SKIP_RESULT, self::OPTION_DISABLED);
-            Configuration::updateValue(self::PAYMENT_METHODS_ENABLED, self::PAYMENT_METHODS_ENABLED_DEFAULT);
+            Configuration::updateValue(self::DISCOUNT, Discount::UY_NONE);
+            Configuration::updateValue(self::INVOICE, '');
 
-            Configuration::updateValue(self::COUNTRY, $this->getDefaultCountry());
+            Configuration::updateValue(self::CLIENT, $this->getClient());
             Configuration::updateValue(self::ENVIRONMENT, Environment::TEST);
             Configuration::updateValue(self::CUSTOM_CONNECTION_URL, '');
             Configuration::updateValue(self::LOGIN, '');
             Configuration::updateValue(self::TRAN_KEY, '');
-            Configuration::updateValue(self::CONNECTION_TYPE, self::CONNECTION_TYPE_REST);
             Configuration::updateValue(self::PAYMENT_BUTTON_IMAGE, '');
 
             return true;
@@ -245,7 +238,6 @@ class PlacetoPayPayment extends PaymentModule
             || !Configuration::deleteByName(self::COMPANY_NAME)
             || !Configuration::deleteByName(self::EMAIL_CONTACT)
             || !Configuration::deleteByName(self::TELEPHONE_CONTACT)
-            || !Configuration::deleteByName(self::DESCRIPTION)
 
             || !Configuration::deleteByName(self::EXPIRATION_TIME_MINUTES)
             || !Configuration::deleteByName(self::SHOW_ON_RETURN)
@@ -254,14 +246,14 @@ class PlacetoPayPayment extends PaymentModule
             || !Configuration::deleteByName(self::FILL_TAX_INFORMATION)
             || !Configuration::deleteByName(self::FILL_BUYER_INFORMATION)
             || !Configuration::deleteByName(self::SKIP_RESULT)
-            || !Configuration::deleteByName(self::PAYMENT_METHODS_ENABLED)
+            || !Configuration::deleteByName(self::DISCOUNT)
+            || !Configuration::deleteByName(self::INVOICE)
 
-            || !Configuration::deleteByName(self::COUNTRY)
+            || !Configuration::deleteByName(self::CLIENT)
             || !Configuration::deleteByName(self::ENVIRONMENT)
             || !Configuration::deleteByName(self::CUSTOM_CONNECTION_URL)
             || !Configuration::deleteByName(self::LOGIN)
             || !Configuration::deleteByName(self::TRAN_KEY)
-            || !Configuration::deleteByName(self::CONNECTION_TYPE)
             || !Configuration::deleteByName(self::PAYMENT_BUTTON_IMAGE)
             || !parent::uninstall()
         ) {
@@ -285,7 +277,7 @@ class PlacetoPayPayment extends PaymentModule
             if (count($formErrors) == 0) {
                 $this->formProcess();
 
-                $contentExtra = $this->displayConfirmation($this->ll('Placetopay settings updated'));
+                $contentExtra = $this->displayConfirmation(sprintf($this->ll('Client settings updated'), $this->getClient()));
             } else {
                 $contentExtra = $this->showError($formErrors);
             }
@@ -319,7 +311,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             PaymentLogger::log(
-                $this->ll('You need to configure your Placetopay account before using this module.'),
+                sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient()),
                 PaymentLogger::WARNING,
                 6,
                 __FILE__,
@@ -392,7 +384,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             PaymentLogger::log(
-                $this->ll('You need to configure your Placetopay account before using this module.'),
+                sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient()),
                 PaymentLogger::WARNING,
                 6,
                 __FILE__,
@@ -423,7 +415,7 @@ class PlacetoPayPayment extends PaymentModule
 
         $newOption = new PaymentOption();
 
-        $newOption->setCallToActionText(unmaskString($this->ll('Pay by Placetopay')))
+        $newOption->setCallToActionText(sprintf($this->ll('Pay by client'), $this->getClient()))
             ->setAdditionalInformation('')
             ->setForm($form);
 
@@ -515,11 +507,6 @@ class PlacetoPayPayment extends PaymentModule
             throw new PaymentException('Invalid currency', 303);
         }
 
-        if (!CurrencyValidator::isValidCurrency($currency->iso_code)) {
-            $message = sprintf('Currency ISO Code [%s] is not supported by PlacetoPay', $currency->iso_code);
-            throw new PaymentException($message, 304);
-        }
-
         $deliveryCountry = new Country((int)($deliveryAddress->id_country));
         $deliveryState = null;
         if ($deliveryAddress->id_state) {
@@ -589,6 +576,22 @@ class PlacetoPayPayment extends PaymentModule
                 ]
             ];
 
+            if ($this->getDefaultPrestashopCountry() === CountryCode::URUGUAY) {
+                $discountCode = $this->getCurrentValueOf(self::DISCOUNT);
+
+                if ($discountCode != Discount::UY_NONE) {
+                    $request['payment']['modifiers'] = [
+                        new PaymentModifier([
+                            'type' => PaymentModifier::TYPE_FEDERAL_GOVERNMENT,
+                            'code' => $discountCode,
+                            'additional' => [
+                                'invoice' => $this->getCurrentValueOf(self::INVOICE)
+                            ]
+                        ])
+                    ];
+                }
+            }
+
             if ($this->getFillTaxInformation() == self::OPTION_ENABLED && $taxAmount > 0) {
                 // Add taxes
                 $request['payment']['amount']['taxes'] = [
@@ -598,13 +601,6 @@ class PlacetoPayPayment extends PaymentModule
                         'base' => $totalAmountWithoutTaxes,
                     ]
                 ];
-            }
-
-            $paymentMethods = $this->getPaymentMethodsEnabled();
-
-            if (!empty($paymentMethods) && $paymentMethods != self::PAYMENT_METHODS_ENABLED_DEFAULT) {
-                // Disable payment method except
-                $request['paymentMethod'] = $paymentMethods;
             }
 
             if (isDebugEnable()) {
@@ -1058,13 +1054,13 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!empty($payment = $response->lastTransaction())
             && !empty($paymentStatus = $payment->status())
-            && ($paymentStatus->isApproved() || $paymentStatus->isRejected() || $paymentStatus->isFailed())
+            && ($paymentStatus->isApproved() || $paymentStatus->isRejected() || $paymentStatus == Status::ST_FAILED)
         ) {
             $date = pSQL($paymentStatus->date());
             $reason = pSQL($paymentStatus->reason());
             $reasonDescription = pSQL($paymentStatus->message());
 
-            if (!$paymentStatus->isFailed()) {
+            if ($paymentStatus != Status::ST_FAILED) {
                 $bank = pSQL($payment->issuerName());
                 $franchise = pSQL($payment->franchise());
                 $franchiseName = pSQL($payment->paymentMethodName());
@@ -1117,6 +1113,38 @@ class PlacetoPayPayment extends PaymentModule
         $history->save();
     }
 
+    final private function updateOrderState(): bool
+    {
+        switch ($this->getCurrentValueOf('PS_LOCALE_LANGUAGE')) {
+            case 'en':
+                $message = 'Awaiting ' . $this->getClient() . ' payment confirmation';
+                break;
+            case 'fr':
+                $message = 'En attente du paiement par ' . $this->getClient();
+                break;
+            case 'es':
+            default:
+                $message = 'En espera de confirmación de pago por ' . $this->getClient();
+                break;
+        }
+
+        $sql = "UPDATE `ps_order_state_lang` SET `name` = '" . pSQL($message) . "' WHERE `id_order_state` = " . $this->getOrderState();
+
+        try {
+            Db::getInstance()->execute($sql);
+        } catch (PrestaShopDatabaseException $e) {
+            // Maneja cualquier excepción relacionada con la base de datos
+            PaymentLogger::log($e->getMessage(), PaymentLogger::INFO, 0, $e->getFile(), $e->getLine());
+        } catch (Exception $e) {
+            // Maneja cualquier otra excepción
+            PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 4, $e->getFile(), $e->getLine());
+
+            return false;
+        }
+
+        return true;
+    }
+
     final private function createOrderState(): bool
     {
         if (!$this->getOrderState()) {
@@ -1128,14 +1156,14 @@ class PlacetoPayPayment extends PaymentModule
 
                 switch (Tools::strtolower($language['iso_code'])) {
                     case 'en':
-                        $orderState->name[$lang] = 'Awaiting ' . $this->displayName . ' payment confirmation';
+                        $orderState->name[$lang] = 'Awaiting ' . $this->getClient() . ' payment confirmation';
                         break;
                     case 'fr':
-                        $orderState->name[$lang] = 'En attente du paiement par ' . $this->displayName;
+                        $orderState->name[$lang] = 'En attente du paiement par ' . $this->getClient();
                         break;
                     case 'es':
                     default:
-                        $orderState->name[$lang] = 'En espera de confirmación de pago por ' . $this->displayName;
+                        $orderState->name[$lang] = 'En espera de confirmación de pago por ' . $this->getClient();
                         break;
                 }
             }
@@ -1316,10 +1344,6 @@ class PlacetoPayPayment extends PaymentModule
                 $formErrors[] = sprintf('%s %s', $this->ll('Telephone contact'), $this->ll('is required.'));
             }
 
-            if (!Tools::getValue(self::DESCRIPTION)) {
-                $formErrors[] = sprintf('%s %s', $this->ll('Payment description'), $this->ll('is required.'));
-            }
-
             // Connection Configuration
             if (!Tools::getValue(self::EXPIRATION_TIME_MINUTES)) {
                 $formErrors[] = sprintf('%s %s', $this->ll('Expiration time to pay'), $this->ll('is required.'));
@@ -1333,8 +1357,8 @@ class PlacetoPayPayment extends PaymentModule
                 );
             }
 
-            if (!Tools::getValue(self::COUNTRY)) {
-                $formErrors[] = sprintf('%s %s', $this->ll('Country'), $this->ll('is required.'));
+            if (!Tools::getValue(self::CLIENT)) {
+                $formErrors[] = sprintf('%s %s', $this->ll('Client'), $this->ll('is required.'));
             }
 
             if (!Tools::getValue(self::ENVIRONMENT)) {
@@ -1351,10 +1375,6 @@ class PlacetoPayPayment extends PaymentModule
             if (empty($this->getCurrentValueOf(self::TRAN_KEY)) && !Tools::getValue(self::TRAN_KEY)) {
                 $formErrors[] = sprintf('%s %s', $this->ll('Trankey'), $this->ll('is required.'));
             }
-
-            if (!Tools::getValue(self::CONNECTION_TYPE)) {
-                $formErrors[] = sprintf('%s %s', $this->ll('Connection type'), $this->ll('is required.'));
-            }
         }
 
         return $formErrors;
@@ -1366,12 +1386,12 @@ class PlacetoPayPayment extends PaymentModule
     final private function formProcess()
     {
         if (Tools::isSubmit('submitPlacetoPayConfiguration')) {
+            $this->updateOrderState();
             // Company data
             Configuration::updateValue(self::COMPANY_DOCUMENT, Tools::getValue(self::COMPANY_DOCUMENT));
             Configuration::updateValue(self::COMPANY_NAME, Tools::getValue(self::COMPANY_NAME));
             Configuration::updateValue(self::EMAIL_CONTACT, Tools::getValue(self::EMAIL_CONTACT));
             Configuration::updateValue(self::TELEPHONE_CONTACT, Tools::getValue(self::TELEPHONE_CONTACT));
-            Configuration::updateValue(self::DESCRIPTION, Tools::getValue(self::DESCRIPTION));
             // Configuration
             Configuration::updateValue(self::EXPIRATION_TIME_MINUTES, Tools::getValue(self::EXPIRATION_TIME_MINUTES));
             Configuration::updateValue(self::SHOW_ON_RETURN, Tools::getValue(self::SHOW_ON_RETURN));
@@ -1383,13 +1403,9 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::FILL_TAX_INFORMATION, Tools::getValue(self::FILL_TAX_INFORMATION));
             Configuration::updateValue(self::FILL_BUYER_INFORMATION, Tools::getValue(self::FILL_BUYER_INFORMATION));
             Configuration::updateValue(self::SKIP_RESULT, Tools::getValue(self::SKIP_RESULT));
-            Configuration::updateValue(self::PAYMENT_METHODS_ENABLED, PaymentMethod::getPaymentMethodsSelected(
-                Tools::getValue(self::PAYMENT_METHODS_ENABLED),
-                Tools::getValue(self::COUNTRY)
-            ));
 
             // Connection Configuration
-            Configuration::updateValue(self::COUNTRY, Tools::getValue(self::COUNTRY));
+            Configuration::updateValue(self::CLIENT, Tools::getValue(self::CLIENT));
             Configuration::updateValue(self::ENVIRONMENT, Tools::getValue(self::ENVIRONMENT));
             // Set or clean custom URL
             $this->isCustomEnvironment()
@@ -1402,7 +1418,6 @@ class PlacetoPayPayment extends PaymentModule
                 Configuration::updateValue(self::TRAN_KEY, Tools::getValue(self::TRAN_KEY));
             }
 
-            Configuration::updateValue(self::CONNECTION_TYPE, Tools::getValue(self::CONNECTION_TYPE));
             Configuration::updateValue(self::PAYMENT_BUTTON_IMAGE, Tools::getValue(self::PAYMENT_BUTTON_IMAGE));
         }
     }
@@ -1424,6 +1439,9 @@ class PlacetoPayPayment extends PaymentModule
                 'log_file' => $this->getLogFilePath(),
                 'log_database' => $this->context->link->getAdminLink('AdminLogs'),
                 'url_logo' => $this->getImage(),
+                'client' => $this->getClient(),
+                'isset_credentials' => sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient()),
+                'notify_translation' => sprintf($this->ll('URL where will send payment status to Prestashop.'), $this->getClient())
             ]
         );
 
@@ -1547,7 +1565,7 @@ class PlacetoPayPayment extends PaymentModule
 
             $this->context->smarty->assign([
                 'icon' => $this->getImage(),
-                'title' => unmaskString($this->ll('Placetopay')),
+                'title' => $this->getClient(),
                 'details' => $details,
             ]);
 
@@ -1562,7 +1580,7 @@ class PlacetoPayPayment extends PaymentModule
         $url = $this->getImageUrl();
 
         if (empty($url)) {
-            $image = $this->getImageByCountry($this->getCountry());
+            $image = $this->getImageByCountry($this->getClient());
         } elseif ($this->checkValidUrl($url)) {
             $image = $url;
         } elseif ($this->checkDirectory($url)) {
@@ -1574,10 +1592,14 @@ class PlacetoPayPayment extends PaymentModule
         return $image;
     }
 
-    final private function getImageByCountry(string $country): string
+    final private function getImageByCountry(string $client): string
     {
-        if ($country === CountryCode::CHILE) {
+        if ($client === unmaskString(Client::GT)) {
             return unmaskString('uggcf://onapb.fnagnaqre.py/hcybnqf/000/029/870/0620s532-9sp9-4248-o99r-78onr9s13r1q/bevtvany/Ybtb_JroPurpxbhg_Trgarg.fit');
+        }
+
+        if ($client === unmaskString(Client::GO)) {
+            return 'https://placetopay-static-prod-bucket.s3.us-east-2.amazonaws.com/goupagos-com-co/header.svg';
         }
 
         return 'https://static.placetopay.com/placetopay-logo.svg';
@@ -1601,7 +1623,11 @@ class PlacetoPayPayment extends PaymentModule
     final private function displayBrandMessage(): string
     {
         $this->context->smarty->assign('url', $this->getImage());
-
+        $this->context->smarty->assign('client_message', sprintf($this->ll('Pay by client'), $this->getClient()));
+        $this->context->smarty->assign('secure_message', sprintf($this->ll(
+                    'Client secure web site will be displayed when you select this payment method.'),
+            $this->getClient()
+            ));
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook/brand_payment.tpl'));
     }
 
@@ -1612,7 +1638,6 @@ class PlacetoPayPayment extends PaymentModule
             self::COMPANY_NAME => $this->getCompanyName(),
             self::EMAIL_CONTACT => $this->getEmailContact(),
             self::TELEPHONE_CONTACT => $this->getTelephoneContact(),
-            self::DESCRIPTION => $this->getDescription(),
 
             self::EXPIRATION_TIME_MINUTES => $this->getExpirationTimeMinutes(),
             self::SHOW_ON_RETURN => $this->getShowOnReturn(),
@@ -1621,16 +1646,12 @@ class PlacetoPayPayment extends PaymentModule
             self::FILL_TAX_INFORMATION => $this->getFillTaxInformation(),
             self::FILL_BUYER_INFORMATION => $this->getFillBuyerInformation(),
             self::SKIP_RESULT => $this->getSkipResult(),
-            $this->getNameInMultipleFormat(self::PAYMENT_METHODS_ENABLED) => PaymentMethod::toArray(
-                $this->getPaymentMethodsEnabled()
-            ),
 
-            self::COUNTRY => $this->getCountry(),
+            self::CLIENT => $this->getClient(),
             self::ENVIRONMENT => $this->getEnvironment(),
             self::CUSTOM_CONNECTION_URL => $this->isCustomEnvironment() ? $this->getCustomConnectionUrl() : '',
             self::LOGIN => $this->getLogin(),
             self::TRAN_KEY => $this->getTranKey(),
-            self::CONNECTION_TYPE => $this->getConnectionType(),
             self::PAYMENT_BUTTON_IMAGE => $this->getImageUrl(),
         ];
     }
@@ -1767,7 +1788,7 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getDescription(): string
     {
-        return $this->getCurrentValueOf(self::DESCRIPTION);
+        return 'Pago en ' . $this->getClient() . ' No: %s';
     }
 
     final private function getExpirationTimeMinutes(): int
@@ -1809,28 +1830,6 @@ class PlacetoPayPayment extends PaymentModule
         return (bool)$this->getCurrentValueOf(self::SKIP_RESULT);
     }
 
-    final private function getPaymentMethodsEnabled(): string
-    {
-        $paymentMethods = $this->getCurrentValueOf(self::PAYMENT_METHODS_ENABLED);
-
-        if (is_array($paymentMethods)) {
-            $paymentMethods = PaymentMethod::toString($paymentMethods);
-        }
-
-        return empty($paymentMethods)
-            ? self::PAYMENT_METHODS_ENABLED_DEFAULT
-            : $paymentMethods;
-    }
-
-    final private function getCountry(): string
-    {
-        $country = $this->getCurrentValueOf(self::COUNTRY);
-
-        return empty($country)
-            ? $this->getDefaultCountry()
-            : $country;
-    }
-
     final private function getEnvironment(): string
     {
         $environment = $this->getCurrentValueOf(self::ENVIRONMENT);
@@ -1864,22 +1863,10 @@ class PlacetoPayPayment extends PaymentModule
         return $this->getCurrentValueOf(self::PAYMENT_BUTTON_IMAGE);
     }
 
-    final private function getConnectionType(): string
-    {
-        $connectionType = $this->getCurrentValueOf(self::CONNECTION_TYPE);
-
-        return empty($connectionType) || !in_array($connectionType, [
-            self::CONNECTION_TYPE_SOAP,
-            self::CONNECTION_TYPE_REST
-        ])
-            ? self::CONNECTION_TYPE_REST
-            : $connectionType;
-    }
-
     final private function getUri(): ?string
     {
         $uri = null;
-        $endpoints = PaymentUrl::getEndpointsTo($this->getCountry());
+        $endpoints = PaymentUrl::getEndpointsTo($this->getDefaultPrestashopCountry());
 
         if ($this->isCustomEnvironment()) {
             $uri = $this->getCustomConnectionUrl();
@@ -2278,7 +2265,7 @@ class PlacetoPayPayment extends PaymentModule
         $setup .= sprintf('Plugin [%s]', $this->getPluginVersion()) . breakLine();
         $setup .= sprintf('URL Base [%s]', $this->getUrl('')) . breakLine();
         $setup .= sprintf('Logs [%s]', $this->getLogFilePath()) . breakLine();
-        $setup .= sprintf('%s [%s]', $this->ll('Country'), $this->getCountry()) . breakLine();
+        $setup .= sprintf('%s [%s]', $this->ll('Country'), $this->getDefaultPrestashopCountry()) . breakLine();
         $setup .= sprintf('%s [%s]', $this->ll('Environment'), $this->getEnvironment()) . breakLine();
 
         if ($this->isCustomEnvironment()) {
@@ -2289,11 +2276,6 @@ class PlacetoPayPayment extends PaymentModule
             );
         }
 
-        $setup .= sprintf(
-            '%s [%s]' . breakLine(),
-            $this->ll('Connection type'),
-            $this->getConnectionType()
-        );
         $setup .= sprintf(
             '%s [%s]' . breakLine(),
             $this->ll('Expiration time to pay'),
@@ -2318,11 +2300,6 @@ class PlacetoPayPayment extends PaymentModule
             '%s [%s]' . breakLine(),
             $this->ll('Skip result?'),
             $this->getSkipResult() ? $this->ll('Yes') : $this->ll('No')
-        );
-        $setup .= sprintf(
-            '%s [%s]' . breakLine(),
-            $this->ll('Payment methods enabled'),
-            $this->getPaymentMethodsEnabled()
         );
 
         $setup .= breakLine();
@@ -2370,19 +2347,6 @@ class PlacetoPayPayment extends PaymentModule
         return $listOption;
     }
 
-    final private function getOptionListPaymentMethods(): array
-    {
-        $options = [
-            self::PAYMENT_METHODS_ENABLED_DEFAULT => $this->ll('All'),
-        ];
-
-        foreach (PaymentMethod::getPaymentMethodsAvailable($this->getCountry()) as $code => $name) {
-            $options[$code] = $name;
-        }
-
-        return $this->getOptionList($options);
-    }
-
     final private function getOptionListShowOnReturn(): array
     {
         $options = [
@@ -2395,20 +2359,33 @@ class PlacetoPayPayment extends PaymentModule
         return $this->getOptionList($options);
     }
 
+    final private function getDefaultPrestashopCountry(): string
+    {
+        return Country::getIsoById((int)Configuration::get('PS_COUNTRY_DEFAULT'));
+    }
+
+    final private function getDefaultClient(): string
+    {
+        return $this->getDefaultPrestashopCountry() == CountryCode::CHILE ? unmaskString(Client::GT) : Client::PT;
+    }
+
+    final private function getClient(): string
+    {
+        return $this->getCurrentValueOf(self::CLIENT) ? $this->getCurrentValueOf(self::CLIENT) : $this->getDefaultClient();
+    }
+
     final private function getOptionListCountries(): array
     {
-        $options = [
-            CountryCode::COLOMBIA => $this->ll('Colombia'),
-            CountryCode::ECUADOR => $this->ll('Ecuador'),
-            CountryCode::COSTA_RICA => $this->ll('Costa Rica'),
-            CountryCode::CHILE => $this->ll('Chile'),
-            CountryCode::PUERTO_RICO => $this->ll('Puerto Rico'),
-            CountryCode::BELIZE => $this->ll('Belice'),
-            CountryCode::HONDURAS => $this->ll('Honduras'),
-            CountryCode::URUGUAY => $this->ll('Uruguay'),
-        ];
+        /** @var CountryConfigInterface $config */
+        foreach (CountryCode::COUNTRIES_CLIENT as $config) {
+            if (!$config::resolve($this->getDefaultPrestashopCountry())) {
+                continue;
+            }
 
-        return $this->getOptionList($options);
+            return $this->getOptionList($config::getClient());
+        }
+
+        return [];
     }
 
     final private function getOptionListEnvironments(): array
@@ -2423,14 +2400,16 @@ class PlacetoPayPayment extends PaymentModule
         return $this->getOptionList($options);
     }
 
-    final private function getOptionListConnectionTypes(): array
+    final private function getOptionsDiscounts(): array
     {
-        $options = [
-            self::CONNECTION_TYPE_SOAP => $this->ll('SOAP'),
-            self::CONNECTION_TYPE_REST => $this->ll('REST'),
-        ];
-
-        return $this->getOptionList($options);
+        return $this->getOptionList([
+            Discount::UY_IVA_REFUND => $this->ll(Discount::UY_IVA_REFUND),
+            Discount::UY_IMESI_REFUND => $this->ll(Discount::UY_IMESI_REFUND),
+            Discount::UY_FINANCIAL_INCLUSION => $this->ll(Discount::UY_FINANCIAL_INCLUSION),
+            Discount::UY_AFAM_REFUND => $this->ll(Discount::UY_AFAM_REFUND),
+            Discount::UY_TAX_REFUND => $this->ll(Discount::UY_AFAM_REFUND),
+            Discount::UY_NONE => $this->ll('None'),
+        ]);
     }
 
     final private function getFieldsCompany(): array
@@ -2464,19 +2443,12 @@ class PlacetoPayPayment extends PaymentModule
                 'required' => true,
                 'autocomplete' => 'off',
             ],
-            [
-                'type' => 'text',
-                'label' => $this->ll('Payment description'),
-                'name' => self::DESCRIPTION,
-                'required' => true,
-                'autocomplete' => 'off',
-            ],
         ];
     }
 
     final private function getFieldsConfiguration(): array
     {
-        return [
+        $fields = [
             [
                 'type' => 'text',
                 'label' => $this->ll('Expiration time to pay'),
@@ -2486,7 +2458,7 @@ class PlacetoPayPayment extends PaymentModule
             ],
             [
                 'type' => 'select',
-                'label' => $this->ll('Show on payment return'),
+                'label' => sprintf($this->ll('Show on payment return'), $this->getClient()),
                 'desc' => $this->ll('If you has PSE method payment in your commerce, set it in: PSE List.'),
                 'name' => self::SHOW_ON_RETURN,
                 'options' => [
@@ -2530,21 +2502,31 @@ class PlacetoPayPayment extends PaymentModule
                 'is_bool' => true,
                 'values' => $this->getOptionSwitch(),
             ],
-            [
-                'type' => 'select',
-                'multiple' => true,
-                'label' => $this->ll('Payment methods enabled'),
-                'name' => $this->getNameInMultipleFormat(self::PAYMENT_METHODS_ENABLED),
-                'id' => self::PAYMENT_METHODS_ENABLED,
-                // @codingStandardsIgnoreLine
-                'desc' => $this->ll('IMPORTANT: Payment methods in Placetopay will restrict by this selection. [Ctrl + Clic] to select several'),
-                'options' => [
-                    'id' => 'value',
-                    'name' => 'label',
-                    'query' => $this->getOptionListPaymentMethods(),
-                ]
-            ]
         ];
+
+        if ($this->getDefaultPrestashopCountry() === CountryCode::URUGUAY){
+            $fields = array_merge($fields, [
+                [
+                    'type' => 'select',
+                    'label' => 'Descuentos',
+                    'name' => self::DISCOUNT,
+                    'options' => [
+                        'id' => 'value',
+                        'name' => 'label',
+                        'query' => $this->getOptionsDiscounts(),
+                    ]
+                ],
+                [
+                    'type' => 'text',
+                    'label' => 'Invoice',
+                    'name' => self::INVOICE,
+                    'required' => false,
+                    'autocomplete' => 'off',
+                ],
+            ]);
+        }
+
+        return $fields;
     }
 
     final private function getFieldsConnection(): array
@@ -2552,8 +2534,8 @@ class PlacetoPayPayment extends PaymentModule
         return [
             [
                 'type' => 'select',
-                'label' => $this->ll('Country'),
-                'name' => self::COUNTRY,
+                'label' => $this->ll('Client'),
+                'name' => self::CLIENT,
                 'required' => true,
                 'options' => [
                     'id' => 'value',
@@ -2599,17 +2581,6 @@ class PlacetoPayPayment extends PaymentModule
                 'name' => self::TRAN_KEY,
                 'required' => true,
                 'autocomplete' => 'off',
-            ],
-            [
-                'type' => 'select',
-                'label' => $this->ll('Connection type'),
-                'name' => self::CONNECTION_TYPE,
-                'required' => true,
-                'options' => [
-                    'id' => 'value',
-                    'name' => 'label',
-                    'query' => $this->getOptionListConnectionTypes(),
-                ],
             ],
             [
                 'type' => 'text',
@@ -2717,38 +2688,15 @@ class PlacetoPayPayment extends PaymentModule
         ];
     }
 
-    final private function instanceRedirection(): PaymentRedirection
+    final private function instanceRedirection(): PlacetoPay
     {
         $settings = [
             'login' => $this->getLogin(),
             'tranKey' => $this->getTranKey(),
             'baseUrl' => $this->getUri(),
-            'type' => $this->getConnectionType(),
             'headers' => $this->getHeaders(),
         ];
 
-        return new PaymentRedirection($settings);
-    }
-
-    final private function getDefaultDescription(): string
-    {
-        $country = $this->getDefaultCountry();
-
-        if ($country === CountryCode::CHILE) {
-            return unmaskString('Cntb ra Trgarg Ab: %f');
-        }
-
-        return 'Pago en PlacetoPay No: %s';
-    }
-
-    final private function getDefaultCountry(): string
-    {
-        $isoCode = $this->getCurrentValueOf('PS_LOCALE_COUNTRY');
-
-        if (is_string($isoCode)) {
-            return substr($isoCode, 0, 2);
-        }
-
-        return CountryCode::COLOMBIA;
+        return new PlacetoPay($settings);
     }
 }
