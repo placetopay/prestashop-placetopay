@@ -577,7 +577,7 @@ class PlacetoPayPayment extends PaymentModule
             ];
 
             if ($this->getDefaultPrestashopCountry() === CountryCode::URUGUAY) {
-                $discountCode = $this->getCurrentValueOf(self::DISCOUNT);
+                $discountCode = $this->getDiscount();
 
                 if ($discountCode != Discount::UY_NONE) {
                     $request['payment']['modifiers'] = [
@@ -585,7 +585,7 @@ class PlacetoPayPayment extends PaymentModule
                             'type' => PaymentModifier::TYPE_FEDERAL_GOVERNMENT,
                             'code' => $discountCode,
                             'additional' => [
-                                'invoice' => $this->getCurrentValueOf(self::INVOICE)
+                                'invoice' => $this->getInvoice()
                             ]
                         ])
                     ];
@@ -1403,6 +1403,8 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::FILL_TAX_INFORMATION, Tools::getValue(self::FILL_TAX_INFORMATION));
             Configuration::updateValue(self::FILL_BUYER_INFORMATION, Tools::getValue(self::FILL_BUYER_INFORMATION));
             Configuration::updateValue(self::SKIP_RESULT, Tools::getValue(self::SKIP_RESULT));
+            Configuration::updateValue(self::DISCOUNT, Tools::getValue(self::DISCOUNT));
+            Configuration::updateValue(self::INVOICE, Tools::getValue(self::INVOICE));
 
             // Connection Configuration
             Configuration::updateValue(self::CLIENT, Tools::getValue(self::CLIENT));
@@ -1646,6 +1648,8 @@ class PlacetoPayPayment extends PaymentModule
             self::FILL_TAX_INFORMATION => $this->getFillTaxInformation(),
             self::FILL_BUYER_INFORMATION => $this->getFillBuyerInformation(),
             self::SKIP_RESULT => $this->getSkipResult(),
+            self::DISCOUNT => $this->getDiscount(),
+            self::INVOICE => $this->getInvoice(),
 
             self::CLIENT => $this->getClient(),
             self::ENVIRONMENT => $this->getEnvironment(),
@@ -1828,6 +1832,16 @@ class PlacetoPayPayment extends PaymentModule
     final private function getSkipResult(): bool
     {
         return (bool)$this->getCurrentValueOf(self::SKIP_RESULT);
+    }
+
+    final private function getDiscount(): int
+    {
+        return $this->getCurrentValueOf(self::DISCOUNT);
+    }
+
+    final private function getInvoice(): int
+    {
+        return $this->getCurrentValueOf(self::INVOICE);
     }
 
     final private function getEnvironment(): string
