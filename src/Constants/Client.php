@@ -4,7 +4,7 @@ namespace PlacetoPay\Constants;
 
 interface Client
 {
-    public const GT = 'Trgarg';
-    public const GO = 'TBH';
-    public const PT = 'Placetopay';
+    public const GNT = 'Trgarg';
+    public const GOU = 'TBH';
+    public const PTP = 'Placetopay';
 }

@@ -15,7 +15,7 @@ class ColombiaCountryConfig extends CountryConfig
 
     public static function getEndpoints(string $client = ''): array
     {
-        if ($client === unmaskString(Client::GO)) {
+        if ($client === unmaskString(Client::GOU)) {
             return array_merge(parent::getEndpoints(), [
                 Environment::PRODUCTION => unmaskString('uggcf://purpxbhg.tbhcntbf.pbz.pb'),
                 Environment::TEST => unmaskString('uggcf://purpxbhg.grfg.tbhcntbf.pbz.pb'),
@@ -28,8 +28,8 @@ class ColombiaCountryConfig extends CountryConfig
     public static function getClient(): array
     {
         return [
-            Client::PT => Client::PT,
-            unmaskString(Client::GO) => unmaskString(Client::GO),
+            Client::PTP => Client::PTP,
+            unmaskString(Client::GOU) => unmaskString(Client::GOU),
         ];
     }
 }

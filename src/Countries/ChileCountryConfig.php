@@ -25,7 +25,7 @@ abstract class ChileCountryConfig extends CountryConfig
     public static function getClient(): array
     {
         return [
-            unmaskString(Client::GT) => unmaskString(Client::GT)
+            unmaskString(Client::GNT) => unmaskString(Client::GNT)
         ];
     }
 }

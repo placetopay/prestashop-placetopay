@@ -1596,11 +1596,11 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getImageByCountry(string $client): string
     {
-        if ($client === unmaskString(Client::GT)) {
+        if ($client === unmaskString(Client::GNT)) {
             return unmaskString('uggcf://onapb.fnagnaqre.py/hcybnqf/000/029/870/0620s532-9sp9-4248-o99r-78onr9s13r1q/bevtvany/Ybtb_JroPurpxbhg_Trgarg.fit');
         }
 
-        if ($client === unmaskString(Client::GO)) {
+        if ($client === unmaskString(Client::GOU)) {
             return 'https://placetopay-static-prod-bucket.s3.us-east-2.amazonaws.com/goupagos-com-co/header.svg';
         }
 
@@ -2380,7 +2380,7 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getDefaultClient(): string
     {
-        return $this->getDefaultPrestashopCountry() == CountryCode::CHILE ? unmaskString(Client::GT) : Client::PT;
+        return $this->getDefaultPrestashopCountry() == CountryCode::CHILE ? unmaskString(Client::GNT) : Client::PTP;
     }
 
     final private function getClient(): string

@@ -25,7 +25,7 @@ class CountryConfig implements CountryConfigInterface
     public static function getClient(): array
     {
         return [
-            Client::PT => Client::PT
+            Client::PTP => Client::PTP
         ];
     }
 }
