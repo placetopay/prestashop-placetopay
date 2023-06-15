@@ -13,7 +13,7 @@ class CountryConfig implements CountryConfigInterface
         return true;
     }
 
-    public static function getEndpoints(): array
+    public static function getEndpoints(string $client): array
     {
         return [
             Environment::PRODUCTION => 'https://checkout.placetopay.com',
@@ -25,7 +25,7 @@ class CountryConfig implements CountryConfigInterface
     public static function getClient(): array
     {
         return [
-            Client::PTP => Client::PTP
+            unmaskString(Client::PTP) => unmaskString(Client::PTP)
         ];
     }
 }

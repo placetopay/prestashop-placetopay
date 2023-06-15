@@ -13,22 +13,22 @@ class ColombiaCountryConfig extends CountryConfig
         return CountryCode::COLOMBIA === $countryCode;
     }
 
-    public static function getEndpoints(string $client = ''): array
+    public static function getEndpoints(string $client): array
     {
         if ($client === unmaskString(Client::GOU)) {
-            return array_merge(parent::getEndpoints(), [
+            return array_merge(parent::getEndpoints($client), [
                 Environment::PRODUCTION => unmaskString('uggcf://purpxbhg.tbhcntbf.pbz.pb'),
                 Environment::TEST => unmaskString('uggcf://purpxbhg.grfg.tbhcntbf.pbz.pb'),
             ]);
         }
 
-        return parent::getEndpoints();
+        return parent::getEndpoints($client);
     }
 
     public static function getClient(): array
     {
         return [
-            Client::PTP => Client::PTP,
+            unmaskString(Client::PTP) => unmaskString(Client::PTP),
             unmaskString(Client::GOU) => unmaskString(Client::GOU),
         ];
     }

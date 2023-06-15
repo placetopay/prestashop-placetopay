@@ -1596,15 +1596,13 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getImageByCountry(string $client): string
     {
-        if ($client === unmaskString(Client::GNT)) {
-            return unmaskString('uggcf://onapb.fnagnaqre.py/hcybnqf/000/029/870/0620s532-9sp9-4248-o99r-78onr9s13r1q/bevtvany/Ybtb_JroPurpxbhg_Trgarg.fit');
-        }
+        $clientImage = [
+            Client::GNT => 'uggcf://onapb.fnagnaqre.py/hcybnqf/000/029/870/0620s532-9sp9-4248-o99r-78onr9s13r1q/bevtvany/Ybtb_JroPurpxbhg_Trgarg.fit',
+            Client::GOU => 'uggcf://cynprgbcnl-fgngvp-cebq-ohpxrg.f3.hf-rnfg-2.nznmbanjf.pbz/tbhcntbf-pbz-pb/urnqre.fit',
+            Client::PTP => 'uggcf://fgngvp.cynprgbcnl.pbz/cynprgbcnl-ybtb.fit'
+        ];
 
-        if ($client === unmaskString(Client::GOU)) {
-            return 'https://placetopay-static-prod-bucket.s3.us-east-2.amazonaws.com/goupagos-com-co/header.svg';
-        }
-
-        return 'https://static.placetopay.com/placetopay-logo.svg';
+        return unmaskString($clientImage[unmaskString($client)]) ?? unmaskString('uggcf://fgngvp.cynprgbcnl.pbz/cynprgbcnl-ybtb.fit');
     }
 
     final private function checkDirectory(string $path): bool
@@ -2380,7 +2378,7 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getDefaultClient(): string
     {
-        return $this->getDefaultPrestashopCountry() == CountryCode::CHILE ? unmaskString(Client::GNT) : Client::PTP;
+        return $this->getDefaultPrestashopCountry() == CountryCode::CHILE ? unmaskString(Client::GNT) : unmaskString(Client::PTP);
     }
 
     final private function getClient(): string
