@@ -1054,13 +1054,13 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!empty($payment = $response->lastTransaction())
             && !empty($paymentStatus = $payment->status())
-            && ($paymentStatus->isApproved() || $paymentStatus->isRejected() || $paymentStatus == Status::ST_FAILED)
+            && ($paymentStatus->isApproved() || $paymentStatus->isRejected() || $paymentStatus->status() === Status::ST_FAILED)
         ) {
             $date = pSQL($paymentStatus->date());
             $reason = pSQL($paymentStatus->reason());
             $reasonDescription = pSQL($paymentStatus->message());
 
-            if ($paymentStatus != Status::ST_FAILED) {
+            if ($paymentStatus !== Status::ST_FAILED) {
                 $bank = pSQL($payment->issuerName());
                 $franchise = pSQL($payment->franchise());
                 $franchiseName = pSQL($payment->paymentMethodName());
@@ -1115,28 +1115,15 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function updateOrderState(): bool
     {
-        switch ($this->getCurrentValueOf('PS_LOCALE_LANGUAGE')) {
-            case 'en':
-                $message = 'Awaiting ' . $this->getClient() . ' payment confirmation';
-                break;
-            case 'fr':
-                $message = 'En attente du paiement par ' . $this->getClient();
-                break;
-            case 'es':
-            default:
-                $message = 'En espera de confirmación de pago por ' . $this->getClient();
-                break;
-        }
-
-        $sql = "UPDATE `ps_order_state_lang` SET `name` = '" . pSQL($message) . "' WHERE `id_order_state` = " . $this->getOrderState();
+        $sql = "UPDATE `ps_order_state_lang` SET `name` = '" .
+            pSQL($this->resolveStateMessage($this->getCurrentValueOf('PS_LOCALE_LANGUAGE'))) .
+            "' WHERE `id_order_state` = " . $this->getOrderState();
 
         try {
             Db::getInstance()->execute($sql);
         } catch (PrestaShopDatabaseException $e) {
-            // Maneja cualquier excepción relacionada con la base de datos
             PaymentLogger::log($e->getMessage(), PaymentLogger::INFO, 0, $e->getFile(), $e->getLine());
         } catch (Exception $e) {
-            // Maneja cualquier otra excepción
             PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 4, $e->getFile(), $e->getLine());
 
             return false;
@@ -1154,18 +1141,7 @@ class PlacetoPayPayment extends PaymentModule
             foreach (Language::getLanguages() as $language) {
                 $lang = $language['id_lang'];
 
-                switch (Tools::strtolower($language['iso_code'])) {
-                    case 'en':
-                        $orderState->name[$lang] = 'Awaiting ' . $this->getClient() . ' payment confirmation';
-                        break;
-                    case 'fr':
-                        $orderState->name[$lang] = 'En attente du paiement par ' . $this->getClient();
-                        break;
-                    case 'es':
-                    default:
-                        $orderState->name[$lang] = 'En espera de confirmación de pago por ' . $this->getClient();
-                        break;
-                }
+                $orderState->name[$lang] = $this->resolveStateMessage(Tools::strtolower($language['iso_code']));
             }
 
             $orderState->color = 'lightblue';
@@ -1189,6 +1165,24 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         return true;
+    }
+
+    final private function resolveStateMessage(string $code): string
+    {
+        switch ($code) {
+            case 'en':
+                $message = 'Awaiting ' . $this->getClient() . ' payment confirmation';
+                break;
+            case 'fr':
+                $message = 'En attente du paiement par ' . $this->getClient();
+                break;
+            case 'es':
+            default:
+                $message = 'En espera de confirmación de pago por ' . $this->getClient();
+                break;
+        }
+
+        return $message;
     }
 
     final private function createPaymentTable(): bool
@@ -1386,7 +1380,9 @@ class PlacetoPayPayment extends PaymentModule
     final private function formProcess()
     {
         if (Tools::isSubmit('submitPlacetoPayConfiguration')) {
-            $this->updateOrderState();
+            if ($this->getClient() !== Tools::getValue(self::CLIENT)) {
+                $this->updateOrderState();
+            }
             // Company data
             Configuration::updateValue(self::COMPANY_DOCUMENT, Tools::getValue(self::COMPANY_DOCUMENT));
             Configuration::updateValue(self::COMPANY_NAME, Tools::getValue(self::COMPANY_NAME));
@@ -2319,15 +2315,6 @@ class PlacetoPayPayment extends PaymentModule
         return $setup;
     }
 
-    /**
-     * @param $name
-     * @return string
-     */
-    final private function getNameInMultipleFormat($name)
-    {
-        return sprintf('%s[]', $name);
-    }
-
     final private function getOptionSwitch(): array
     {
         return [
@@ -2378,7 +2365,7 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getDefaultClient(): string
     {
-        return $this->getDefaultPrestashopCountry() == CountryCode::CHILE ? unmaskString(Client::GNT) : unmaskString(Client::PTP);
+        return $this->getDefaultPrestashopCountry() === CountryCode::CHILE ? unmaskString(Client::GNT) : unmaskString(Client::PTP);
     }
 
     final private function getClient(): string
