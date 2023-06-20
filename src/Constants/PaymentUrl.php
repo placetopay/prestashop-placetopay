@@ -30,7 +30,7 @@ abstract class PaymentUrl
                 continue;
             }
 
-            return $config::getEndpoints();
+            return $config::getEndpoints($countryCode);
         }
 
         return [];
