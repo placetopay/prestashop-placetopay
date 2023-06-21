@@ -650,8 +650,9 @@ class PlacetoPayPayment extends PaymentModule
 
             // Redirect flow
             Tools::redirectLink($redirectTo);
-        } catch (Exception $e) {
-            $message = $e->getMessage();
+        } catch (\Throwable $e) {
+            $this->updateCurrentOrderWithError();
+
             PaymentLogger::log($message, PaymentLogger::WARNING, 8, $e->getFile(), $e->getLine());
 
             Tools::redirect($urlOrderStatus);
