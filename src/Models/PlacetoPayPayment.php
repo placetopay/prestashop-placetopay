@@ -1829,12 +1829,12 @@ class PlacetoPayPayment extends PaymentModule
         return (bool)$this->getCurrentValueOf(self::SKIP_RESULT);
     }
 
-    final private function getDiscount(): int
+    final private function getDiscount(): string
     {
         return $this->getCurrentValueOf(self::DISCOUNT);
     }
 
-    final private function getInvoice(): int
+    final private function getInvoice(): string
     {
         return $this->getCurrentValueOf(self::INVOICE);
     }
