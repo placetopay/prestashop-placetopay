@@ -653,7 +653,7 @@ class PlacetoPayPayment extends PaymentModule
         } catch (\Throwable $e) {
             $this->updateCurrentOrderWithError();
 
-            PaymentLogger::log($message, PaymentLogger::WARNING, 8, $e->getFile(), $e->getLine());
+            PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 8, $e->getFile(), $e->getLine());
 
             Tools::redirect($urlOrderStatus);
         }
