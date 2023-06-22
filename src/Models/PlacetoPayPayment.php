@@ -162,7 +162,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             $this->warning .= '<br> - '
-                . sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient());
+                . $this->lll('You need to configure your %s account before using this module.');
         }
 
         @date_default_timezone_set(Configuration::get('PS_TIMEZONE'));
@@ -277,7 +277,7 @@ class PlacetoPayPayment extends PaymentModule
             if (count($formErrors) == 0) {
                 $this->formProcess();
 
-                $contentExtra = $this->displayConfirmation(sprintf($this->ll('Client settings updated'), $this->getClient()));
+                $contentExtra = $this->displayConfirmation($this->lll('%s settings updated'));
             } else {
                 $contentExtra = $this->showError($formErrors);
             }
@@ -311,7 +311,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             PaymentLogger::log(
-                sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient()),
+                $this->lll('You need to configure your %s account before using this module.'),
                 PaymentLogger::WARNING,
                 6,
                 __FILE__,
@@ -384,7 +384,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             PaymentLogger::log(
-                sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient()),
+                $this->lll('You need to configure your %s account before using this module.'),
                 PaymentLogger::WARNING,
                 6,
                 __FILE__,
@@ -415,7 +415,7 @@ class PlacetoPayPayment extends PaymentModule
 
         $newOption = new PaymentOption();
 
-        $newOption->setCallToActionText(sprintf($this->ll('Pay by client'), $this->getClient()))
+        $newOption->setCallToActionText($this->lll('Pay by %s'))
             ->setAdditionalInformation('')
             ->setForm($form);
 
@@ -1166,9 +1166,9 @@ class PlacetoPayPayment extends PaymentModule
         return true;
     }
 
-    final private function resolveStateMessage(string $code): string
+    final private function resolveStateMessage(string $langCode): string
     {
-        switch ($code) {
+        switch ($langCode) {
             case 'en':
                 $message = 'Awaiting ' . $this->getClient() . ' payment confirmation';
                 break;
@@ -1437,8 +1437,8 @@ class PlacetoPayPayment extends PaymentModule
                 'log_database' => $this->context->link->getAdminLink('AdminLogs'),
                 'url_logo' => $this->getImage(),
                 'client' => $this->getClient(),
-                'isset_credentials' => sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient()),
-                'notify_translation' => sprintf($this->ll('URL where will send payment status to Prestashop.'), $this->getClient())
+                'isset_credentials' => $this->lll('You need to configure your %s account before using this module.'),
+                'notify_translation' => $this->lll('URL used by %s to report the status of payments.')
             ]
         );
 
@@ -1618,11 +1618,10 @@ class PlacetoPayPayment extends PaymentModule
     final private function displayBrandMessage(): string
     {
         $this->context->smarty->assign('url', $this->getImage());
-        $this->context->smarty->assign('client_message', sprintf($this->ll('Pay by client'), $this->getClient()));
-        $this->context->smarty->assign('secure_message', sprintf($this->ll(
-            'Client secure web site will be displayed when you select this payment method.'),
-            $this->getClient()
-        ));
+        $this->context->smarty->assign('client_message', $this->lll('Pay by %s'));
+        $this->context->smarty->assign('secure_message',
+            $this->lll('%s secure web site will be displayed when you select this payment method.')
+        );
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook/brand_payment.tpl'));
     }
 
@@ -2210,19 +2209,15 @@ class PlacetoPayPayment extends PaymentModule
     final private function getStatusPayment(RedirectInformation $response): int
     {
         $status = PaymentStatus::PENDING;
-        $lastStatus = $response->status();
 
-        if ($response->isSuccessful() && !empty($lastStatus)) {
-            if ($lastStatus->isApproved()) {
+        if ($response->isSuccessful()) {
+            if ($response->status()->isApproved()) {
                 $status = PaymentStatus::APPROVED;
-            } elseif ($lastStatus->isRejected()) {
+            } elseif ($response->status()->isRejected()) {
                 $status = PaymentStatus::REJECTED;
             }
         } elseif ($response->status()->isRejected()) {
-            // Canceled by user
             $status = PaymentStatus::REJECTED;
-        } else {
-            $status = PaymentStatus::FAILED;
         }
 
         return $status;
@@ -2451,7 +2446,7 @@ class PlacetoPayPayment extends PaymentModule
             ],
             [
                 'type' => 'select',
-                'label' => sprintf($this->ll('Show on payment return'), $this->getClient()),
+                'label' => $this->lll('Returning from %s show'),
                 'desc' => $this->ll('If you has PSE method payment in your commerce, set it in: PSE List.'),
                 'name' => self::SHOW_ON_RETURN,
                 'options' => [
@@ -2631,6 +2626,11 @@ class PlacetoPayPayment extends PaymentModule
     final private function ll(string $string): string
     {
         return $this->l($string, getModuleName());
+    }
+
+    final private function lll(string $translation): string
+    {
+        return sprintf($this->ll($translation), $this->getClient());
     }
 
     final private function showError(array $errors): string
