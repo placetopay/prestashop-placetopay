@@ -1055,22 +1055,20 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!empty($payment = $response->lastTransaction())
             && !empty($paymentStatus = $payment->status())
-            && ($paymentStatus->isApproved() || $paymentStatus->isRejected() || $paymentStatus->status() === Status::ST_FAILED)
+            && ($payment->isSuccessful())
         ) {
             $date = pSQL($paymentStatus->date());
             $reason = pSQL($paymentStatus->reason());
             $reasonDescription = pSQL($paymentStatus->message());
 
-            if ($paymentStatus !== Status::ST_FAILED) {
-                $bank = pSQL($payment->issuerName());
-                $franchise = pSQL($payment->franchise());
-                $franchiseName = pSQL($payment->paymentMethodName());
-                $authCode = pSQL($payment->authorization());
-                $receipt = pSQL($payment->receipt());
-                $conversion = pSQL($payment->amount()->factor());
-                $installments = pSQL($payment->additionalData()['installments'] ?? 0);
-                $lastDigits = pSQL(str_replace('*', '', $payment->additionalData()['lastDigits']));
-            }
+            $bank = pSQL($payment->issuerName());
+            $franchise = pSQL($payment->franchise());
+            $franchiseName = pSQL($payment->paymentMethodName());
+            $authCode = pSQL($payment->authorization());
+            $receipt = pSQL($payment->receipt());
+            $conversion = pSQL($payment->amount()->factor());
+            $installments = pSQL($payment->additionalData()['installments'] ?? 0);
+            $lastDigits = pSQL(str_replace('*', '', $payment->additionalData()['lastDigits']));
         }
 
         if (!empty($request = $response->request())
@@ -1583,9 +1581,9 @@ class PlacetoPayPayment extends PaymentModule
         } elseif ($this->checkValidUrl($url)) {
             $image = $url;
         } elseif ($this->checkDirectory($url)) {
-            $image = $this->context->shop->getBaseURL(true).$url;
+            $image = $this->context->shop->getBaseURL(true) . $url;
         } else {
-            $image = 'https://static.placetopay.com/'.$url.'.svg';
+            $image = 'https://static.placetopay.com/' . $url . '.svg';
         }
 
         return $image;
@@ -1622,9 +1620,9 @@ class PlacetoPayPayment extends PaymentModule
         $this->context->smarty->assign('url', $this->getImage());
         $this->context->smarty->assign('client_message', sprintf($this->ll('Pay by client'), $this->getClient()));
         $this->context->smarty->assign('secure_message', sprintf($this->ll(
-                    'Client secure web site will be displayed when you select this payment method.'),
+            'Client secure web site will be displayed when you select this payment method.'),
             $this->getClient()
-            ));
+        ));
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook/brand_payment.tpl'));
     }
 
@@ -1949,11 +1947,11 @@ class PlacetoPayPayment extends PaymentModule
     {
         $sql = 'SELECT `id_order`
             FROM `' . _DB_PREFIX_ . 'orders`
-            WHERE `id_cart` = ' . (int) $id_cart;
+            WHERE `id_cart` = ' . (int)$id_cart;
 
         $result = Db::getInstance()->getValue($sql);
 
-        return !empty($result) ? (int) $result : false;
+        return !empty($result) ? (int)$result : false;
     }
 
     /**
@@ -2211,25 +2209,20 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getStatusPayment(RedirectInformation $response): int
     {
-        // By default is pending so make a query for it later (see information.php example)
         $status = PaymentStatus::PENDING;
         $lastStatus = $response->status();
 
         if ($response->isSuccessful() && !empty($lastStatus)) {
-            // In order to use the functions please refer to the RedirectInformation class
             if ($lastStatus->isApproved()) {
-                // Approved status
                 $status = PaymentStatus::APPROVED;
             } elseif ($lastStatus->isRejected()) {
-                // This is why it has been reject
                 $status = PaymentStatus::REJECTED;
-            } elseif ($lastStatus->isFailed()) {
-                // This is why it has been fail
-                $status = PaymentStatus::FAILED;
             }
         } elseif ($response->status()->isRejected()) {
             // Canceled by user
             $status = PaymentStatus::REJECTED;
+        } else {
+            $status = PaymentStatus::FAILED;
         }
 
         return $status;
@@ -2504,7 +2497,7 @@ class PlacetoPayPayment extends PaymentModule
             ],
         ];
 
-        if ($this->getDefaultPrestashopCountry() === CountryCode::URUGUAY){
+        if ($this->getDefaultPrestashopCountry() === CountryCode::URUGUAY) {
             $fields = array_merge($fields, [
                 [
                     'type' => 'select',
