@@ -12,9 +12,9 @@ abstract class EcuadorCountryConfig extends CountryConfig
         return CountryCode::ECUADOR === $countryCode;
     }
 
-    public static function getEndpoints(): array
+    public static function getEndpoints(string $client): array
     {
-        return array_merge(parent::getEndpoints(), [
+        return array_merge(parent::getEndpoints($client), [
             Environment::PRODUCTION => 'https://checkout.placetopay.ec',
             Environment::TEST => 'https://checkout-test.placetopay.ec',
             Environment::DEVELOPMENT => 'https://checkout-ec.placetopay.dev',

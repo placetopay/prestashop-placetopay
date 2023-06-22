@@ -3,10 +3,10 @@
 {l s='Evertec PlacetoPay S.A.S.' mod='placetopaypayment'}
 {l s='Are you sure you want to uninstall?' mod='placetopaypayment'}
 {l s='No currency has been set for this module.' mod='placetopaypayment'}
-{l s='You need to configure your Placetopay account before using this module.' mod='placetopaypayment'}
+{l s='You need to configure your client account before using this module.' mod='placetopaypayment'}
 {l s='is required.' mod='placetopaypayment'}
 {l s='is not valid.' mod='placetopaypayment'}
-{l s='Placetopay settings updated' mod='placetopaypayment'}
+{l s='Client settings updated' mod='placetopaypayment'}
 {l s='Re-inject stock on declination?' mod='placetopaypayment'}
 {l s='Company data' mod='placetopaypayment'}
 {l s='Merchant ID' mod='placetopaypayment'}
@@ -27,7 +27,7 @@
 {l s='Fill buyer information?' mod='placetopaypayment'}
 {l s='Skip result?' mod='placetopaypayment'}
 {l s='Connection Configuration' mod='placetopaypayment'}
-{l s='Country' mod='placetopaypayment'}
+{l s='Client' mod='placetopaypayment'}
 {l s='Colombia' mod='placetopaypayment'}
 {l s='Ecuador' mod='placetopaypayment'}
 {l s='Chile' mod='placetopaypayment'}
@@ -48,8 +48,8 @@
 {l s='Connection type' mod='placetopaypayment'}
 {l s='SOAP' mod='placetopaypayment'}
 {l s='REST' mod='placetopaypayment'}
-{l s='Pay by Placetopay' mod='placetopaypayment'}
-{l s='Placetopay secure web site will be displayed when you select this payment method.' mod='placetopaypayment'}
+{l s='Pay by client' mod='placetopaypayment'}
+{l s='Client secure web site will be displayed when you select this payment method.' mod='placetopaypayment'}
 {l s='Pending payment' mod='placetopaypayment'}
 {l s='Completed payment' mod='placetopaypayment'}
 {l s='Failed payment' mod='placetopaypayment'}
@@ -82,3 +82,10 @@
 {l s='Receipt' mod='placetopaypayment'}
 {l s='Reason' mod='placetopaypayment'}
 {l s='%s installments' mod='placetopaypayment'}
+{l s='URL where will send payment status to Prestashop.' mod='placetopaypayment'}
+{l s='17934' mod='placetopaypayment'}
+{l s='18083' mod='placetopaypayment'}
+{l s='19210' mod='placetopaypayment'}
+{l s='18910' mod='placetopaypayment'}
+{l s='18999' mod='placetopaypayment'}
+{l s='None' mod='placetopaypayment'}
