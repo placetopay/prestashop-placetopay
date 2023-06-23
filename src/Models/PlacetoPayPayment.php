@@ -162,7 +162,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             $this->warning .= '<br> - '
-                . sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient());
+                . $this->lll('You need to configure your %s account before using this module.');
         }
 
         @date_default_timezone_set(Configuration::get('PS_TIMEZONE'));
@@ -277,7 +277,7 @@ class PlacetoPayPayment extends PaymentModule
             if (count($formErrors) == 0) {
                 $this->formProcess();
 
-                $contentExtra = $this->displayConfirmation(sprintf($this->ll('Client settings updated'), $this->getClient()));
+                $contentExtra = $this->displayConfirmation($this->lll('%s settings updated'));
             } else {
                 $contentExtra = $this->showError($formErrors);
             }
@@ -311,7 +311,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             PaymentLogger::log(
-                sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient()),
+                $this->lll('You need to configure your %s account before using this module.'),
                 PaymentLogger::WARNING,
                 6,
                 __FILE__,
@@ -384,7 +384,7 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!$this->isSetCredentials()) {
             PaymentLogger::log(
-                sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient()),
+                $this->lll('You need to configure your %s account before using this module.'),
                 PaymentLogger::WARNING,
                 6,
                 __FILE__,
@@ -415,7 +415,7 @@ class PlacetoPayPayment extends PaymentModule
 
         $newOption = new PaymentOption();
 
-        $newOption->setCallToActionText(sprintf($this->ll('Pay by client'), $this->getClient()))
+        $newOption->setCallToActionText($this->lll('Pay by %s'))
             ->setAdditionalInformation('')
             ->setForm($form);
 
@@ -1055,22 +1055,20 @@ class PlacetoPayPayment extends PaymentModule
 
         if (!empty($payment = $response->lastTransaction())
             && !empty($paymentStatus = $payment->status())
-            && ($paymentStatus->isApproved() || $paymentStatus->isRejected() || $paymentStatus->status() === Status::ST_FAILED)
+            && ($payment->isSuccessful())
         ) {
             $date = pSQL($paymentStatus->date());
             $reason = pSQL($paymentStatus->reason());
             $reasonDescription = pSQL($paymentStatus->message());
 
-            if ($paymentStatus !== Status::ST_FAILED) {
-                $bank = pSQL($payment->issuerName());
-                $franchise = pSQL($payment->franchise());
-                $franchiseName = pSQL($payment->paymentMethodName());
-                $authCode = pSQL($payment->authorization());
-                $receipt = pSQL($payment->receipt());
-                $conversion = pSQL($payment->amount()->factor());
-                $installments = pSQL($payment->additionalData()['installments'] ?? 0);
-                $lastDigits = pSQL(str_replace('*', '', $payment->additionalData()['lastDigits']));
-            }
+            $bank = pSQL($payment->issuerName());
+            $franchise = pSQL($payment->franchise());
+            $franchiseName = pSQL($payment->paymentMethodName());
+            $authCode = pSQL($payment->authorization());
+            $receipt = pSQL($payment->receipt());
+            $conversion = pSQL($payment->amount()->factor());
+            $installments = pSQL($payment->additionalData()['installments'] ?? 0);
+            $lastDigits = pSQL(str_replace('*', '', $payment->additionalData()['lastDigits']));
         }
 
         if (!empty($request = $response->request())
@@ -1168,9 +1166,9 @@ class PlacetoPayPayment extends PaymentModule
         return true;
     }
 
-    final private function resolveStateMessage(string $code): string
+    final private function resolveStateMessage(string $langCode): string
     {
-        switch ($code) {
+        switch ($langCode) {
             case 'en':
                 $message = 'Awaiting ' . $this->getClient() . ' payment confirmation';
                 break;
@@ -1439,8 +1437,8 @@ class PlacetoPayPayment extends PaymentModule
                 'log_database' => $this->context->link->getAdminLink('AdminLogs'),
                 'url_logo' => $this->getImage(),
                 'client' => $this->getClient(),
-                'isset_credentials' => sprintf($this->ll('You need to configure your client account before using this module.'), $this->getClient()),
-                'notify_translation' => sprintf($this->ll('URL where will send payment status to Prestashop.'), $this->getClient())
+                'isset_credentials' => $this->lll('You need to configure your %s account before using this module.'),
+                'notify_translation' => $this->lll('URL used by %s to report the status of payments.')
             ]
         );
 
@@ -1583,9 +1581,9 @@ class PlacetoPayPayment extends PaymentModule
         } elseif ($this->checkValidUrl($url)) {
             $image = $url;
         } elseif ($this->checkDirectory($url)) {
-            $image = $this->context->shop->getBaseURL(true).$url;
+            $image = $this->context->shop->getBaseURL(true) . $url;
         } else {
-            $image = 'https://static.placetopay.com/'.$url.'.svg';
+            $image = 'https://static.placetopay.com/' . $url . '.svg';
         }
 
         return $image;
@@ -1620,11 +1618,10 @@ class PlacetoPayPayment extends PaymentModule
     final private function displayBrandMessage(): string
     {
         $this->context->smarty->assign('url', $this->getImage());
-        $this->context->smarty->assign('client_message', sprintf($this->ll('Pay by client'), $this->getClient()));
-        $this->context->smarty->assign('secure_message', sprintf($this->ll(
-                    'Client secure web site will be displayed when you select this payment method.'),
-            $this->getClient()
-            ));
+        $this->context->smarty->assign('client_message', $this->lll('Pay by %s'));
+        $this->context->smarty->assign('secure_message',
+            $this->lll('%s secure web site will be displayed when you select this payment method.')
+        );
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook/brand_payment.tpl'));
     }
 
@@ -1949,11 +1946,11 @@ class PlacetoPayPayment extends PaymentModule
     {
         $sql = 'SELECT `id_order`
             FROM `' . _DB_PREFIX_ . 'orders`
-            WHERE `id_cart` = ' . (int) $id_cart;
+            WHERE `id_cart` = ' . (int)$id_cart;
 
         $result = Db::getInstance()->getValue($sql);
 
-        return !empty($result) ? (int) $result : false;
+        return !empty($result) ? (int)$result : false;
     }
 
     /**
@@ -2211,24 +2208,15 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getStatusPayment(RedirectInformation $response): int
     {
-        // By default is pending so make a query for it later (see information.php example)
         $status = PaymentStatus::PENDING;
-        $lastStatus = $response->status();
 
-        if ($response->isSuccessful() && !empty($lastStatus)) {
-            // In order to use the functions please refer to the RedirectInformation class
-            if ($lastStatus->isApproved()) {
-                // Approved status
+        if ($response->isSuccessful()) {
+            if ($response->status()->isApproved()) {
                 $status = PaymentStatus::APPROVED;
-            } elseif ($lastStatus->isRejected()) {
-                // This is why it has been reject
+            } elseif ($response->status()->isRejected()) {
                 $status = PaymentStatus::REJECTED;
-            } elseif ($lastStatus->isFailed()) {
-                // This is why it has been fail
-                $status = PaymentStatus::FAILED;
             }
         } elseif ($response->status()->isRejected()) {
-            // Canceled by user
             $status = PaymentStatus::REJECTED;
         }
 
@@ -2458,7 +2446,7 @@ class PlacetoPayPayment extends PaymentModule
             ],
             [
                 'type' => 'select',
-                'label' => sprintf($this->ll('Show on payment return'), $this->getClient()),
+                'label' => $this->lll('Returning from %s show'),
                 'desc' => $this->ll('If you has PSE method payment in your commerce, set it in: PSE List.'),
                 'name' => self::SHOW_ON_RETURN,
                 'options' => [
@@ -2504,7 +2492,7 @@ class PlacetoPayPayment extends PaymentModule
             ],
         ];
 
-        if ($this->getDefaultPrestashopCountry() === CountryCode::URUGUAY){
+        if ($this->getDefaultPrestashopCountry() === CountryCode::URUGUAY) {
             $fields = array_merge($fields, [
                 [
                     'type' => 'select',
@@ -2638,6 +2626,11 @@ class PlacetoPayPayment extends PaymentModule
     final private function ll(string $string): string
     {
         return $this->l($string, getModuleName());
+    }
+
+    final private function lll(string $translation): string
+    {
+        return sprintf($this->ll($translation), $this->getClient());
     }
 
     final private function showError(array $errors): string

@@ -7,10 +7,10 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4a84fa314d025e9515472
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_506852acddff49d5301613f585fd5bc6'] = 'Evertec PlacetoPay S.A.S.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_876f23178c29dc2552c0b48bf23cd9bd'] = 'Are you sure you want to uninstall?';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_a02758d758e8bec77a33d7f392eb3f8a'] = 'No currency has been set for this module.';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_18558d5ffd9b08ba77f4438bc68df99d'] = 'You need to configure your %s account before using this module.';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_aae39cdce5349ef19bbad1fa8d9158e5'] = 'You need to configure your %s account before using this module.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_ee66f9c9930cb33d2a5dde9b240d3f7e'] = 'is required.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_b0f2aa53ca75f7cb21943f01e6cf22ff'] = 'is not valid.';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_9a8b8be64981ef76c4d899bfac160216'] = '%s settings updated';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_52835d99689c02ebcc7345391107fd3e'] = '%s settings updated';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_a5239217cade6840bdf6bad4790c2405'] = 'Re-inject stock on declination?';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_60daa6e5d5cf70fa4b01349f1d3209e9'] = 'Company data';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_229a7ec501323b94db7ff3157a7623c9'] = 'Merchant ID';
@@ -20,8 +20,8 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_fcc334a736f4de2d397a3
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_961b9a68822e8a47a046b0ef80bb8196'] = 'Payment description';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_254f642527b45bc260048e30704edb39'] = 'Configuration';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_7e07e9e90c97ced358b7191599066be6'] = 'Expiration time to pay';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_7cb035b7a69b159cf733884472d3d4d7'] = 'Show on %s return';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d9936d8c4bfa1e6fa1df8c46fa8fbc95'] = 'URL where %s will send payment status to Prestashop.';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_9903d05ca7174aeea1413306f4474625'] = 'Returning from %s show';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d596312c8bd794e696b62effe66b9d8c'] = 'URL where %s will send payment status to Prestashop.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6c13a05f626c6bb8b29ab2757fbeebaa'] = 'If you has PSE method payment in your commerce, set it in: Payment list.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_589d213944623dd93012c9f0b314442a'] = 'Default';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_accea76d09b0193c332cf51c646a205c'] = 'Payment details';
@@ -53,7 +53,7 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6332f3778e6c3ae54d794
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d0afed67605524c7117536fe92ce3da8'] = 'Connection type';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_4de91f0fcb9cd3a20b6b1d64610a0a3d'] = 'SOAP';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_50780f47f6839d47d60bc4555ee00c3f'] = 'REST';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_008ed0a245a5b77005914891b9d68fb1'] = 'Pay with %s';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_f990493af3321939ca512f8f2cace108'] = 'Pay with %s';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d213d9f6558da5e72e3348aaf5bf4970'] = '%s secure web site will be displayed when you select this payment method.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_e59458c2ad3850466357a1cd342adc51'] = 'Pending payment';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_5d5c4a24285e79624af97a58941965cf'] = 'Completed payment';
@@ -75,9 +75,9 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6adf97f83acf6453d4a6a
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_6aeabdd64048318ca8c79647564ba969'] = 'This plugin don\'t has been tested with your PrestaShop version [%s].';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_5932ec01231e4ec6ba6b4a3a7691de53'] = 'Payment button image	';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c8b48868eb21f2d35301ba4d05720257'] = 'It can be a URL, an image name (SVG format) or a local path (image from ' . _PS_IMG_ . ' folder).';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_e8fb3b7d3c7e5016c0e464f6f622e6ba'] = 'The %s secure website will be displayed when you select this payment method.';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_9e2b5965a105cd77862dfc03cf5371a2'] = 'The %s secure website will be displayed when you select this payment method.';
 $_MODULE['<{placetopaypayment}prestashop>payment_a905b48f56e4462afa66e3b3da6eb091'] = 'Pay with %s';
-$_MODULE['<{placetopaypayment}prestashop>payment_e8fb3b7d3c7e5016c0e464f6f622e6ba'] = 'The %s secure website will be displayed when you select this payment method.';
+$_MODULE['<{placetopaypayment}prestashop>payment_9e2b5965a105cd77862dfc03cf5371a2'] = 'The %s secure website will be displayed when you select this payment method.';
 $_MODULE['<{placetopaypayment}prestashop>payment_0eaadb4fcb48a0a0ed7bc9868be9fbaa'] = 'Warning';
 $_MODULE['<{placetopaypayment}prestashop>payment_23ab9d23650891426fe6a81e038cfade'] = 'At this time your order';
 $_MODULE['<{placetopaypayment}prestashop>payment_6810b4142fbd38d9e9e2f67c616d1368'] = 'presents a checkout transaction which is PENDING to receive confirmation from your bank, please wait a few minutes and check back later to see if your payment was successfully confirmed.';
@@ -126,7 +126,7 @@ $_MODULE['<{placetopaypayment}prestashop>response_13dba24862cf9128167a59100e154c
 $_MODULE['<{placetopaypayment}prestashop>response_5f7ae98bdc36ea2686daed151216abf6'] = 'Retry payment';
 $_MODULE['<{placetopaypayment}prestashop>response_91a1bd08a417cbd1ce9ee50d8c67bab6'] = 'Payment History';
 $_MODULE['<{placetopaypayment}prestashop>setting_539fa2e06ba86d40021c702405354de6'] = 'This module allows you to accept payments by %s.';
-$_MODULE['<{placetopaypayment}prestashop>setting_18558d5ffd9b08ba77f4438bc68df99d'] = 'You need to configure your %s account before using this module.';
+$_MODULE['<{placetopaypayment}prestashop>setting_aae39cdce5349ef19bbad1fa8d9158e5'] = 'You need to configure your %s account before using this module.';
 $_MODULE['<{placetopaypayment}prestashop>setting_a2b787ad97ab6f553dded04fc19dab01'] = 'Notification URL';
 $_MODULE['<{placetopaypayment}prestashop>setting_d66be00270dd3d64aad0834d24367dad'] = 'Scheduler task path';
 $_MODULE['<{placetopaypayment}prestashop>setting_3e75e0ca8d410b971074efb89689b85a'] = 'Set this task to validate payments with pending status in your site.';
