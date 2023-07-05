@@ -5,7 +5,6 @@
   "require": {
     "php": "^7.1",
     "ext-curl": "*",
-    "ext-soap": "*",
     "ext-json": "*",
     "ext-mbstring": "*",
     "alejociro/redirection": "^1.0",
