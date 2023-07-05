@@ -3,7 +3,7 @@
         <img src="{$url_logo}" style="float:left; margin-right:15px;" alt="PlacetoPay" height="48">
         <p>
             <strong>
-                {l s='This module allows you to accept payments by Placetopay.' mod='placetopaypayment'}
+                {l s='This module allows you to accept payments by' mod='placetopaypayment'} {$client}.
             </strong>
         </p>
         <p>
@@ -14,7 +14,7 @@
     {if !$is_set_credentials}
         <div class="alert alert-warning">
             <p>
-                {l s='You need to configure your Placetopay account before using this module.' mod='placetopaypayment'}
+                {$isset_credentials}
             </p>
         </div>
     {/if}
@@ -28,7 +28,7 @@
                 <div class="col-lg-9">
                     <span style="font-size: 16px;">{$url_notification}</span>
                     <p class="help-block">
-                        {l s='URL where Placetopay will send payment status to Prestashop.' mod='placetopaypayment'}
+                        {$notify_translation}
                     </p>
                 </div>
             </div>

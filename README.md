@@ -91,7 +91,6 @@ cd /var/www/html/modules/placetopaypayment \
 | 301  | Customer was not loaded                        |
 | 302  | Address was not loaded                         |
 | 303  | Currency was not loaded                        |
-| 304  | Currency is not supported by PlacetoPay        |
 | 401  | Create payment PlacetoPay failed               |
 | 501  | Payload notification PlacetoPay was not valid  |
 | 601  | Update status payment PlacetoPay fail          |

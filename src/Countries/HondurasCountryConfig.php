@@ -12,9 +12,9 @@ abstract class HondurasCountryConfig extends CountryConfig
         return CountryCode::HONDURAS === $countryCode;
     }
 
-    public static function getEndpoints(): array
+    public static function getEndpoints(string $client): array
     {
-        return array_merge(parent::getEndpoints(), [
+        return array_merge(parent::getEndpoints($client), [
             Environment::TEST => 'https://uy-uat-checkout.placetopay.com',
             Environment::PRODUCTION => 'https://checkout.placetopay.uy',
         ]);

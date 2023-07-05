@@ -5,10 +5,9 @@
   "require": {
     "php": "^7.1",
     "ext-curl": "*",
-    "ext-soap": "*",
     "ext-json": "*",
     "ext-mbstring": "*",
-    "dnetix/redirection": "^1.0",
+    "alejociro/redirection": "^1.0",
     "guzzlehttp/guzzle": "~5.3"
   },
   "license": "MIT",

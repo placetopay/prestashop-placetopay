@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [3.8.0 (2022-07-05)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.6...3.8.0)
+
+### Added
+
+- Add branding by client country (it's defined in PS).
+- Add modifiers support: UY.
+
+### Removed
+
+- Remove currency validation, now it depends from response of WC.
+- Remove payments methods enable, now it depends from configurations in WC.
+- Remove connection type configuration, only supports REST messages (using JSON).
+
 ## [3.7.6 (2022-05-30)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.5...3.7.6)
 
 ### Fixed
