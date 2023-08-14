@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Add lightbox to process payments.
+
 ## [3.8.0 (2022-07-05)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.6...3.8.0)
 
 ### Added
