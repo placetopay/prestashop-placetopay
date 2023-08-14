@@ -91,6 +91,8 @@ class PlacetoPayPayment extends PaymentModule
     const EXPIRATION_TIME_MINUTES_DEFAULT = 120; // 2 Hours
     const EXPIRATION_TIME_MINUTES_MIN = 10; // 10 Minutes
 
+    const LIGHTBOX = 'PLACETOPAY_LIGHTBOX';
+
     const SHOW_ON_RETURN_DEFAULT = 'default';
     const SHOW_ON_RETURN_PSE_LIST = 'pse_list';
     const SHOW_ON_RETURN_DETAILS = 'details';
@@ -223,6 +225,7 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::LOGIN, '');
             Configuration::updateValue(self::TRAN_KEY, '');
             Configuration::updateValue(self::PAYMENT_BUTTON_IMAGE, '');
+            Configuration::updateValue(self::LIGHTBOX, self::OPTION_DISABLED);
 
             return true;
         }
@@ -255,6 +258,7 @@ class PlacetoPayPayment extends PaymentModule
             || !Configuration::deleteByName(self::LOGIN)
             || !Configuration::deleteByName(self::TRAN_KEY)
             || !Configuration::deleteByName(self::PAYMENT_BUTTON_IMAGE)
+            || !Configuration::deleteByName(self::LIGHTBOX)
             || !parent::uninstall()
         ) {
             return false;
@@ -648,8 +652,12 @@ class PlacetoPayPayment extends PaymentModule
                 PaymentLogger::log($message, PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
             }
 
-            // Redirect flow
-            Tools::redirectLink($redirectTo);
+            if ($this->getLightbox()) {
+                echo $this->display($this->getThisModulePath(), fixPath('/views/templates/front/redirect.tpl'));
+                echo $this->resolveLightbox($redirectTo, $returnUrl);
+            } else {
+                Tools::redirectLink($redirectTo);
+            }
         } catch (\Throwable $e) {
             $this->updateCurrentOrderWithError();
 
@@ -657,6 +665,25 @@ class PlacetoPayPayment extends PaymentModule
 
             Tools::redirect($urlOrderStatus);
         }
+    }
+
+    private function resolveLightbox(string $processUrl, string $returnUrl)
+    {
+        $lightboxScript = 'https://checkout.placetopay.com/lightbox.min.js';
+
+        if ($this->getDefaultPrestashopCountry()) {
+            $lightboxScript = 'https://checkout.placetopay.ec/lightbox.min.js';
+        }
+
+        return <<<HTML
+         <script src="{$lightboxScript}"></script>
+         <script>
+            P.init("{$processUrl}", { opacity: 0.4 });
+            P.on('response', function() {
+            window.location = "{$returnUrl}";
+            });
+         </script>
+        HTML;
     }
 
     /**
@@ -938,7 +965,8 @@ class PlacetoPayPayment extends PaymentModule
         $message,
         $ipAddress,
         $reference
-    ) {
+    )
+    {
         // Default values
         $reason = '';
         $date = date('Y-m-d H:i:s');
@@ -1416,6 +1444,7 @@ class PlacetoPayPayment extends PaymentModule
             }
 
             Configuration::updateValue(self::PAYMENT_BUTTON_IMAGE, Tools::getValue(self::PAYMENT_BUTTON_IMAGE));
+            Configuration::updateValue(self::LIGHTBOX, Tools::getValue(self::LIGHTBOX));
         }
     }
 
@@ -1597,7 +1626,8 @@ class PlacetoPayPayment extends PaymentModule
             Client::PTP => 'uggcf://fgngvp.cynprgbcnl.pbz/cynprgbcnl-ybtb.fit'
         ];
 
-        return unmaskString($clientImage[unmaskString($client)]) ?? unmaskString('uggcf://fgngvp.cynprgbcnl.pbz/cynprgbcnl-ybtb.fit');
+        return $clientImage[unmaskString($client ?? '')] ? unmaskString($clientImage[unmaskString($client)]) :
+            unmaskString('uggcf://fgngvp.cynprgbcnl.pbz/cynprgbcnl-ybtb.fit');
     }
 
     final private function checkDirectory(string $path): bool
@@ -1649,6 +1679,7 @@ class PlacetoPayPayment extends PaymentModule
             self::LOGIN => $this->getLogin(),
             self::TRAN_KEY => $this->getTranKey(),
             self::PAYMENT_BUTTON_IMAGE => $this->getImageUrl(),
+            self::LIGHTBOX => $this->getLightbox()
         ];
     }
 
@@ -1867,6 +1898,11 @@ class PlacetoPayPayment extends PaymentModule
     final private function getImageUrl(): ?string
     {
         return $this->getCurrentValueOf(self::PAYMENT_BUTTON_IMAGE);
+    }
+
+    final private function getLightbox(): bool
+    {
+        return (bool)$this->getCurrentValueOf(self::LIGHTBOX);
     }
 
     final private function getUri(): ?string
@@ -2576,7 +2612,14 @@ class PlacetoPayPayment extends PaymentModule
                 'desc' => $this->ll('It can be a URL, an image name (provide the image to the placetopay team as svg format for this to work) or a local path (save the image to the img folder).'),
                 'name' => self::PAYMENT_BUTTON_IMAGE,
                 'autocomplete' => 'off',
-            ]
+            ],
+            [
+                'type' => 'switch',
+                'label' => $this->ll('Lightbox'),
+                'name' => self::LIGHTBOX,
+                'is_bool' => true,
+                'values' => $this->getOptionSwitch(),
+            ],
         ];
     }
 
