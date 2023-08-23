@@ -6,7 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [3.8.0 (2022-07-05)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.6...3.8.0)
+## [3.8.1 (2023-08-23)](https://github.com/placetopay/prestashop-placetopay/compare/3.8.0...3.8.1)
+
+### Added
+
+- Add lightbox to process payments.
+
+## [3.8.0 (2023-07-05)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.6...3.8.0)
 
 ### Added
 
@@ -19,25 +25,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 - Remove payments methods enable, now it depends from configurations in WC.
 - Remove connection type configuration, only supports REST messages (using JSON).
 
-## [3.7.6 (2022-05-30)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.5...3.7.6)
+## [3.7.6 (2023-05-30)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.5...3.7.6)
 
 ### Fixed
 
 - Fix total amount and base amount of the payment.
 
-## [3.7.5 (2022-04-24)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.4...3.7.5)
+## [3.7.5 (2023-04-24)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.4...3.7.5)
 
 ### Fixed
 
 - Fix amount base of the payment. (code overwrite in commit)
 
-## [3.7.4 (2022-03-30)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.3...3.7.4)
+## [3.7.4 (2023-03-30)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.3...3.7.4)
 
 ### Added
 
 - Add UY country as option in country list.
 
-## [3.7.3 (2022-03-10)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.2...3.7.3)
+## [3.7.3 (2023-03-10)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.2...3.7.3)
 
 ### Fixed
 

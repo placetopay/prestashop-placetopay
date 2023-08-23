@@ -89,3 +89,4 @@
 {l s='18910' mod='placetopaypayment'}
 {l s='18999' mod='placetopaypayment'}
 {l s='None' mod='placetopaypayment'}
+{l s='Processing payment' mod='placetopaypayment'}
