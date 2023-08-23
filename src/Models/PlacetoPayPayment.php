@@ -122,7 +122,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.8.0';
+        $this->version = '3.8.1';
 
         $this->tab = 'payments_gateways';
 
