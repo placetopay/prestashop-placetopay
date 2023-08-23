@@ -1,17 +1,23 @@
 <!DOCTYPE html>
+<!--[if lt IE 7]> <html lang="es" class="no-js lt-ie9 lt-ie8 lt-ie7 lt-ie6"> <![endif]-->
+<!--[if IE 7]>    <html lang="es" class="no-js lt-ie9 lt-ie8 ie7"> <![endif]-->
+<!--[if IE 8]>    <html lang="es" class="no-js lt-ie9 ie8"> <![endif]-->
+<!--[if gt IE 8]> <html lang="es" class="no-js ie9"> <![endif]-->
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Realizando Pago</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <meta name="robots" content="NOFOLLOW, NOINDEX">
+
+    <title>{l s='Processing payment' mod='placetopaypayment'}</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
 <header class="w-full mt-5 text-gray-700 bg-white border-t border-gray-100 shadow-sm body-font">
     <div class="container flex flex-col items-start justify-between p-6 mx-auto md:flex-row">
-        <a class="flex items-center mb-4 font-medium text-gray-900 title-font md:mb-0">
-            <a href="#_" class="font-medium hover:text-gray-900">Prestashop</a>
-        </a>
     </div>
 </header>
 <main class="content">
