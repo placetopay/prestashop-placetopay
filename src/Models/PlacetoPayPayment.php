@@ -675,15 +675,15 @@ class PlacetoPayPayment extends PaymentModule
             $lightboxScript = 'https://checkout.placetopay.ec/lightbox.min.js';
         }
 
-        return <<<HTML
-         <script src="{$lightboxScript}"></script>
+        return "
+         <script src='". $lightboxScript . "'></script>
          <script>
-            P.init("{$processUrl}", { opacity: 0.4 });
+            P.init('" . $processUrl . "', { opacity: 0.4 });
             P.on('response', function() {
-            window.location = "{$returnUrl}";
+                window.location = '" . $returnUrl . "';
             });
          </script>
-        HTML;
+        ";
     }
 
     /**
