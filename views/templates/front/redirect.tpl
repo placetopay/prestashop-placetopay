@@ -9,8 +9,6 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="icon" type="image/x-icon" href="/1.7.8/img/favicon.ico" />
-    <link rel="apple-touch-icon" href="/1.7.8/img/app_icon.png" />
 
     <meta name="robots" content="NOFOLLOW, NOINDEX">
 
