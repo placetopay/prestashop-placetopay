@@ -165,3 +165,4 @@ $_MODULE['<{placetopaypayment}prestashop>pending_payment_f0023db864e79a837861189
 $_MODULE['<{placetopaypayment}prestashop>pending_payment_373ee24274eb806bef2ef57bb12ffe85'] = 'o enviar un correo electrónico a';
 $_MODULE['<{placetopaypayment}prestashop>pending_payment_5c5bbfeeda36c97c247a2d8f7c622373'] = 'y preguntar por el estado de la transacción:';
 $_MODULE['<{placetopaypayment}prestashop>brand_payment_a905b48f56e4462afa66e3b3da6eb091'] = 'Paga con %s';
+$_MODULE['<{placetopaypayment}prestashop>redirect_4b36342bf82779bc67add7c2f816d6ee'] = 'Procesando pago';
