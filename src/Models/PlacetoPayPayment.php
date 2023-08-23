@@ -669,14 +669,8 @@ class PlacetoPayPayment extends PaymentModule
 
     private function resolveLightbox(string $processUrl, string $returnUrl)
     {
-        $lightboxScript = 'https://checkout.placetopay.com/lightbox.min.js';
-
-        if ($this->getDefaultPrestashopCountry()) {
-            $lightboxScript = 'https://checkout.placetopay.ec/lightbox.min.js';
-        }
-
         return "
-         <script src='". $lightboxScript . "'></script>
+         <script src='https://checkout.placetopay.com/lightbox.min.js'></script>
          <script>
             P.init('" . $processUrl . "', { opacity: 0.4 });
             P.on('response', function() {
