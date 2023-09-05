@@ -22,7 +22,7 @@ try {
     $cart = Context::getContext()->cart;
     if (!Validate::isLoadedObject($cart)) {
         PaymentLogger::log('Cart not found', PaymentLogger::ERROR, 18, __FILE__, __LINE__);
-        die('Cart not found');
+        Tools::redirect('authentication.php?back=order.php');
     }
 
     (new PlacetoPayPayment())->redirect($cart);
