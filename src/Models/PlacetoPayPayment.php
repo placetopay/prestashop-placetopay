@@ -2260,21 +2260,27 @@ class PlacetoPayPayment extends PaymentModule
     final private function getPaymentPSEList($customerId)
     {
         $orders = self::getCustomerOrders($customerId);
+        $isPaid = false;
 
         if ($orders) {
             foreach ($orders as &$order) {
                 $myOrder = new Order((int)$order['id_order']);
                 if (Validate::isLoadedObject($myOrder)) {
                     $order['virtual'] = $myOrder->isVirtual(false);
+
                 }
             }
+
+            $lastOrder = new Order((int)$orders[0]['id_order']);
+            $isPaid = $lastOrder->getCurrentOrderState()->paid;
         }
 
         $this->context->smarty->assign([
             'orders' => $orders,
             'invoiceAllowed' => (int)Configuration::get('PS_INVOICE'),
             'reorderingAllowed' => !(bool)Configuration::get('PS_DISALLOW_HISTORY_REORDERING'),
-            'slowValidation' => Tools::isSubmit('slowvalidation')
+            'slowValidation' => Tools::isSubmit('slowvalidation'),
+            'isPaid' => $isPaid
         ]);
 
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/front/history.tpl'));
