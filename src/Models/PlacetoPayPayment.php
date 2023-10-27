@@ -107,7 +107,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_HOME = '';
 
     const MIN_VERSION_PS = '1.6.1.0';
-    const MAX_VERSION_PS = '1.7.8.8';
+    const MAX_VERSION_PS = '1.7.8.10';
 
     /**
      * @var string
@@ -122,7 +122,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.8.1';
+        $this->version = '3.8.2';
 
         $this->tab = 'payments_gateways';
 
@@ -2260,6 +2260,7 @@ class PlacetoPayPayment extends PaymentModule
     final private function getPaymentPSEList($customerId)
     {
         $orders = self::getCustomerOrders($customerId);
+        $isPaid = false;
 
         if ($orders) {
             foreach ($orders as &$order) {
@@ -2268,13 +2269,17 @@ class PlacetoPayPayment extends PaymentModule
                     $order['virtual'] = $myOrder->isVirtual(false);
                 }
             }
+
+            $lastOrder = new Order((int)$orders[0]['id_order']);
+            $isPaid = $lastOrder->getCurrentOrderState()->paid;
         }
 
         $this->context->smarty->assign([
             'orders' => $orders,
             'invoiceAllowed' => (int)Configuration::get('PS_INVOICE'),
             'reorderingAllowed' => !(bool)Configuration::get('PS_DISALLOW_HISTORY_REORDERING'),
-            'slowValidation' => Tools::isSubmit('slowvalidation')
+            'slowValidation' => Tools::isSubmit('slowvalidation'),
+            'isPaid' => $isPaid
         ]);
 
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/front/history.tpl'));
