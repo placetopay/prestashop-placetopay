@@ -7,8 +7,8 @@
     "ext-curl": "*",
     "ext-json": "*",
     "ext-mbstring": "*",
-    "alejociro/redirection": "^1.0.14",
-    "guzzlehttp/guzzle": "^5.3.4|^7.0"
+    "alejociro/redirection": "^1.0.15",
+    "guzzlehttp/guzzle": "^5.3.4 | ^7.0"
   },
   "license": "MIT",
   "authors": [
