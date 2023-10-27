@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- Hide default payment approved message when it is not.
+
 ## [3.8.1 (2023-08-23)](https://github.com/placetopay/prestashop-placetopay/compare/3.8.0...3.8.1)
 
 ### Added
