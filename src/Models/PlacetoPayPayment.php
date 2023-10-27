@@ -107,7 +107,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_HOME = '';
 
     const MIN_VERSION_PS = '1.6.1.0';
-    const MAX_VERSION_PS = '1.7.8.10';
+    const MAX_VERSION_PS = '8.1.2';
 
     /**
      * @var string
