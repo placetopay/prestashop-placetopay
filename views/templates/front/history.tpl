@@ -6,6 +6,13 @@
 {/capture}
 
 <h1 class="page-heading bottom-indent">{l s='Order history'}</h1>
+{if !$isPaid}
+	<style>
+		#content-hook_order_confirmation {
+			display: none;
+		}
+	</style>
+{/if}
 <p class="info-title">{l s='Here are the orders you\'ve placed since your account was created.'}</p>
 {if $slowValidation}
 	<p class="alert alert-warning">{l s='If you have just placed an order, it may take a few minutes for it to be validated. Please refresh this page if your order is missing.'}</p>
