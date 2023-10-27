@@ -107,7 +107,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_HOME = '';
 
     const MIN_VERSION_PS = '1.6.1.0';
-    const MAX_VERSION_PS = '1.7.8.8';
+    const MAX_VERSION_PS = '1.7.8.10';
 
     /**
      * @var string
@@ -122,7 +122,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '3.8.1';
+        $this->version = '3.8.2';
 
         $this->tab = 'payments_gateways';
 
