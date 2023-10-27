@@ -2267,7 +2267,6 @@ class PlacetoPayPayment extends PaymentModule
                 $myOrder = new Order((int)$order['id_order']);
                 if (Validate::isLoadedObject($myOrder)) {
                     $order['virtual'] = $myOrder->isVirtual(false);
-
                 }
             }
 
