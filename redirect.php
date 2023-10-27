@@ -19,8 +19,14 @@ try {
         Tools::redirect('authentication.php?back=order.php');
     }
 
+    $cart = Context::getContext()->cart;
+    if (!Validate::isLoadedObject($cart)) {
+        PaymentLogger::log('Cart not found', PaymentLogger::ERROR, 18, __FILE__, __LINE__);
+        Tools::redirect('authentication.php?back=order.php');
+    }
+
     (new PlacetoPayPayment())->redirect($cart);
-} catch (Exception $e) {
+} catch (Throwable $e) {
     PaymentLogger::log($e->getMessage(), PaymentLogger::ERROR, 999, __FILE__, __LINE__);
     die($e->getMessage());
 }
