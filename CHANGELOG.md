@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Updated
+
+- Hide lightbox checkbox in chile
+
 ## [4.0.0 (2023-11-01)](https://github.com/placetopay/prestashop-placetopay/compare/3.8.2...4.0.0)
 
 ### Added
