@@ -5,7 +5,7 @@
 ## Prerequisites
 
 - `prestashop` >= 1.6.1 _recommended: >= 1.7.8_
-- `php` >= 7.1 _recommended: >= 7.4_
+- `php` >= 7.2.5 _recommended: >= 8.1_
 - `ext-curl`
 - `ext-soap`
 - `ext-json`
