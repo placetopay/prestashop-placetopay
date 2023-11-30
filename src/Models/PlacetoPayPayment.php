@@ -2554,7 +2554,7 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getFieldsConnection(): array
     {
-        return [
+        $fields = [
             [
                 'type' => 'select',
                 'label' => $this->ll('Client'),
@@ -2612,14 +2612,19 @@ class PlacetoPayPayment extends PaymentModule
                 'name' => self::PAYMENT_BUTTON_IMAGE,
                 'autocomplete' => 'off',
             ],
-            [
+        ];
+
+        if ($this->getDefaultPrestashopCountry() !== CountryCode::CHILE) {
+            $fields[] = [
                 'type' => 'switch',
                 'label' => $this->ll('Lightbox'),
                 'name' => self::LIGHTBOX,
                 'is_bool' => true,
                 'values' => $this->getOptionSwitch(),
-            ],
-        ];
+            ];
+        }
+
+        return $fields;
     }
 
     final private function getLegendTo(string $title, string $icon): array
