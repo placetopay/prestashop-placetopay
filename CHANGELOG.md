@@ -8,17 +8,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Updated
 
-- Hide lightbox checkbox in chile
+## [4.0.1 (2023-11-30)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.0...4.0.1)
+
+- Hide lightbox option for CL:
 
 ## [4.0.0 (2023-11-01)](https://github.com/placetopay/prestashop-placetopay/compare/3.8.2...4.0.0)
 
 ### Added
 
-- Enable support for Prestashop >= 8.0
+- Enable support for Prestashop >= 8.0.
 
 ### Removed
 
-- Drop support for Prestashop <= 1.6
+- Drop support for Prestashop <= 1.6.
 
 ## [3.8.2 (2023-10-27)](https://github.com/placetopay/prestashop-placetopay/compare/3.8.1...3.8.2)
 
