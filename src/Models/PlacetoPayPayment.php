@@ -122,7 +122,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '4.0.1';
+        $this->version = '4.0.2';
 
         $this->tab = 'payments_gateways';
 
@@ -1902,7 +1902,7 @@ class PlacetoPayPayment extends PaymentModule
     final private function getUri(): ?string
     {
         $uri = null;
-        $endpoints = PaymentUrl::getEndpointsTo($this->getDefaultPrestashopCountry());
+        $endpoints = PaymentUrl::getEndpointsTo($this->getDefaultPrestashopCountry(), $this->getClient());
 
         if ($this->isCustomEnvironment()) {
             $uri = $this->getCustomConnectionUrl();
