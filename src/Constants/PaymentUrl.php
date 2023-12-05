@@ -22,7 +22,7 @@ abstract class PaymentUrl
         ColombiaCountryConfig::class,
         CountryConfig::class
     ];
-    public static function getEndpointsTo(string $countryCode): array
+    public static function getEndpointsTo(string $countryCode, string $client): array
     {
         /** @var CountryConfigInterface $config */
         foreach (self::COUNTRIES_CONFIG as $config) {
@@ -30,7 +30,7 @@ abstract class PaymentUrl
                 continue;
             }
 
-            return $config::getEndpoints($countryCode);
+            return $config::getEndpoints($client);
         }
 
         return [];
