@@ -7,17 +7,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 
 
-## [4.0.2 (2023-12-04)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.1...4.0.2)
+## [4.0.2 (2023-12-05)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.1...4.0.2)
 
-### Fixed 
+### Fixed
 
-- Resolve endpoint by client
+- Resolve endpoint by Client.
 
 ## [4.0.1 (2023-11-30)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.0...4.0.1)
 
 ### Updated
 
-- Hide lightbox option for CL:
+- Hide lightbox option for CL.
 
 ## [4.0.0 (2023-11-01)](https://github.com/placetopay/prestashop-placetopay/compare/3.8.2...4.0.0)
 
