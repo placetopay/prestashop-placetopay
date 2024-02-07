@@ -56,7 +56,7 @@ $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_50780f47f6839d47d60bc
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_f990493af3321939ca512f8f2cace108'] = 'Pay with %s';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_d213d9f6558da5e72e3348aaf5bf4970'] = '%s secure web site will be displayed when you select this payment method.';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_e59458c2ad3850466357a1cd342adc51'] = 'Pending payment';
-$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_5d5c4a24285e79624af97a58941965cf'] = 'Completed payment';
+$_MODULE['<{placetopaypayment}prestashop>placetopaypayment_c24ee8c28e2fa837fde0de182fb91755'] = 'Approved payment';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_08fc2add263dba5610ca59b67ec43346'] = 'Failed payment';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_842defa666a224eda21bb1a0e9800bef'] = 'Rejected payment';
 $_MODULE['<{placetopaypayment}prestashop>placetopaypayment_8a644475a8ff34cd3e78f91386fbcecb'] = 'No information';
@@ -96,13 +96,10 @@ $_MODULE['<{placetopaypayment}prestashop>payment_2de28d215e20c116e73d869aa84a2e0
 $_MODULE['<{placetopaypayment}prestashop>payment_c4ebf5f6191ec97d7a281f4c301c8656'] = 'TRANSUNION S.A';
 $_MODULE['<{placetopaypayment}prestashop>payment_7dd7734f1843fede04855fe5039ed1bd'] = ', generating a';
 $_MODULE['<{placetopaypayment}prestashop>payment_2830ccf15fbef7fa3077e861dfc58b7c'] = 'consultation trace.';
-$_MODULE['<{placetopaypayment}prestashop>response_5d5c4a24285e79624af97a58941965cf'] = 'Completed payment';
-$_MODULE['<{placetopaypayment}prestashop>response_5d4f2f541dcbae61aaeebde92e4ade6d'] = 'Dear customer, your payment has been approved, thank you for your purchase.';
+$_MODULE['<{placetopaypayment}prestashop>response_c24ee8c28e2fa837fde0de182fb91755'] = 'Approved payment';
 $_MODULE['<{placetopaypayment}prestashop>response_08fc2add263dba5610ca59b67ec43346'] = 'Failed payment';
-$_MODULE['<{placetopaypayment}prestashop>response_d04ac5471730e68a8fbe7a5fc54a762c'] = 'We\'re sorry. Your payment has not been completed. You can try again or choose another payment method.';
 $_MODULE['<{placetopaypayment}prestashop>response_842defa666a224eda21bb1a0e9800bef'] = 'Rejected payment';
 $_MODULE['<{placetopaypayment}prestashop>response_e59458c2ad3850466357a1cd342adc51'] = 'Pending payment';
-$_MODULE['<{placetopaypayment}prestashop>response_c7887eb14ed0e5611cf22ffebf4c54e6'] = 'Dear customer, your payment is being validated in the payment gateway, once this process has been completed will be informed of the operation.';
 $_MODULE['<{placetopaypayment}prestashop>response_229a7ec501323b94db7ff3157a7623c9'] = 'Merchant ID';
 $_MODULE['<{placetopaypayment}prestashop>response_0bf8ec7aacced3ad2fe3760db576c2ef'] = 'Legal Name';
 $_MODULE['<{placetopaypayment}prestashop>response_87dcb72ef896c13c9767da5dbcefc32f'] = 'Order No.';
