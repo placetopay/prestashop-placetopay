@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## Updated
 
+- Change method to get installments of the payment.
 - Change message of approved payment and remove default messages in the payment detail.
 
 ## Fixed
