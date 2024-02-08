@@ -952,7 +952,7 @@ class PlacetoPayPayment extends PaymentModule
      */
     final private function insertPaymentPlaceToPay(
         $requestId,
-        $orderId,
+        $cardId,
         $currencyId,
         $amount,
         $status,
@@ -983,7 +983,7 @@ class PlacetoPayPayment extends PaymentModule
                 authcode,
                 reference
             ) VALUES (
-                '$orderId',
+                '$cardId',
                 '$currencyId',
                 '$date',
                 '$amount',
@@ -1556,17 +1556,13 @@ class PlacetoPayPayment extends PaymentModule
         $orderId = $params['id_order'];
         $bsOrder = new Order((int)$orderId);
 
-        if ($bsOrder->module != 'placetopaypayment') {
+        if ($bsOrder->module !== 'placetopaypayment') {
             return null;
         }
 
-        $result = Db::getInstance()->ExecuteS(
-            "SELECT * FROM `{$this->tablePayment}` WHERE `id_order` = {$orderId}"
-        );
+        $result = $this->getTransactionInformation($bsOrder->id_cart);
 
         if (!empty($result)) {
-            $result = $result[0];
-
             $installmentType = $result['installments'] > 0
                 ? sprintf($this->ll('%s installments'), $result['installments'])
                 : $this->ll('No installments');
@@ -2149,20 +2145,13 @@ class PlacetoPayPayment extends PaymentModule
     }
 
     /**
-     * @param $cartId
-     * @param null $orderId
-     * @return mixed
      * @throws PaymentException
      */
-    final private function getTransactionInformation($cartId, $orderId = null)
+    final private function getTransactionInformation(int $cartId): array
     {
-        $id_order = (empty($cartId)
-            ? "(SELECT `id_cart` FROM `{$this->tableOrder}` WHERE `id_order` = {$orderId})"
-            : $cartId);
-
         try {
             $result = Db::getInstance()->ExecuteS(
-                "SELECT * FROM `{$this->tablePayment}` WHERE `id_order` = {$id_order}"
+                "SELECT * FROM `{$this->tablePayment}` WHERE `id_order` = {$cartId}"
             );
         } catch (Exception $e) {
             throw new PaymentException($e->getMessage(), 801);
