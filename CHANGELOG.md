@@ -1,11 +1,25 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
-and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](http://keepachangelog.com)
+and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+## [4.0.3 (2024-01-08)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.2...4.0.3)
+
+## Removed
+
+- Remove docker installation options (and update readme).
+
+## Updated
+
+- Change method to get installments of the payment.
+- Change message of approved payment and remove default messages in the payment detail.
+
+## Fixed
+
+- Fix Order details view in show backend administration.
 
 ## [4.0.2 (2023-12-05)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.1...4.0.2)
 

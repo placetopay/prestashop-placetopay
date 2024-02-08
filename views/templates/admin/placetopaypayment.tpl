@@ -51,7 +51,7 @@
 {l s='Pay by %s' mod='placetopaypayment'}
 {l s='%s secure web site will be displayed when you select this payment method.' mod='placetopaypayment'}
 {l s='Pending payment' mod='placetopaypayment'}
-{l s='Completed payment' mod='placetopaypayment'}
+{l s='Approved payment' mod='placetopaypayment'}
 {l s='Failed payment' mod='placetopaypayment'}
 {l s='Rejected payment' mod='placetopaypayment'}
 {l s='No information' mod='placetopaypayment'}
