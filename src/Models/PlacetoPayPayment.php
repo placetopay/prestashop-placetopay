@@ -119,6 +119,11 @@ class PlacetoPayPayment extends PaymentModule
      */
     private $tableOrder = _DB_PREFIX_ . 'orders';
 
+    /**
+     * @var string
+     */
+    private $tableLanguage = _DB_PREFIX_ . 'order_state_lang';
+
     public function __construct()
     {
         $this->name = getModuleName();
@@ -1171,7 +1176,7 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function updateOrderState(): bool
     {
-        $sql = "UPDATE `ps_order_state_lang` SET `name` = '" .
+        $sql = "UPDATE `{$this->tableLanguage}` SET `name` = '" .
             pSQL($this->resolveStateMessage($this->getCurrentValueOf('PS_LOCALE_LANGUAGE'))) .
             "' WHERE `id_order_state` = " . $this->getOrderState();
 
@@ -1180,7 +1185,7 @@ class PlacetoPayPayment extends PaymentModule
         } catch (PrestaShopDatabaseException $e) {
             PaymentLogger::log($e->getMessage(), PaymentLogger::INFO, 0, $e->getFile(), $e->getLine());
         } catch (Exception $e) {
-            PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 4, $e->getFile(), $e->getLine());
+            PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 19, $e->getFile(), $e->getLine());
 
             return false;
         }
@@ -1358,7 +1363,7 @@ class PlacetoPayPayment extends PaymentModule
         } catch (PrestaShopDatabaseException $e) {
             PaymentLogger::log($e->getMessage(), PaymentLogger::INFO, 0, $e->getFile(), $e->getLine());
         } catch (Exception $e) {
-            PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 4, $e->getFile(), $e->getLine());
+            PaymentLogger::log($e->getMessage(), PaymentLogger::WARNING, 20, $e->getFile(), $e->getLine());
 
             return false;
         }
