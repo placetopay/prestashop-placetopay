@@ -952,7 +952,7 @@ class PlacetoPayPayment extends PaymentModule
      */
     final private function insertPaymentPlaceToPay(
         $requestId,
-        $orderId,
+        $cardId,
         $currencyId,
         $amount,
         $status,
@@ -983,7 +983,7 @@ class PlacetoPayPayment extends PaymentModule
                 authcode,
                 reference
             ) VALUES (
-                '$orderId',
+                '$cardId',
                 '$currencyId',
                 '$date',
                 '$amount',
@@ -1089,7 +1089,7 @@ class PlacetoPayPayment extends PaymentModule
             $authCode = pSQL($payment->authorization());
             $receipt = pSQL($payment->receipt());
             $conversion = pSQL($payment->amount()->factor());
-            $installments = pSQL($payment->additionalData()['installments'] ?? 0);
+            $installments = $this->getInstallments($payment->additionalData());
             $lastDigits = pSQL(str_replace('*', '', $payment->additionalData()['lastDigits']));
         }
 
@@ -1124,6 +1124,41 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         return true;
+    }
+
+    final private function getInstallments(array $additionalData): int
+    {
+        $installmentKeys = ['installments', 'installment'];
+
+        foreach ($installmentKeys as $key) {
+            if (isset($additionalData[$key]) && is_numeric($additionalData[$key])) {
+                return (int) $additionalData[$key];
+            }
+        }
+
+        if (isset($additionalData['processorFields']) && is_array($additionalData['processorFields'])) {
+            foreach ($additionalData['processorFields'] as $field) {
+                if (isset($field['value']) && is_array($field['value'])) {
+                    foreach ($installmentKeys as $key) {
+                        if (isset($field['value'][$key]) && is_numeric($field['value'][$key])) {
+                            return (int) $field['value'][$key];
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach ($additionalData as $value) {
+            if (is_array($value)) {
+                foreach ($installmentKeys as $key) {
+                    if (isset($value[$key]) && is_numeric($value[$key])) {
+                        return (int) $value[$key];
+                    }
+                }
+            }
+        }
+
+        return 0;
     }
 
     final private function updateCurrentOrderWithError()
@@ -1521,17 +1556,13 @@ class PlacetoPayPayment extends PaymentModule
         $orderId = $params['id_order'];
         $bsOrder = new Order((int)$orderId);
 
-        if ($bsOrder->module != 'placetopaypayment') {
+        if ($bsOrder->module !== 'placetopaypayment') {
             return null;
         }
 
-        $result = Db::getInstance()->ExecuteS(
-            "SELECT * FROM `{$this->tablePayment}` WHERE `id_order` = {$orderId}"
-        );
+        $result = $this->getTransactionInformation($bsOrder->id_cart);
 
         if (!empty($result)) {
-            $result = $result[0];
-
             $installmentType = $result['installments'] > 0
                 ? sprintf($this->ll('%s installments'), $result['installments'])
                 : $this->ll('No installments');
@@ -2114,20 +2145,13 @@ class PlacetoPayPayment extends PaymentModule
     }
 
     /**
-     * @param $cartId
-     * @param null $orderId
-     * @return mixed
      * @throws PaymentException
      */
-    final private function getTransactionInformation($cartId, $orderId = null)
+    final private function getTransactionInformation(int $cartId): array
     {
-        $id_order = (empty($cartId)
-            ? "(SELECT `id_cart` FROM `{$this->tableOrder}` WHERE `id_order` = {$orderId})"
-            : $cartId);
-
         try {
             $result = Db::getInstance()->ExecuteS(
-                "SELECT * FROM `{$this->tablePayment}` WHERE `id_order` = {$id_order}"
+                "SELECT * FROM `{$this->tablePayment}` WHERE `id_order` = {$cartId}"
             );
         } catch (Exception $e) {
             throw new PaymentException($e->getMessage(), 801);

@@ -16,7 +16,7 @@
             {elseif $status eq 'rejected'}
                 <h2 style="color:red">{l s='Rejected payment' mod='placetopaypayment'}</h2>
             {elseif $status eq 'pending'}
-                <h2 style="color:yellow">{l s='Pending payment' mod='placetopaypayment'}</h2>
+                <h2 style="color:#f59e0b">{l s='Pending payment' mod='placetopaypayment'}</h2>
             {/if}
         {/if}
     </div>
