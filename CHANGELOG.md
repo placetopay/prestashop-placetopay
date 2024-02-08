@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Updated
 
+- Change method to get installments of the payment.
 - Change message of approved payment and remove default messages in the payment detail.
 
 ## [4.0.2 (2023-12-05)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.1...4.0.2)
