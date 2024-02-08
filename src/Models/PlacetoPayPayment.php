@@ -1089,7 +1089,7 @@ class PlacetoPayPayment extends PaymentModule
             $authCode = pSQL($payment->authorization());
             $receipt = pSQL($payment->receipt());
             $conversion = pSQL($payment->amount()->factor());
-            $installments = pSQL($payment->additionalData()['installments'] ?? 0);
+            $installments = $this->getInstallments($payment->additionalData());
             $lastDigits = pSQL(str_replace('*', '', $payment->additionalData()['lastDigits']));
         }
 
@@ -1124,6 +1124,41 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         return true;
+    }
+
+    final private function getInstallments(array $additionalData): int
+    {
+        $installmentKeys = ['installments', 'installment'];
+
+        foreach ($installmentKeys as $key) {
+            if (isset($additionalData[$key]) && is_numeric($additionalData[$key])) {
+                return (int) $additionalData[$key];
+            }
+        }
+
+        if (isset($additionalData['processorFields']) && is_array($additionalData['processorFields'])) {
+            foreach ($additionalData['processorFields'] as $field) {
+                if (isset($field['value']) && is_array($field['value'])) {
+                    foreach ($installmentKeys as $key) {
+                        if (isset($field['value'][$key]) && is_numeric($field['value'][$key])) {
+                            return (int) $field['value'][$key];
+                        }
+                    }
+                }
+            }
+        }
+
+        foreach ($additionalData as $value) {
+            if (is_array($value)) {
+                foreach ($installmentKeys as $key) {
+                    if (isset($value[$key]) && is_numeric($value[$key])) {
+                        return (int) $value[$key];
+                    }
+                }
+            }
+        }
+
+        return 0;
     }
 
     final private function updateCurrentOrderWithError()
