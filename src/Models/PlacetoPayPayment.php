@@ -177,18 +177,38 @@ class PlacetoPayPayment extends PaymentModule
 
     public function install()
     {
+        if (!parent::install()) {
+            return false;
+        }
+
         $error = '';
 
-        if (!parent::install()
-            || !$this->createPaymentTable()
-            || !$this->createOrderState()
-            || !$this->alterColumnIpAddress()
-            || !$this->addColumnEmail()
-            || !$this->addColumnRequestId()
-            || !$this->addColumnReference()
-            || !$this->addInstallmentLastDigitsColumns()
-        ) {
-            $error = 'Error on install module';
+        if (!$this->tableExists($this->tablePayment) && !$this->createPaymentTable()) {
+            $error = 'Error creating payment table';
+        }
+
+        if (!Configuration::get(self::ORDER_STATE) && !$this->createOrderState()) {
+            $error = 'Error creating order state';
+        }
+
+        if (!$this->columnExists($this->tablePayment, 'ip_address') && !$this->alterColumnIpAddress()) {
+            $error = 'Error altering ip_address column';
+        }
+
+        if (!$this->columnExists($this->tablePayment, 'payer_email') && !$this->addColumnEmail()) {
+            $error = 'Error adding payer_email column';
+        }
+
+        if (!$this->columnExists($this->tablePayment, 'id_request') && !$this->addColumnRequestId()) {
+            $error = 'Error adding id_request column';
+        }
+
+        if (!$this->columnExists($this->tablePayment, 'reference') && !$this->addColumnReference()) {
+            $error = 'Error adding reference column';
+        }
+
+        if (!$this->columnExists($this->tablePayment, 'installments') && !$this->addInstallmentLastDigitsColumns()) {
+            $error = 'Error adding installments column';
         }
 
         if (empty($error) && !$this->registerHook('paymentReturn')) {
@@ -208,64 +228,99 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         if (empty($error)) {
-            // Set default values
-            Configuration::updateValue(self::COMPANY_DOCUMENT, '');
-            Configuration::updateValue(self::COMPANY_NAME, '');
-            Configuration::updateValue(self::EMAIL_CONTACT, '');
-            Configuration::updateValue(self::TELEPHONE_CONTACT, '');
-
-            Configuration::updateValue(self::EXPIRATION_TIME_MINUTES, self::EXPIRATION_TIME_MINUTES_DEFAULT);
-            Configuration::updateValue(self::SHOW_ON_RETURN, self::SHOW_ON_RETURN_PSE_LIST);
-            Configuration::updateValue(self::CIFIN_MESSAGE, self::OPTION_DISABLED);
-            Configuration::updateValue(self::ALLOW_BUY_WITH_PENDING_PAYMENTS, self::OPTION_ENABLED);
-            Configuration::updateValue(self::FILL_TAX_INFORMATION, self::OPTION_ENABLED);
-            Configuration::updateValue(self::FILL_BUYER_INFORMATION, self::OPTION_ENABLED);
-            Configuration::updateValue(self::SKIP_RESULT, self::OPTION_DISABLED);
-            Configuration::updateValue(self::DISCOUNT, Discount::UY_NONE);
-            Configuration::updateValue(self::INVOICE, '');
-
-            Configuration::updateValue(self::CLIENT, $this->getClient());
-            Configuration::updateValue(self::ENVIRONMENT, Environment::TEST);
-            Configuration::updateValue(self::CUSTOM_CONNECTION_URL, '');
-            Configuration::updateValue(self::LOGIN, '');
-            Configuration::updateValue(self::TRAN_KEY, '');
-            Configuration::updateValue(self::PAYMENT_BUTTON_IMAGE, '');
-            Configuration::updateValue(self::LIGHTBOX, self::OPTION_DISABLED);
-
+            $this->setDefaultConfigurations();
             return true;
         }
 
         PaymentLogger::log($error, PaymentLogger::ERROR, 100, __FILE__, __LINE__);
-
         return false;
+    }
+
+    private function setDefaultConfigurations()
+    {
+        Configuration::updateValue(self::COMPANY_DOCUMENT, '');
+        Configuration::updateValue(self::COMPANY_NAME, '');
+        Configuration::updateValue(self::EMAIL_CONTACT, '');
+        Configuration::updateValue(self::TELEPHONE_CONTACT, '');
+
+        Configuration::updateValue(self::EXPIRATION_TIME_MINUTES, self::EXPIRATION_TIME_MINUTES_DEFAULT);
+        Configuration::updateValue(self::SHOW_ON_RETURN, self::SHOW_ON_RETURN_PSE_LIST);
+        Configuration::updateValue(self::CIFIN_MESSAGE, self::OPTION_DISABLED);
+        Configuration::updateValue(self::ALLOW_BUY_WITH_PENDING_PAYMENTS, self::OPTION_ENABLED);
+        Configuration::updateValue(self::FILL_TAX_INFORMATION, self::OPTION_ENABLED);
+        Configuration::updateValue(self::FILL_BUYER_INFORMATION, self::OPTION_ENABLED);
+        Configuration::updateValue(self::SKIP_RESULT, self::OPTION_DISABLED);
+        Configuration::updateValue(self::DISCOUNT, Discount::UY_NONE);
+        Configuration::updateValue(self::INVOICE, '');
+
+        Configuration::updateValue(self::CLIENT, $this->getClient());
+        Configuration::updateValue(self::ENVIRONMENT, Environment::TEST);
+        Configuration::updateValue(self::CUSTOM_CONNECTION_URL, '');
+        Configuration::updateValue(self::LOGIN, '');
+        Configuration::updateValue(self::TRAN_KEY, '');
+        Configuration::updateValue(self::PAYMENT_BUTTON_IMAGE, '');
+        Configuration::updateValue(self::LIGHTBOX, self::OPTION_DISABLED);
+    }
+
+    private function tableExists($tableName)
+    {
+        $sql = "SHOW TABLES LIKE '$tableName'";
+        return Db::getInstance()->executeS($sql);
+    }
+
+    private function columnExists($tableName, $columnName)
+    {
+        $sql = "SHOW COLUMNS FROM `$tableName` LIKE '$columnName'";
+        return Db::getInstance()->executeS($sql);
     }
 
     public function uninstall()
     {
-        if (!Configuration::deleteByName(self::COMPANY_DOCUMENT)
-            || !Configuration::deleteByName(self::COMPANY_NAME)
-            || !Configuration::deleteByName(self::EMAIL_CONTACT)
-            || !Configuration::deleteByName(self::TELEPHONE_CONTACT)
+        $tableExists = $this->tableExists($this->tablePayment);
+        if ($tableExists) {
+            $sqlCheckRecords = "SELECT COUNT(*) FROM `{$this->tablePayment}`";
+            $recordsCount = (int)Db::getInstance()->getValue($sqlCheckRecords);
 
-            || !Configuration::deleteByName(self::EXPIRATION_TIME_MINUTES)
-            || !Configuration::deleteByName(self::SHOW_ON_RETURN)
-            || !Configuration::deleteByName(self::CIFIN_MESSAGE)
-            || !Configuration::deleteByName(self::ALLOW_BUY_WITH_PENDING_PAYMENTS)
-            || !Configuration::deleteByName(self::FILL_TAX_INFORMATION)
-            || !Configuration::deleteByName(self::FILL_BUYER_INFORMATION)
-            || !Configuration::deleteByName(self::SKIP_RESULT)
-            || !Configuration::deleteByName(self::DISCOUNT)
-            || !Configuration::deleteByName(self::INVOICE)
+            if ($recordsCount === 0) {
+                $sqlDropTable = "DROP TABLE IF EXISTS `{$this->tablePayment}`;";
+                Db::getInstance()->execute($sqlDropTable);
+            }
+        }
 
-            || !Configuration::deleteByName(self::CLIENT)
-            || !Configuration::deleteByName(self::ENVIRONMENT)
-            || !Configuration::deleteByName(self::CUSTOM_CONNECTION_URL)
-            || !Configuration::deleteByName(self::LOGIN)
-            || !Configuration::deleteByName(self::TRAN_KEY)
-            || !Configuration::deleteByName(self::PAYMENT_BUTTON_IMAGE)
-            || !Configuration::deleteByName(self::LIGHTBOX)
-            || !parent::uninstall()
-        ) {
+        $orderState = new OrderState((int)Configuration::get(self::ORDER_STATE));
+        if (Validate::isLoadedObject($orderState)) {
+            $orderState->delete();
+        }
+
+        $configurations = [
+            self::COMPANY_DOCUMENT,
+            self::COMPANY_NAME,
+            self::EMAIL_CONTACT,
+            self::TELEPHONE_CONTACT,
+            self::EXPIRATION_TIME_MINUTES,
+            self::SHOW_ON_RETURN,
+            self::CIFIN_MESSAGE,
+            self::ALLOW_BUY_WITH_PENDING_PAYMENTS,
+            self::FILL_TAX_INFORMATION,
+            self::FILL_BUYER_INFORMATION,
+            self::SKIP_RESULT,
+            self::DISCOUNT,
+            self::INVOICE,
+            self::CLIENT,
+            self::ENVIRONMENT,
+            self::CUSTOM_CONNECTION_URL,
+            self::LOGIN,
+            self::TRAN_KEY,
+            self::PAYMENT_BUTTON_IMAGE,
+            self::LIGHTBOX,
+            self::ORDER_STATE,
+        ];
+
+        foreach ($configurations as $config) {
+            Configuration::deleteByName($config);
+        }
+
+        if (!parent::uninstall()) {
             return false;
         }
 
