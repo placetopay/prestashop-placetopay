@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+## [4.0.4 (2024-06-05)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.3...4.0.4)
+
+## Fixed
+
+- Fix method reset for uninstall and install the component.
+
 ## [4.0.3 (2024-01-08)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.2...4.0.3)
 
 ## Removed
