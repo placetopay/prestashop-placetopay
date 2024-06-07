@@ -5,17 +5,21 @@ UID=$(shell id -u)
 MODULE_NAME=placetopaypayment
 
 # Usage:
-# make compile PLUGIN_VERSION=-2.24.0-prestashop-1.7.x PHP_VERSION=php7.2
-# make compile PLUGIN_VERSION=-2.24.0-prestashop-8.0.x PHP_VERSION=php7.4
+# make compile PLUGIN_VERSION=-4.0.4-prestashop-1.7.x PHP_VERSION=7.2
+# make compile PLUGIN_VERSION=-4.0.4-prestashop-8.x   PHP_VERSION=7.4
 
 .PHONY: compile
 compile:
+	$(eval PHP_VERSION=${PHP_VERSION:-7.2})
 	$(eval MODULE_NAME_VR=$(MODULE_NAME)$(PLUGIN_VERSION))
 	@touch ~/Downloads/placetopaypayment_test \
         && rm -Rf ~/Downloads/placetopaypayment* \
-        && cp -p $(CURRENT_FOLDER) ~/Downloads/placetopaypayment -R \
+        && cp -pr $(CURRENT_FOLDER) ~/Downloads/placetopaypayment -R \
         && cd ~/Downloads/placetopaypayment \
-        && ${PHP_VERSION:-php} `which composer` install --no-dev \
+        && sed -i 's/"php": "[0-9].[0-9].[0-9]"/"php": "$(PHP_VERSION)"/' ~/Downloads/placetopaypayment/composer.json \
+        && sed -i 's/"php": "[>=^~].*"/"php": ">=$(PHP_VERSION)"/' ~/Downloads/placetopaypayment/composer.json \
+        && rm -Rf ~/Downloads/placetopaypayment/composer.lock \
+        && php$(PHP_VERSION) `which composer` install --no-dev \
         && find ~/Downloads/placetopaypayment/ -type d -name ".git*" -exec rm -Rf {} + \
         && find ~/Downloads/placetopaypayment/ -type d -name "squizlabs" -exec rm -Rf {} + \
         && rm -Rf ~/Downloads/placetopaypayment/.git* \
@@ -40,4 +44,4 @@ compile:
         && chown $(UID):$(UID) $(MODULE_NAME_VR).zip \
         && chmod 644 $(MODULE_NAME_VR).zip \
         && rm -Rf ~/Downloads/placetopaypayment
-	@echo "Compile file complete: ~/Downloads/$(MODULE_NAME_VR).zip"
+	@echo "Compile file complete: ~/Downloads/$(MODULE_NAME_VR).zip using PHP $(PHP_VERSION)"
