@@ -2,6 +2,8 @@
 
 [PlacetoPay](https://www.placetopay.com) Plugin Payment for [Prestashop](https://www.prestashop.com)
 
+For more information about the component and the functionalities it offers, visit the following link **[Prestashop-Placetopay](https://placetopay.dev/plugins/prestashop)**.
+
 ## Prerequisites
 
 - `prestashop` >= 1.7.x _recommended: >= 8.x
