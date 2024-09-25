@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+### [2.24.4] - 2024-09-26
+
+### Added
+- Add brand image in payment option
+
 ## [4.0.4 (2024-06-20)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.3...4.0.4)
 
 ## Added
