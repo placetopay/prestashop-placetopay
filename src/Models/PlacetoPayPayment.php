@@ -480,6 +480,7 @@ class PlacetoPayPayment extends PaymentModule
         $newOption = new PaymentOption();
 
         $newOption->setCallToActionText($this->lll('Pay by %s'))
+            ->setLogo($this->getImage())
             ->setAdditionalInformation('')
             ->setForm($form);
 
