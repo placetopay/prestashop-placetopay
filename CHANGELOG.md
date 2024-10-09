@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+### [4.0.6 (2024-10-09)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.5...4.0.6)
+
+## Fixed
+
+- Resolve redirect when the payment was resolve before.
+
 ### [4.0.5 (2024-09-26)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.4...4.0.5)
 
 ### Added
