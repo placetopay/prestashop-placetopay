@@ -800,12 +800,13 @@ class PlacetoPayPayment extends PaymentModule
         $requestId = $paymentPlaceToPay['id_request'];
         $reference = $paymentPlaceToPay['reference'];
         $oldStatus = $paymentPlaceToPay['status'];
+        $order = $this->getOrderByCartId($cartId);
 
         if (isDebugEnable()) {
             PaymentLogger::log(print_r($paymentPlaceToPay, true), PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
         }
 
-        if (!isDebugEnable() && $oldStatus != PaymentStatus::PENDING) {
+        if ($oldStatus != PaymentStatus::PENDING) {
             $message = sprintf(
                 'Payment with reference: [%s] not is pending, current status is [%d=%s]',
                 $reference,
@@ -816,11 +817,10 @@ class PlacetoPayPayment extends PaymentModule
             PaymentLogger::log($message, PaymentLogger::WARNING, 12, __FILE__, __LINE__);
 
             if (!empty($input)) {
-                // Show status to reference in console
                 die($message . PHP_EOL);
             }
 
-            Tools::redirect('authentication.php?back=order.php');
+            Tools::redirect($this->resolveRedirectUrl($cartId, $order));
         }
 
         $paymentRedirection = $this->instanceRedirection()->query($requestId);
@@ -828,8 +828,6 @@ class PlacetoPayPayment extends PaymentModule
         if (isDebugEnable()) {
             PaymentLogger::log(print_r($paymentRedirection, true), PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
         }
-
-        $order = $this->getOrderByCartId($cartId);
 
         if ($paymentRedirection->isSuccessful() && $order) {
             $newStatus = $this->getStatusPayment($paymentRedirection);
@@ -862,12 +860,7 @@ class PlacetoPayPayment extends PaymentModule
                 ));
             }
 
-            $redirectTo = __PS_BASE_URI__
-                . $this->getRedirectPageFromStatus($newStatus)
-                . '?id_cart=' . $cartId
-                . '&id_module=' . $this->id
-                . '&id_order=' . $order->id
-                . '&key=' . $order->secure_key;
+            $redirectTo = $this->resolveRedirectUrl($cartId, $order);
 
             if (isDebugEnable()) {
                 $message = sprintf('Redirecting flow to: [%s]', $redirectTo);
@@ -883,6 +876,16 @@ class PlacetoPayPayment extends PaymentModule
         } else {
             throw new PaymentException('Un-know error in process payment', 99);
         }
+    }
+
+    public function resolveRedirectUrl($cartId, $order): string
+    {
+        return __PS_BASE_URI__
+            . $this->getRedirectPageFromStatus()
+            . '?id_cart=' . $cartId
+            . '&id_module=' . $this->id
+            . '&id_order=' . $order->id
+            . '&key=' . $order->secure_key;
     }
 
     public function resolvePendingPayments(): void
