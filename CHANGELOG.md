@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+### [4.0.7 (2025-02-06)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.6...4.0.7)
+
+### Added
+
+- Add resolve module logo by client.
+
 ### [4.0.6 (2024-10-09)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.5...4.0.6)
 
 ## Fixed
