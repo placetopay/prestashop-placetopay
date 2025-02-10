@@ -141,6 +141,15 @@ class PlacetoPayPayment extends PaymentModule
         $this->controllers = ['validation'];
         $this->is_eu_compatible = 1;
 
+        $modulePath = _PS_MODULE_DIR_ . $this->name . '/';
+
+        $currentLogoPath = $modulePath . 'logo.png';
+        $newLogoPath = $modulePath . 'logos/' . $this->getClient() . '.png';
+
+        if (file_exists($newLogoPath) && (!file_exists($currentLogoPath) || md5_file($currentLogoPath) !== md5_file($newLogoPath))) {
+            copy($newLogoPath, $currentLogoPath);
+        }
+
         $this->currencies = true;
         $this->currencies_mode = 'checkbox';
 
@@ -148,7 +157,8 @@ class PlacetoPayPayment extends PaymentModule
 
         parent::__construct();
 
-        $this->author = $this->ll('Evertec PlacetoPay S.A.S.');
+        $this->author = $this->getClient() === unmaskString(Client::PTP)
+            ? $this->ll('Evertec PlacetoPay S.A.S.') : $this->getClient();
         $this->displayName = $this->getClient();
         $this->description = $this->ll('Accept payments by credit cards and debits account.');
 
