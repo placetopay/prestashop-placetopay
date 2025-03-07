@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+### Fixed
+
+- Add sleep for a race condition in return and notification process. [#PT-11281](https://app.clickup.com/t/31051369/PT-11281)
+
 ### [4.0.7 (2025-02-06)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.6...4.0.7)
 
 ### Added

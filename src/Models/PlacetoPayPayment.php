@@ -765,6 +765,7 @@ class PlacetoPayPayment extends PaymentModule
             $paymentPlaceToPay = $this->getPaymentPlaceToPayBy('reference', $reference);
         } elseif (!empty($inputStream = Tools::file_get_contents("php://input"))) {
             // On resolve function called process
+            sleep(5);
             $input = json_decode($inputStream, 1);
 
             $notification = new Notification((array)$input, $this->getTranKey());
