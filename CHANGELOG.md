@@ -6,25 +6,25 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
-### [4.0.8 (2025-03-07)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.7...4.0.8)
+## [4.0.8 (2025-03-07)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.7...4.0.8)
 
 ### Fixed
 
 - Add sleep for a race condition in return and notification process.
 
-### [4.0.7 (2025-02-10)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.6...4.0.7)
+## [4.0.7 (2025-02-10)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.6...4.0.7)
 
 ### Added
 
 - Add resolve module logo by client.
 
-### [4.0.6 (2024-10-09)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.5...4.0.6)
+## [4.0.6 (2024-10-09)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.5...4.0.6)
 
-## Fixed
+### Fixed
 
 - Resolve redirect when the payment was resolve before.
 
-### [4.0.5 (2024-09-26)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.4...4.0.5)
+## [4.0.5 (2024-09-26)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.4...4.0.5)
 
 ### Added
 
@@ -32,28 +32,28 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [4.0.4 (2024-06-20)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.3...4.0.4)
 
-## Added
+### Added
 
 - Add information in the readme.
 
 ## [4.0.4 (2024-06-05)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.3...4.0.4)
 
-## Fixed
+### Fixed
 
 - Fix method reset for uninstall and install the component.
 
 ## [4.0.3 (2024-01-08)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.2...4.0.3)
 
-## Removed
+### Removed
 
 - Remove docker installation options (and update readme).
 
-## Updated
+### Updated
 
 - Change method to get installments of the payment.
 - Change message of approved payment and remove default messages in the payment detail.
 
-## Fixed
+### Fixed
 
 - Fix Order details view in show backend administration.
 
