@@ -127,7 +127,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '4.0.7';
+        $this->version = '4.0.8';
 
         $this->tab = 'payments_gateways';
 
@@ -765,6 +765,7 @@ class PlacetoPayPayment extends PaymentModule
             $paymentPlaceToPay = $this->getPaymentPlaceToPayBy('reference', $reference);
         } elseif (!empty($inputStream = Tools::file_get_contents("php://input"))) {
             // On resolve function called process
+            sleep(5);
             $input = json_decode($inputStream, 1);
 
             $notification = new Notification((array)$input, $this->getTranKey());

@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+## [4.0.8 (2025-03-07)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.7...4.0.8)
+
+### Fixed
+
+- Add sleep for a race condition in return and notification process.
+
 ## [4.0.7 (2025-02-10)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.6...4.0.7)
 
 ### Added
