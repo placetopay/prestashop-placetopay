@@ -815,7 +815,7 @@ class PlacetoPayPayment extends PaymentModule
         $order = $this->getOrderByCartId($cartId);
 
         if (isDebugEnable()) {
-            PaymentLogger::log(json_encode($paymentPlaceToPay), PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
+            PaymentLogger::log(print_r($paymentPlaceToPay, true), PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
         }
 
         if ($oldStatus != PaymentStatus::PENDING) {
