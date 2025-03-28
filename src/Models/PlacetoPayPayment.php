@@ -679,6 +679,7 @@ class PlacetoPayPayment extends PaymentModule
             }
 
             if (isDebugEnable()) {
+                PaymentLogger::log('URI: ' . $this->getUri(), PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
                 PaymentLogger::log(print_r($request, true), PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
             }
 
@@ -775,7 +776,7 @@ class PlacetoPayPayment extends PaymentModule
                     die('Change signature value in your request to: ' . $notification->makeSignature());
                 }
 
-                $message = 'Notification is not valid, process canceled. Input request:' . PHP_EOL . print_r($input, 1);
+                $message = 'Notification is not valid, process canceled. Input request:' . PHP_EOL . print_r($input, true);
 
                 throw new PaymentException($message, 501);
             }
@@ -814,7 +815,7 @@ class PlacetoPayPayment extends PaymentModule
         $order = $this->getOrderByCartId($cartId);
 
         if (isDebugEnable()) {
-            PaymentLogger::log(print_r($paymentPlaceToPay, true), PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
+            PaymentLogger::log(json_encode($paymentPlaceToPay), PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
         }
 
         if ($oldStatus != PaymentStatus::PENDING) {
