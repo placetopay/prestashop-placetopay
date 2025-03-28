@@ -1511,7 +1511,7 @@ class PlacetoPayPayment extends PaymentModule
     final private function formProcess()
     {
         if (Tools::isSubmit('submitPlacetoPayConfiguration')) {
-            if ($this->getClient() !== Tools::getValue(self::CLIENT)) {
+            if (Configuration::get(self::CLIENT) !== Tools::getValue(self::CLIENT)) {
                 $this->updateOrderState();
             }
             // Company data
