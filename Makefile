@@ -5,8 +5,8 @@ UID=$(shell id -u)
 MODULE_NAME=placetopaypayment
 
 # Usage:
-# make compile PLUGIN_VERSION=-4.0.8-prestashop-1.7.x PHP_VERSION=7.2
-# make compile PLUGIN_VERSION=-4.0.8-prestashop-8.x   PHP_VERSION=7.4
+# make compile PLUGIN_VERSION=-4.0.9-prestashop-1.7.x PHP_VERSION=7.2
+# make compile PLUGIN_VERSION=-4.0.9-prestashop-8.x   PHP_VERSION=7.4
 
 .PHONY: compile
 compile:
