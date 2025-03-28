@@ -127,7 +127,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '4.0.8';
+        $this->version = '4.0.9';
 
         $this->tab = 'payments_gateways';
 
@@ -679,6 +679,7 @@ class PlacetoPayPayment extends PaymentModule
             }
 
             if (isDebugEnable()) {
+                PaymentLogger::log('URI: ' . $this->getUri(), PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
                 PaymentLogger::log(print_r($request, true), PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
             }
 
@@ -775,7 +776,7 @@ class PlacetoPayPayment extends PaymentModule
                     die('Change signature value in your request to: ' . $notification->makeSignature());
                 }
 
-                $message = 'Notification is not valid, process canceled. Input request:' . PHP_EOL . print_r($input, 1);
+                $message = 'Notification is not valid, process canceled. Input request:' . PHP_EOL . print_r($input, true);
 
                 throw new PaymentException($message, 501);
             }
@@ -1511,7 +1512,7 @@ class PlacetoPayPayment extends PaymentModule
     final private function formProcess()
     {
         if (Tools::isSubmit('submitPlacetoPayConfiguration')) {
-            if ($this->getClient() !== Tools::getValue(self::CLIENT)) {
+            if (Configuration::get(self::CLIENT) !== Tools::getValue(self::CLIENT)) {
                 $this->updateOrderState();
             }
             // Company data
@@ -1722,7 +1723,7 @@ class PlacetoPayPayment extends PaymentModule
     {
         $clientImage = [
             Client::GNT => 'uggcf://onapb.fnagnaqre.py/hcybnqf/000/029/870/0620s532-9sp9-4248-o99r-78onr9s13r1q/bevtvany/Ybtb_JroPurpxbhg_Trgarg.fit',
-            Client::GOU => 'uggcf://cynprgbcnl-fgngvp-cebq-ohpxrg.f3.hf-rnfg-2.nznmbanjf.pbz/tbhcntbf-pbz-pb/urnqre.fit',
+            Client::GOU => 'uggcf://cynprgbcnl-fgngvp-hng-ohpxrg.f3.hf-rnfg-2.nznmbanjf.pbz/ninycnlpragre-pbz/ybtbf/Urnqre+Pbeerb+-+Ybtb+Ninycnl.fit',
             Client::PTP => 'uggcf://fgngvp.cynprgbcnl.pbz/cynprgbcnl-ybtb.fit'
         ];
 
@@ -2493,7 +2494,13 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getClient(): string
     {
-        return $this->getCurrentValueOf(self::CLIENT) ? $this->getCurrentValueOf(self::CLIENT) : $this->getDefaultClient();
+        $client = $this->getCurrentValueOf(self::CLIENT);
+
+        if (!$client) {
+            $client = $this->getDefaultClient();
+        }
+
+        return $client;
     }
 
     final private function getOptionListCountries(): array

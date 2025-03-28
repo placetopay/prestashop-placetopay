@@ -17,8 +17,8 @@ class ColombiaCountryConfig extends CountryConfig
     {
         if ($client === unmaskString(Client::GOU)) {
             return array_merge(parent::getEndpoints($client), [
-                Environment::PRODUCTION => unmaskString('uggcf://purpxbhg.tbhcntbf.pbz.pb'),
-                Environment::TEST => unmaskString('uggcf://purpxbhg.grfg.tbhcntbf.pbz.pb'),
+                Environment::PRODUCTION => unmaskString('uggcf://purpxbhg.ninycnlpragre.pbz'),
+                Environment::TEST => unmaskString('uggcf://purpxbhg.grfg.ninycnlpragre.pbz'),
             ]);
         }
 
@@ -29,7 +29,7 @@ class ColombiaCountryConfig extends CountryConfig
     {
         return [
             unmaskString(Client::PTP) => unmaskString(Client::PTP),
-            unmaskString(Client::GOU) => unmaskString(Client::GOU),
+            unmaskString(Client::GOU) => unmaskString('NinyCnl'),
         ];
     }
 }
