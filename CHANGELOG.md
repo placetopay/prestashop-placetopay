@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+### Updated
+
+- Update branding for clients
+
 ## [4.0.8 (2025-03-07)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.7...4.0.8)
 
 ### Fixed
