@@ -27,8 +27,7 @@ use PlacetoPay\Constants\CountryCode;
 use PlacetoPay\Constants\Discount;
 use PlacetoPay\Constants\Environment;
 use PlacetoPay\Constants\PaymentStatus;
-use PlacetoPay\Constants\PaymentUrl;
-use PlacetoPay\Countries\CountryConfigInterface;
+use PlacetoPay\CountryConfig;
 use PlacetoPay\Exceptions\PaymentException;
 use PlacetoPay\Loggers\PaymentLogger;
 use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
@@ -127,7 +126,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '4.0.9';
+        $this->version = '5.0.0';
 
         $this->tab = 'payments_gateways';
 
@@ -141,15 +140,6 @@ class PlacetoPayPayment extends PaymentModule
         $this->controllers = ['validation'];
         $this->is_eu_compatible = 1;
 
-        $modulePath = _PS_MODULE_DIR_ . $this->name . '/';
-
-        $currentLogoPath = $modulePath . 'logo.png';
-        $newLogoPath = $modulePath . 'logos/' . $this->getClient() . '.png';
-
-        if (file_exists($newLogoPath) && (!file_exists($currentLogoPath) || md5_file($currentLogoPath) !== md5_file($newLogoPath))) {
-            copy($newLogoPath, $currentLogoPath);
-        }
-
         $this->currencies = true;
         $this->currencies_mode = 'checkbox';
 
@@ -157,7 +147,7 @@ class PlacetoPayPayment extends PaymentModule
 
         parent::__construct();
 
-        $this->author = $this->getClient() === unmaskString(Client::PTP)
+        $this->author = $this->getClient() === 'Placetopay'
             ? $this->ll('Evertec PlacetoPay S.A.S.') : $this->getClient();
         $this->displayName = $this->getClient();
         $this->description = $this->ll('Accept payments by credit cards and debits account.');
@@ -1707,7 +1697,7 @@ class PlacetoPayPayment extends PaymentModule
         $url = $this->getImageUrl();
 
         if (empty($url)) {
-            $image = $this->getImageByCountry($this->getClient());
+            $image = CountryConfig::IMAGE;
         } elseif ($this->checkValidUrl($url)) {
             $image = $url;
         } elseif ($this->checkDirectory($url)) {
@@ -1717,18 +1707,6 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         return $image;
-    }
-
-    final private function getImageByCountry(string $client): string
-    {
-        $clientImage = [
-            Client::GNT => 'uggcf://onapb.fnagnaqre.py/hcybnqf/000/029/870/0620s532-9sp9-4248-o99r-78onr9s13r1q/bevtvany/Ybtb_JroPurpxbhg_Trgarg.fit',
-            Client::GOU => 'uggcf://cynprgbcnl-fgngvp-hng-ohpxrg.f3.hf-rnfg-2.nznmbanjf.pbz/ninycnlpragre-pbz/ybtbf/Urnqre+Pbeerb+-+Ybtb+Ninycnl.fit',
-            Client::PTP => 'uggcf://fgngvp.cynprgbcnl.pbz/cynprgbcnl-ybtb.fit'
-        ];
-
-        return $clientImage[unmaskString($client ?? '')] ? unmaskString($clientImage[unmaskString($client)]) :
-            unmaskString('uggcf://fgngvp.cynprgbcnl.pbz/cynprgbcnl-ybtb.fit');
     }
 
     final private function checkDirectory(string $path): bool
@@ -2009,7 +1987,7 @@ class PlacetoPayPayment extends PaymentModule
     final private function getUri(): ?string
     {
         $uri = null;
-        $endpoints = PaymentUrl::getEndpointsTo($this->getDefaultPrestashopCountry(), $this->getClient());
+        $endpoints = CountryConfig::getEndpoints();
 
         if ($this->isCustomEnvironment()) {
             $uri = $this->getCustomConnectionUrl();
@@ -2484,12 +2462,12 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getDefaultPrestashopCountry(): string
     {
-        return Country::getIsoById((int)Configuration::get('PS_COUNTRY_DEFAULT'));
+        return CountryConfig::COUNTRY_CODE;
     }
 
     final private function getDefaultClient(): string
     {
-        return $this->getDefaultPrestashopCountry() === CountryCode::CHILE ? unmaskString(Client::GNT) : unmaskString(Client::PTP);
+        return CountryConfig::CLIENT;
     }
 
     final private function getClient(): string
@@ -2505,16 +2483,9 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getOptionListCountries(): array
     {
-        /** @var CountryConfigInterface $config */
-        foreach (CountryCode::COUNTRIES_CLIENT as $config) {
-            if (!$config::resolve($this->getDefaultPrestashopCountry())) {
-                continue;
-            }
-
-            return $this->getOptionList($config::getClient());
-        }
-
-        return [];
+        return $this->getOptionList([
+            CountryConfig::CLIENT => CountryConfig::CLIENT
+        ]);
     }
 
     final private function getOptionListEnvironments(): array
