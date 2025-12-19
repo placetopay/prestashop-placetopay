@@ -77,7 +77,7 @@ if (!function_exists('breakLine')) {
 if (!function_exists('getModuleName')) {
     function getModuleName(): string
     {
-        return 'placetopaypayment';
+        return \PlacetoPay\CountryConfig::MODULE_NAME;
     }
 }
 

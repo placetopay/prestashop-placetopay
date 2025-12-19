@@ -10,6 +10,7 @@ abstract class CountryConfig
     public const IMAGE = 'https://static.placetopay.com/placetopay-logo.svg';
     public const COUNTRY_CODE = 'CO';
     public const COUNTRY_NAME = 'Colombia';
+    public const MODULE_NAME = 'placetopaypayment';
 
     public static function getEndpoints(): array
     {

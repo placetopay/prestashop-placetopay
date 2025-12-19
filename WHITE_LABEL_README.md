@@ -63,7 +63,7 @@ prestashop-placetopay/
     'client' => 'NombreCliente',
     'country_code' => 'XX',
     'country_name' => 'País',
-    'image' => 'https://example.com/logo.svg',
+    // 'image' => 'https://example.com/logo.svg',
     'template' => 'NuevoClientePaymentUrl',  // Nombre del template
     'endpoints' => [
         'prod' => 'https://api.cliente.com',

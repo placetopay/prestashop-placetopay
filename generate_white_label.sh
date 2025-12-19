@@ -60,6 +60,7 @@ get_client_config() {
         echo 'COUNTRY_NAME=' . \$client['country_name'] . '|';
         echo 'TEMPLATE_FILE=' . (isset(\$client['template_file']) ? \$client['template_file'] : '') . '|';
         echo 'LOGO_FILE=' . (isset(\$client['logo_file']) ? \$client['logo_file'] : 'Placetopay.png') . '|';
+        echo 'MODULE_NAME=' . \$client['module_name'] . '|';
     " 2>/dev/null || echo ""
 }
 
@@ -99,6 +100,7 @@ parse_config() {
             "COUNTRY_NAME") COUNTRY_NAME="$value" ;;
             "TEMPLATE_FILE") TEMPLATE_FILE="$value" ;;
             "LOGO_FILE") LOGO_FILE="$value" ;;
+            "MODULE_NAME") MODULE_NAME="$value" ;;
         esac
     done
 }
@@ -162,10 +164,10 @@ install_composer_dependencies() {
     # Verificar si existe el comando php con la versión específica
     if command -v "php${php_version}" >/dev/null 2>&1; then
         print_status "Usando php${php_version} para instalar dependencias..."
-        php${php_version} "$(which composer)" install --no-dev 2>&1 | grep -v "^$" || true
+        php${php_version} "$(which composer)" install 2>&1 | grep -v "^$" || true
     else
         print_warning "php${php_version} no encontrado, usando php por defecto..."
-        php "$(which composer)" install --no-dev 2>&1 | grep -v "^$" || true
+        php "$(which composer)" install 2>&1 | grep -v "^$" || true
     fi
     
     cd "$BASE_DIR"
@@ -243,8 +245,9 @@ create_white_label_version_with_php() {
     print_status "Cliente: $CLIENT, País: $COUNTRY_NAME ($COUNTRY_CODE), PHP: $php_version"
     
     # Crear directorio de trabajo temporal con nombre fijo del módulo
-    local module_name="placetopaypayment"
+    local module_name="$MODULE_NAME"
     local work_dir="$TEMP_DIR/$module_name"
+    echo "------- Creating work_dir at $work_dir"
     mkdir -p "$work_dir"
     
     # Copiar todos los archivos (como cp -pr en el Makefile, pero usando rsync para excluir lo necesario)
@@ -259,7 +262,7 @@ create_white_label_version_with_php() {
         --exclude='src/Countries/' \
         --exclude='woocommerce-gateway-placetopay/' \
         "$BASE_DIR/" "$work_dir/" 2>/dev/null || true
-    
+
     # Copiar template de CountryConfig.php si existe
     if [[ -n "$TEMPLATE_FILE" ]]; then
         print_status "Usando template personalizado: $TEMPLATE_FILE"
@@ -277,7 +280,7 @@ create_white_label_version_with_php() {
             print_warning "Logo no encontrado: $work_dir/logos/$LOGO_FILE"
         fi
     fi
-    
+
     # Instalar dependencias de composer con la versión específica de PHP
     install_composer_dependencies "$work_dir" "$php_version"
     
@@ -290,12 +293,13 @@ create_white_label_version_with_php() {
     # Crear archivo ZIP
     print_status "Creando archivo ZIP..."
     mkdir -p "$OUTPUT_DIR"
+    echo "work_dir is $work_dir , module_name is $module_name"
     cd "$TEMP_DIR"
     zip -rq "$OUTPUT_DIR/$project_name.zip" "$module_name"
     cd "$BASE_DIR"
     
     # Limpiar directorio temporal de este build
-    rm -rf "$work_dir"
+#    rm -rf "$work_dir"
     
     print_success "Creado: $OUTPUT_DIR/$project_name.zip (carpeta interna: $module_name)"
 }
@@ -343,7 +347,7 @@ main() {
     
     # Limpiar directorio temporal
     print_status "Limpiando archivos temporales..."
-    rm -rf "$TEMP_DIR"
+#    rm -rf "$TEMP_DIR"
     
     print_success "¡Generación de marca blanca completada!"
     print_status "Los archivos generados están en: $OUTPUT_DIR"
@@ -406,7 +410,7 @@ case "${1:-}" in
             mkdir -p "$TEMP_DIR" "$OUTPUT_DIR"
             
             create_white_label_version "$1"
-            rm -rf "$TEMP_DIR"
+#            rm -rf "$TEMP_DIR"
             print_success "¡Generación de marca blanca completada para $1!"
         else
             print_error "Opción desconocida: $1"
