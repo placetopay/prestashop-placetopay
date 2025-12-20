@@ -219,21 +219,38 @@ update_module_name_function() {
     fi
 }
 
-# Función para actualizar el namespace en composer.json
+# Función para actualizar el namespace y nombre del paquete en composer.json
+# Esto genera un hash único del autoloader para cada cliente, evitando conflictos
 update_composer_namespace() {
     local work_dir="$1"
     local namespace_name="$2"
+    local client_id="$3"
     
-    print_status "Actualizando namespace en composer.json: PlacetoPay -> $namespace_name"
+    print_status "Actualizando namespace y nombre del paquete en composer.json: PlacetoPay -> $namespace_name"
     
     local composer_file="$work_dir/composer.json"
     if [[ -f "$composer_file" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS
+            # Actualizar el namespace en PSR-4 autoloader
             sed -i '' 's|"PlacetoPay\\\\": "src/"|"'"${namespace_name}"'\\\\": "src/"|g' "$composer_file"
+            # Cambiar el nombre del paquete para generar hash único del autoloader
+            # Esto evita conflictos cuando múltiples módulos están instalados
+            # Usar patrón más flexible que maneje espacios y comas opcionales
+            sed -i '' 's|"name": "placetopay/prestashop-gateway"|"name": "placetopay/prestashop-gateway-'"${client_id}"'"|g' "$composer_file"
         else
             # Linux
+            # Actualizar el namespace en PSR-4 autoloader
             sed -i 's|"PlacetoPay\\\\": "src/"|"'"${namespace_name}"'\\\\": "src/"|g' "$composer_file"
+            # Cambiar el nombre del paquete para generar hash único del autoloader
+            sed -i 's|"name": "placetopay/prestashop-gateway"|"name": "placetopay/prestashop-gateway-'"${client_id}"'"|g' "$composer_file"
+        fi
+        
+        # Verificar que el cambio se aplicó correctamente
+        if grep -q "\"name\": \"placetopay/prestashop-gateway-${client_id}\"" "$composer_file"; then
+            print_status "✓ composer.json actualizado con nombre único: placetopay/prestashop-gateway-${client_id}"
+        else
+            print_warning "⚠ No se pudo verificar el cambio en composer.json"
         fi
     fi
 }
@@ -772,8 +789,9 @@ create_white_label_version_with_php() {
     # Actualizar getModuleName() para retornar el nombre correcto del módulo
     update_module_name_function "$work_dir" "$module_name"
     
-    # Actualizar namespace en composer.json y spl_autoload.php antes de instalar dependencias
-    update_composer_namespace "$work_dir" "$namespace_name"
+    # Actualizar namespace y nombre del paquete en composer.json antes de instalar dependencias
+    # IMPORTANTE: Esto debe hacerse ANTES de composer install para generar hash único del autoloader
+    update_composer_namespace "$work_dir" "$namespace_name" "$CLIENT_ID"
     update_spl_autoload_namespace "$work_dir" "$namespace_name"
     
     # Crear archivo principal del módulo con nombre único
