@@ -6,11 +6,7 @@ use PlacetoPay\Constants\Environment;
 
 abstract class CountryConfig
 {
-    // CLIENT_ID: Identificador único del cliente en formato "cliente-país" (con guión)
-    // Se usa como base para generar namespaces, nombres de clases y archivos
-    // Ejemplo: "placetopay-colombia", "getnet-chile", "avalpay-colombia"
     public const CLIENT_ID = 'placetopay-colombia';
-    
     public const CLIENT = 'Placetopay';
     public const IMAGE = 'https://static.placetopay.com/placetopay-logo.svg';
     public const COUNTRY_CODE = 'CO';
@@ -25,4 +21,6 @@ abstract class CountryConfig
         ];
     }
 }
+
+
 

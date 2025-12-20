@@ -58,6 +58,7 @@ get_client_config() {
         echo 'CLIENT=' . \$client['client'] . '|';
         echo 'COUNTRY_CODE=' . \$client['country_code'] . '|';
         echo 'COUNTRY_NAME=' . \$client['country_name'] . '|';
+        echo 'CLIENT_ID=' . (isset(\$client['client_id']) ? \$client['client_id'] : '') . '|';
         echo 'TEMPLATE_FILE=' . (isset(\$client['template_file']) ? \$client['template_file'] : '') . '|';
         echo 'LOGO_FILE=' . (isset(\$client['logo_file']) ? \$client['logo_file'] : 'Placetopay.png') . '|';
     " 2>/dev/null || echo ""
@@ -84,6 +85,7 @@ parse_config() {
     CLIENT=""
     COUNTRY_CODE=""
     COUNTRY_NAME=""
+    CLIENT_ID=""
     TEMPLATE_FILE=""
     LOGO_FILE=""
     
@@ -97,10 +99,271 @@ parse_config() {
             "CLIENT") CLIENT="$value" ;;
             "COUNTRY_CODE") COUNTRY_CODE="$value" ;;
             "COUNTRY_NAME") COUNTRY_NAME="$value" ;;
+            "CLIENT_ID") CLIENT_ID="$value" ;;
             "TEMPLATE_FILE") TEMPLATE_FILE="$value" ;;
             "LOGO_FILE") LOGO_FILE="$value" ;;
         esac
     done
+}
+
+# Función para generar CLIENT_ID si no está definido en la configuración
+# Convierte "Getnet" + "Chile" -> "getnet-chile" (minúsculas con guión)
+get_client_id() {
+    local client="$1"
+    local country_name="$2"
+    
+    # Convertir a minúsculas y unir con guión
+    local client_lower=$(echo "$client" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+    local country_lower=$(echo "$country_name" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+    
+    echo "${client_lower}-${country_lower}"
+}
+
+# Función para obtener el nombre del namespace desde CLIENT_ID
+# Convierte "getnet-chile" -> "GetnetChile" (capitaliza cada palabra después del guión)
+get_namespace_name() {
+    local client_id="$1"
+    
+    # Convertir formato "cliente-país" a "ClientePais" (PascalCase)
+    # Dividir por guiones, capitalizar primera letra de cada palabra, unir sin espacios
+    echo "$client_id" | awk -F'-' '{
+        result = ""
+        for (i=1; i<=NF; i++) {
+            word = $i
+            if (length(word) > 0) {
+                first = toupper(substr(word,1,1))
+                rest = tolower(substr(word,2))
+                result = result first rest
+            }
+        }
+        print result
+    }'
+}
+
+# Función para convertir CLIENT_ID a snake_case para nombres de funciones PHP
+# Convierte "getnet-chile" -> "getnet_chile" (reemplaza guiones con guiones bajos)
+get_php_function_id() {
+    local client_id="$1"
+    echo "$client_id" | tr '-' '_'
+}
+
+# Función para reemplazar namespaces en archivos PHP
+replace_namespaces() {
+    local work_dir="$1"
+    local namespace_name="$2"
+    
+    print_status "Reemplazando namespaces: PlacetoPay -> $namespace_name"
+    
+    # Buscar y reemplazar en todos los archivos PHP
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s|namespace PlacetoPay|namespace $namespace_name|g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s|use PlacetoPay\\\\|use $namespace_name\\\\|g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s|\\\\PlacetoPay\\\\|\\\\$namespace_name\\\\|g" {} \;
+    else
+        # Linux
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s|namespace PlacetoPay|namespace $namespace_name|g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s|use PlacetoPay\\\\|use $namespace_name\\\\|g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s|\\\\PlacetoPay\\\\|\\\\$namespace_name\\\\|g" {} \;
+    fi
+}
+
+# Función para reemplazar nombres de clases en archivos PHP
+replace_class_names() {
+    local work_dir="$1"
+    local namespace_name="$2"
+    
+    print_status "Renombrando clases con sufijo: $namespace_name"
+    
+    # Primero renombrar los archivos
+    if [[ -f "$work_dir/src/Models/PlacetoPayPayment.php" ]]; then
+        mv "$work_dir/src/Models/PlacetoPayPayment.php" "$work_dir/src/Models/PlacetoPayPayment${namespace_name}.php"
+    fi
+    
+    # Reemplazar declaración y referencias de clase en archivos
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        # macOS
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/class PlacetoPayPayment /class PlacetoPayPayment${namespace_name} /g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/PlacetoPayPayment::/PlacetoPayPayment${namespace_name}::/g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/new PlacetoPayPayment(/new PlacetoPayPayment${namespace_name}(/g" {} \;
+    else
+        # Linux
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/class PlacetoPayPayment /class PlacetoPayPayment${namespace_name} /g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/PlacetoPayPayment::/PlacetoPayPayment${namespace_name}::/g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/new PlacetoPayPayment(/new PlacetoPayPayment${namespace_name}(/g" {} \;
+    fi
+}
+
+# Función para actualizar getModuleName() en helpers.php
+update_module_name_function() {
+    local work_dir="$1"
+    local module_name="$2"
+    
+    print_status "Actualizando getModuleName() para retornar: $module_name"
+    
+    local helpers_file="$work_dir/helpers.php"
+    if [[ -f "$helpers_file" ]]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            sed -i '' "s/return 'placetopaypayment';/return '${module_name}';/g" "$helpers_file"
+        else
+            # Linux
+            sed -i "s/return 'placetopaypayment';/return '${module_name}';/g" "$helpers_file"
+        fi
+    fi
+}
+
+# Función para actualizar el namespace en composer.json
+update_composer_namespace() {
+    local work_dir="$1"
+    local namespace_name="$2"
+    
+    print_status "Actualizando namespace en composer.json: PlacetoPay -> $namespace_name"
+    
+    local composer_file="$work_dir/composer.json"
+    if [[ -f "$composer_file" ]]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            sed -i '' 's|"PlacetoPay\\\\": "src/"|"'"${namespace_name}"'\\\\": "src/"|g' "$composer_file"
+        else
+            # Linux
+            sed -i 's|"PlacetoPay\\\\": "src/"|"'"${namespace_name}"'\\\\": "src/"|g' "$composer_file"
+        fi
+    fi
+}
+
+# Función para actualizar el namespace en spl_autoload.php
+update_spl_autoload_namespace() {
+    local work_dir="$1"
+    local namespace_name="$2"
+    
+    print_status "Actualizando namespace en spl_autoload.php: PlacetoPay -> $namespace_name"
+    
+    local autoload_file="$work_dir/spl_autoload.php"
+    if [[ -f "$autoload_file" ]]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            # Actualizar la verificación del namespace en el switch
+            sed -i '' "s/substr(\$className, 0, 10) === 'PlacetoPay'/substr(\$className, 0, ${#namespace_name}) === '${namespace_name}'/g" "$autoload_file"
+            # Actualizar el str_replace
+            sed -i '' "s|str_replace('PlacetoPay\\\\\\\\', '', \$className)|str_replace('${namespace_name}\\\\\\\\', '', \$className)|g" "$autoload_file"
+        else
+            # Linux
+            sed -i "s/substr(\$className, 0, 10) === 'PlacetoPay'/substr(\$className, 0, ${#namespace_name}) === '${namespace_name}'/g" "$autoload_file"
+            sed -i "s|str_replace('PlacetoPay\\\\\\\\', '', \$className)|str_replace('${namespace_name}\\\\\\\\', '', \$className)|g" "$autoload_file"
+        fi
+    fi
+}
+
+# Función para reemplazar las constantes de configuración de la base de datos
+# Esto asegura que cada cliente tenga sus propias claves únicas en ps_configuration
+replace_configuration_constants() {
+    local work_dir="$1"
+    local client_id="$2"
+    local namespace_name="$3"
+    
+    # Convertir CLIENT_ID a formato de constante (mayúsculas con guión bajo)
+    # Ejemplo: getnet-chile -> GETNET_CHILE
+    local const_prefix=$(echo "$client_id" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+    
+    print_status "Reemplazando constantes de configuración: PLACETOPAY_ -> ${const_prefix}_"
+    
+    local payment_file="$work_dir/src/Models/PlacetoPayPayment${namespace_name}.php"
+    
+    if [[ -f "$payment_file" ]]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            # Reemplazar las constantes de configuración de la base de datos
+            sed -i '' "s/'PLACETOPAY_COMPANYDOCUMENT'/'${const_prefix}_COMPANYDOCUMENT'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_COMPANYNAME'/'${const_prefix}_COMPANYNAME'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_EMAILCONTACT'/'${const_prefix}_EMAILCONTACT'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_TELEPHONECONTACT'/'${const_prefix}_TELEPHONECONTACT'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_DESCRIPTION'/'${const_prefix}_DESCRIPTION'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_EXPIRATION_TIME_MINUTES'/'${const_prefix}_EXPIRATION_TIME_MINUTES'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_SHOWONRETURN'/'${const_prefix}_SHOWONRETURN'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_CIFINMESSAGE'/'${const_prefix}_CIFINMESSAGE'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_ALLOWBUYWITHPENDINGPAYMENTS'/'${const_prefix}_ALLOWBUYWITHPENDINGPAYMENTS'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_FILL_TAX_INFORMATION'/'${const_prefix}_FILL_TAX_INFORMATION'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_FILL_BUYER_INFORMATION'/'${const_prefix}_FILL_BUYER_INFORMATION'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_SKIP_RESULT'/'${const_prefix}_SKIP_RESULT'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_CLIENT'/'${const_prefix}_CLIENT'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_DISCOUNT'/'${const_prefix}_DISCOUNT'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_INVOICE'/'${const_prefix}_INVOICE'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_ENVIRONMENT'/'${const_prefix}_ENVIRONMENT'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_CUSTOM_CONNECTION_URL'/'${const_prefix}_CUSTOM_CONNECTION_URL'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_PAYMENT_BUTTON_IMAGE'/'${const_prefix}_PAYMENT_BUTTON_IMAGE'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_LOGIN'/'${const_prefix}_LOGIN'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_TRANKEY'/'${const_prefix}_TRANKEY'/g" "$payment_file"
+            sed -i '' "s/'PLACETOPAY_LIGHTBOX'/'${const_prefix}_LIGHTBOX'/g" "$payment_file"
+            sed -i '' "s/'PS_OS_PLACETOPAY'/'PS_OS_${const_prefix}'/g" "$payment_file"
+        else
+            # Linux
+            sed -i "s/'PLACETOPAY_COMPANYDOCUMENT'/'${const_prefix}_COMPANYDOCUMENT'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_COMPANYNAME'/'${const_prefix}_COMPANYNAME'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_EMAILCONTACT'/'${const_prefix}_EMAILCONTACT'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_TELEPHONECONTACT'/'${const_prefix}_TELEPHONECONTACT'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_DESCRIPTION'/'${const_prefix}_DESCRIPTION'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_EXPIRATION_TIME_MINUTES'/'${const_prefix}_EXPIRATION_TIME_MINUTES'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_SHOWONRETURN'/'${const_prefix}_SHOWONRETURN'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_CIFINMESSAGE'/'${const_prefix}_CIFINMESSAGE'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_ALLOWBUYWITHPENDINGPAYMENTS'/'${const_prefix}_ALLOWBUYWITHPENDINGPAYMENTS'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_FILL_TAX_INFORMATION'/'${const_prefix}_FILL_TAX_INFORMATION'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_FILL_BUYER_INFORMATION'/'${const_prefix}_FILL_BUYER_INFORMATION'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_SKIP_RESULT'/'${const_prefix}_SKIP_RESULT'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_CLIENT'/'${const_prefix}_CLIENT'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_DISCOUNT'/'${const_prefix}_DISCOUNT'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_INVOICE'/'${const_prefix}_INVOICE'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_ENVIRONMENT'/'${const_prefix}_ENVIRONMENT'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_CUSTOM_CONNECTION_URL'/'${const_prefix}_CUSTOM_CONNECTION_URL'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_PAYMENT_BUTTON_IMAGE'/'${const_prefix}_PAYMENT_BUTTON_IMAGE'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_LOGIN'/'${const_prefix}_LOGIN'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_TRANKEY'/'${const_prefix}_TRANKEY'/g" "$payment_file"
+            sed -i "s/'PLACETOPAY_LIGHTBOX'/'${const_prefix}_LIGHTBOX'/g" "$payment_file"
+            sed -i "s/'PS_OS_PLACETOPAY'/'PS_OS_${const_prefix}'/g" "$payment_file"
+        fi
+    fi
+}
+
+# Función para crear el archivo principal del módulo con nombre único
+create_main_module_file() {
+    local work_dir="$1"
+    local module_name="$2"
+    local namespace_name="$3"
+    
+    print_status "Creando archivo principal del módulo: ${module_name}.php"
+    
+    # Nombre de la clase sin namespace (PascalCase sin guiones)
+    # Ejemplo: placetopay-getnet-chile -> PlacetopayGetnetChile
+    local main_class_name=$(echo "$module_name" | awk -F'-' '{
+        result = ""
+        for (i=1; i<=NF; i++) {
+            word = $i
+            if (length(word) > 0) {
+                first = toupper(substr(word,1,1))
+                rest = tolower(substr(word,2))
+                result = result first rest
+            }
+        }
+        print result
+    }')
+    
+    # Crear el archivo principal del módulo
+    cat > "$work_dir/${module_name}.php" << EOF
+<?php
+
+if (!defined('_PS_VERSION_')) {
+    exit;
+}
+
+require_once 'spl_autoload.php';
+
+class ${main_class_name} extends ${namespace_name}\\Models\\PlacetoPayPayment${namespace_name}
+{
+}
+EOF
+    
+    # Eliminar el archivo original placetopaypayment.php
+    rm -f "$work_dir/placetopaypayment.php"
 }
 
 # Función para obtener nombre del proyecto
@@ -232,6 +495,16 @@ create_white_label_version_with_php() {
     # Parsear configuración
     parse_config "$config"
     
+    # Generar CLIENT_ID si no está definido en la configuración
+    if [[ -z "$CLIENT_ID" ]]; then
+        CLIENT_ID=$(get_client_id "$CLIENT" "$COUNTRY_NAME")
+        print_warning "CLIENT_ID no encontrado en config, generando: $CLIENT_ID"
+    fi
+    
+    # Obtener nombre del namespace desde CLIENT_ID
+    local namespace_name
+    namespace_name=$(get_namespace_name "$CLIENT_ID")
+    
     # Determinar nombre del proyecto base
     local project_name_base
     project_name_base=$(get_project_name "$CLIENT" "$COUNTRY_NAME")
@@ -240,12 +513,20 @@ create_white_label_version_with_php() {
     local project_name="${project_name_base}-${prestashop_version}"
     
     print_status "Creando versión de marca blanca: $project_name"
-    print_status "Cliente: $CLIENT, País: $COUNTRY_NAME ($COUNTRY_CODE), PHP: $php_version"
+    print_status "Cliente: $CLIENT, País: $COUNTRY_NAME ($COUNTRY_CODE), CLIENT_ID: $CLIENT_ID"
+    print_status "Namespace: $namespace_name, PHP: $php_version"
     
-    # Crear directorio de trabajo temporal con nombre fijo del módulo
-    local module_name="placetopaypayment"
+    # El nombre del módulo debe ser único por cliente (basado en CLIENT_ID)
+    # PrestaShop requiere que: nombre_carpeta = nombre_archivo_principal = nombre_clase
+    # Ejemplos:
+    #   - banchile-chile -> banchile-chile-payment
+    #   - placetopay-colombia -> placetopay-colombia-payment
+    #   - getnet-chile -> getnet-chile-payment
+    local module_name="${CLIENT_ID}-payment"
     local work_dir="$TEMP_DIR/$module_name"
     mkdir -p "$work_dir"
+    
+    print_status "Nombre del módulo: $module_name"
     
     # Copiar todos los archivos (como cp -pr en el Makefile, pero usando rsync para excluir lo necesario)
     print_status "Copiando archivos fuente..."
@@ -277,6 +558,23 @@ create_white_label_version_with_php() {
             print_warning "Logo no encontrado: $work_dir/logos/$LOGO_FILE"
         fi
     fi
+    
+    # Reemplazar namespaces y nombres de clases para cliente específico
+    replace_namespaces "$work_dir" "$namespace_name"
+    replace_class_names "$work_dir" "$namespace_name"
+    
+    # Reemplazar constantes de configuración de la base de datos
+    replace_configuration_constants "$work_dir" "$CLIENT_ID" "$namespace_name"
+    
+    # Actualizar getModuleName() para retornar el nombre correcto del módulo
+    update_module_name_function "$work_dir" "$module_name"
+    
+    # Actualizar namespace en composer.json y spl_autoload.php antes de instalar dependencias
+    update_composer_namespace "$work_dir" "$namespace_name"
+    update_spl_autoload_namespace "$work_dir" "$namespace_name"
+    
+    # Crear archivo principal del módulo con nombre único (banchile-chile-payment.php)
+    create_main_module_file "$work_dir" "$module_name" "$namespace_name"
     
     # Instalar dependencias de composer con la versión específica de PHP
     install_composer_dependencies "$work_dir" "$php_version"
