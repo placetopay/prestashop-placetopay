@@ -77,6 +77,31 @@ if (!function_exists('breakLine')) {
 if (!function_exists('getModuleName')) {
     function getModuleName(): string
     {
+        if (defined('_MODULE_NAME_')) {
+            return _MODULE_NAME_;
+        }
+
+        static $moduleNameFromPath = null;
+        if ($moduleNameFromPath === null) {
+            $helpersPath = __FILE__;
+            if (preg_match('#/modules/([^/]+)/#', $helpersPath, $matches)) {
+                $moduleNameFromPath = $matches[1];
+            }
+        }
+        
+        if ($moduleNameFromPath !== null) {
+            return $moduleNameFromPath;
+        }
+        
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        foreach ($backtrace as $trace) {
+            if (isset($trace['file']) && strpos($trace['file'], '/modules/') !== false) {
+                if (preg_match('#/modules/([^/]+)/#', $trace['file'], $matches)) {
+                    return $matches[1];
+                }
+            }
+        }
+        
         return 'placetopaypayment';
     }
 }

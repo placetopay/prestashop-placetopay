@@ -4,8 +4,9 @@
 composer.lock
 Homestead.json
 Homestead.yaml
-config*
 .env
 docker-compose.override.yml
 docker-compose.backup.yml
 .php_cs.cache
+builds/
+temp_builds/

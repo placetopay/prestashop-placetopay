@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+## [5.0.0 (2025-12-17)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.8...4.0.9)
+
+### Added
+
+- Generate zips by tenant config
+
 ## [4.0.9 (2025-03-28)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.8...4.0.9)
 
 ### Updated
