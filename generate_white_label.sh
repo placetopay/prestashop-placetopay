@@ -19,7 +19,7 @@ OUTPUT_DIR="${BASE_DIR}/builds"
 CONFIG_FILE="${BASE_DIR}/config/clients.php"
 
 # Versiones de PHP y PrestaShop para generar
-declare -a PHP_VERSIONS=("7.2" "7.4", "8.1")
+declare -a PHP_VERSIONS=("7.2" "7.4" "8.1")
 declare -a PRESTASHOP_VERSIONS=("prestashop-1.7.x" "prestashop-8.x" "prestashop-9.x")
 
 # Funciones para imprimir con colores
