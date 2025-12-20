@@ -1469,10 +1469,6 @@ class PlacetoPayPayment extends PaymentModule
                 );
             }
 
-            if (!Tools::getValue(self::CLIENT)) {
-                $formErrors[] = sprintf('%s %s', $this->ll('Client'), $this->ll('is required.'));
-            }
-
             if (!Tools::getValue(self::ENVIRONMENT)) {
                 $formErrors[] = sprintf('%s %s', $this->ll('Environment'), $this->ll('is required.'));
             } elseif (Tools::getValue(self::ENVIRONMENT) === Environment::CUSTOM
@@ -2475,13 +2471,6 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         return $client;
-    }
-
-    final private function getOptionListCountries(): array
-    {
-        return $this->getOptionList([
-            CountryConfig::CLIENT => CountryConfig::CLIENT
-        ]);
     }
 
     private function getOptionListEnvironments(): array
