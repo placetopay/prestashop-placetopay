@@ -1622,7 +1622,7 @@ class PlacetoPayPayment extends PaymentModule
         $orderId = $params['id_order'];
         $bsOrder = new Order((int)$orderId);
 
-        if ($bsOrder->module !== 'placetopaypayment') {
+        if ($bsOrder->module !== getModuleName()) {
             return null;
         }
 
