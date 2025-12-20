@@ -2479,7 +2479,6 @@ class PlacetoPayPayment extends PaymentModule
             Environment::PRODUCTION => $this->ll('Production'),
             Environment::TEST => $this->ll('Test'),
             Environment::DEVELOPMENT => $this->ll('Development'),
-            Environment::CUSTOM => $this->ll('Custom'),
         ];
 
         $endpoints = CountryConfig::getEndpoints();
@@ -2488,6 +2487,10 @@ class PlacetoPayPayment extends PaymentModule
             if (!array_key_exists($key, $endpoints)) {
                 unset($options[$key]);
             }
+        }
+
+        if(isDebugEnable()) {
+            $options[Environment::CUSTOM] = $this->ll('Custom');
         }
 
         return $this->getOptionList($options);
@@ -2636,20 +2639,28 @@ class PlacetoPayPayment extends PaymentModule
                     'query' => $this->getOptionListEnvironments(),
                 ],
             ],
-            [
-                'type' => 'text',
-                'label' => $this->ll('Custom connection URL'),
-                'desc' => sprintf(
-                    '%s %s: %s',
-                    // @codingStandardsIgnoreLine
-                    $this->ll('By example: "https://alternative.placetopay.com/redirection". This value only is required when you select'),
-                    $this->ll('Environment'),
-                    $this->ll('Custom')
-                ),
-                'name' => self::CUSTOM_CONNECTION_URL,
-                'required' => $this->isCustomEnvironment(),
-                'autocomplete' => 'off',
-            ],
+        ];
+
+        if (isDebugEnable()) {
+            $fields = array_merge($fields, [
+                [
+                    'type' => 'text',
+                    'label' => $this->ll('Custom connection URL'),
+                    'desc' => sprintf(
+                        '%s %s: %s',
+                        // @codingStandardsIgnoreLine
+                        $this->ll('By example: "https://alternative.placetopay.com/redirection". This value only is required when you select'),
+                        $this->ll('Environment'),
+                        $this->ll('Custom')
+                    ),
+                    'name' => self::CUSTOM_CONNECTION_URL,
+                    'required' => $this->isCustomEnvironment(),
+                    'autocomplete' => 'off',
+                ],
+            ]);
+        }
+
+        $fields = array_merge($fields, [
             [
                 'type' => 'text',
                 'label' => $this->ll('Login'),
@@ -2671,7 +2682,7 @@ class PlacetoPayPayment extends PaymentModule
                 'name' => self::PAYMENT_BUTTON_IMAGE,
                 'autocomplete' => 'off',
             ],
-        ];
+        ]);
 
         if ($this->getDefaultPrestashopCountry() !== CountryCode::CHILE) {
             $fields[] = [
