@@ -1,7 +1,7 @@
 <?php
 // Configuración centralizada de clientes para generación de white-label
 // Cada cliente tiene un CLIENT_ID único que se usa para identificación en el código
-// 
+//
 // CLIENT_ID: Identificador único para el cliente (formato: cliente-país con guión)
 //   - Se usa como base para generar namespaces, nombres de clases y archivos
 //   - Ejemplo: "getnet-chile", "avalpay-colombia", "placetopay-ecuador"
@@ -52,12 +52,12 @@ return [
         'template_file' => 'PlacetopayHondurasConfig',
         'logo_file' => 'Placetopay.png',
     ],
-    'gou-belice' => [
-        'client' => 'Gou',
+    'placetopay-belice' => [
+        'client' => 'Placetopay',
         'country_code' => 'BZ',
         'country_name' => 'Belice',
-        'client_id' => 'gou-belice',
-        'template_file' => 'GouBeliceConfig',
+        'client_id' => 'placetopay-belice',
+        'template_file' => 'PlacetopayBeliceConfig',
         'logo_file' => 'Placetopay.png',
     ],
     'placetopay-uruguay' => [

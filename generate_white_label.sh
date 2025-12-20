@@ -19,8 +19,8 @@ OUTPUT_DIR="${BASE_DIR}/builds"
 CONFIG_FILE="${BASE_DIR}/config/clients.php"
 
 # Versiones de PHP y PrestaShop para generar
-declare -a PHP_VERSIONS=("7.2" "7.4")
-declare -a PRESTASHOP_VERSIONS=("prestashop-1.7.x" "prestashop-8.x")
+declare -a PHP_VERSIONS=("7.2" "7.4", "8.1")
+declare -a PRESTASHOP_VERSIONS=("prestashop-1.7.x" "prestashop-8.x" "prestashop-9.x")
 
 # Funciones para imprimir con colores
 print_status() {
@@ -42,12 +42,12 @@ print_error() {
 # Función para obtener configuración de cliente desde archivo PHP
 get_client_config() {
     local client_key="$1"
-    
+
     if [[ ! -f "$CONFIG_FILE" ]]; then
         print_error "Archivo de configuración no encontrado: $CONFIG_FILE"
         return 1
     fi
-    
+
     # Usar PHP para extraer la configuración del cliente
     php -r "
         \$config = include '$CONFIG_FILE';
@@ -70,7 +70,7 @@ get_all_clients() {
         print_error "Archivo de configuración no encontrado: $CONFIG_FILE"
         return 1
     fi
-    
+
     php -r "
         \$config = include '$CONFIG_FILE';
         echo implode(' ', array_keys(\$config));
@@ -80,7 +80,7 @@ get_all_clients() {
 # Función para parsear configuración
 parse_config() {
     local config="$1"
-    
+
     # Reset variables
     CLIENT=""
     COUNTRY_CODE=""
@@ -88,13 +88,13 @@ parse_config() {
     CLIENT_ID=""
     TEMPLATE_FILE=""
     LOGO_FILE=""
-    
+
     IFS='|' read -ra PARTS <<< "$config"
     for part in "${PARTS[@]}"; do
         IFS='=' read -ra KV <<< "$part"
         local key="${KV[0]}"
         local value="${KV[1]}"
-        
+
         case "$key" in
             "CLIENT") CLIENT="$value" ;;
             "COUNTRY_CODE") COUNTRY_CODE="$value" ;;
@@ -111,11 +111,11 @@ parse_config() {
 get_client_id() {
     local client="$1"
     local country_name="$2"
-    
+
     # Convertir a minúsculas y unir con guión
     local client_lower=$(echo "$client" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
     local country_lower=$(echo "$country_name" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
-    
+
     echo "${client_lower}-${country_lower}"
 }
 
@@ -123,7 +123,7 @@ get_client_id() {
 # Convierte "getnet-chile" -> "GetnetChile" (capitaliza cada palabra después del guión)
 get_namespace_name() {
     local client_id="$1"
-    
+
     # Convertir formato "cliente-país" a "ClientePais" (PascalCase)
     # Dividir por guiones, capitalizar primera letra de cada palabra, unir sin espacios
     echo "$client_id" | awk -F'-' '{
@@ -151,9 +151,9 @@ get_php_function_id() {
 replace_namespaces() {
     local work_dir="$1"
     local namespace_name="$2"
-    
+
     print_status "Reemplazando namespaces: PlacetoPay -> $namespace_name"
-    
+
     # Buscar y reemplazar en todos los archivos PHP
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
@@ -172,14 +172,14 @@ replace_namespaces() {
 replace_class_names() {
     local work_dir="$1"
     local namespace_name="$2"
-    
+
     print_status "Renombrando clases: PlacetoPayPayment -> ${namespace_name}Payment"
-    
+
     # Primero renombrar los archivos
     if [[ -f "$work_dir/src/Models/PlacetoPayPayment.php" ]]; then
         mv "$work_dir/src/Models/PlacetoPayPayment.php" "$work_dir/src/Models/${namespace_name}Payment.php"
     fi
-    
+
     # Reemplazar declaración y referencias de clase en archivos
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
@@ -187,7 +187,7 @@ replace_class_names() {
         find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/PlacetoPayPayment::/\${namespace_name}Payment::/g" {} \;
         find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/new PlacetoPayPayment(/new ${namespace_name}Payment(/g" {} \;
         find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/extends PlacetoPayPayment/extends ${namespace_name}Payment/g" {} \;
-        
+
         # Eliminar el use de Constants\Client que no existe
         find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "/use.*Constants\\\\Client;/d" {} \;
     else
@@ -204,9 +204,9 @@ replace_class_names() {
 update_module_name_function() {
     local work_dir="$1"
     local module_name="$2"
-    
+
     print_status "Actualizando getModuleName() para retornar: $module_name"
-    
+
     local helpers_file="$work_dir/helpers.php"
     if [[ -f "$helpers_file" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -225,9 +225,9 @@ update_composer_namespace() {
     local work_dir="$1"
     local namespace_name="$2"
     local client_id="$3"
-    
+
     print_status "Actualizando namespace y nombre del paquete en composer.json: PlacetoPay -> $namespace_name"
-    
+
     local composer_file="$work_dir/composer.json"
     if [[ -f "$composer_file" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -245,7 +245,7 @@ update_composer_namespace() {
             # Cambiar el nombre del paquete para generar hash único del autoloader
             sed -i 's|"name": "placetopay/prestashop-gateway"|"name": "placetopay/prestashop-gateway-'"${client_id}"'"|g' "$composer_file"
         fi
-        
+
         # Verificar que el cambio se aplicó correctamente
         if grep -q "\"name\": \"placetopay/prestashop-gateway-${client_id}\"" "$composer_file"; then
             print_status "✓ composer.json actualizado con nombre único: placetopay/prestashop-gateway-${client_id}"
@@ -259,20 +259,20 @@ update_composer_namespace() {
 update_spl_autoload_namespace() {
     local work_dir="$1"
     local namespace_name="$2"
-    
+
     print_status "Actualizando namespace en spl_autoload.php: PlacetoPay -> $namespace_name"
-    
+
     local autoload_file="$work_dir/spl_autoload.php"
     if [[ -f "$autoload_file" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS
             # Actualizar la llamada a versionComparePlaceToPay en la línea 5
             sed -i '' "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$autoload_file"
-            
+
             # Actualizar comentarios
             sed -i '' "s/PlacetoPay and Dnetix/${namespace_name} and Dnetix/g" "$autoload_file"
             sed -i '' "s/load PlacetoPay/load ${namespace_name}/g" "$autoload_file"
-            
+
             # Actualizar la verificación del namespace en el switch
             sed -i '' "s/substr(\$className, 0, 10) === 'PlacetoPay'/substr(\$className, 0, ${#namespace_name}) === '${namespace_name}'/g" "$autoload_file"
             # Actualizar el str_replace
@@ -292,16 +292,16 @@ update_spl_autoload_namespace() {
 update_class_references() {
     local work_dir="$1"
     local main_class_name="$2"
-    
+
     print_status "Actualizando referencias a clase principal: PlacetoPayPayment -> $main_class_name"
-    
+
     # Archivos que instancian la clase directamente
     local files_to_update=(
         "$work_dir/process.php"
         "$work_dir/redirect.php"
         "$work_dir/sonda.php"
     )
-    
+
     for file in "${files_to_update[@]}"; do
         if [[ -f "$file" ]]; then
             if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -315,13 +315,13 @@ update_class_references() {
             fi
         fi
     done
-    
+
     # Actualizar el controlador Front (controllers/front/sonda.php)
     local controller_file="$work_dir/controllers/front/sonda.php"
     if [[ -f "$controller_file" ]]; then
         # Convertir nombre a snake_case para función
         local function_suffix=$(echo "$main_class_name" | tr '[:upper:]' '[:lower:]')
-        
+
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS
             # Actualizar nombre de clase del controlador
@@ -334,7 +334,7 @@ update_class_references() {
             sed -i "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${function_suffix}()/g" "$controller_file"
         fi
     fi
-    
+
     # Actualizar nombre de función en sonda.php
     if [[ -f "$work_dir/sonda.php" ]]; then
         # Convertir el nombre de la clase a snake_case para la función
@@ -354,15 +354,15 @@ replace_configuration_constants() {
     local work_dir="$1"
     local client_id="$2"
     local namespace_name="$3"
-    
+
     # Convertir CLIENT_ID a formato de constante (mayúsculas con guión bajo)
     # Ejemplo: getnet-chile -> GETNET_CHILE
     local const_prefix=$(echo "$client_id" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
-    
+
     print_status "Reemplazando constantes de configuración: PLACETOPAY_ -> ${const_prefix}_"
-    
+
     local payment_file="$work_dir/src/Models/${namespace_name}Payment.php"
-    
+
     if [[ -f "$payment_file" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS
@@ -422,14 +422,14 @@ create_main_module_file() {
     local work_dir="$1"
     local module_name="$2"
     local namespace_name="$3"
-    
+
     print_status "Creando archivo principal del módulo: ${module_name}.php"
-    
+
     # Nombre de la clase (PascalCase, primera letra en mayúscula)
     # El nombre del módulo ya no tiene guiones, así que solo capitalizamos la primera letra
     # Ejemplo: banchilechile -> Banchilechile
     local main_class_name="$(echo ${module_name:0:1} | tr '[:lower:]' '[:upper:]')${module_name:1}"
-    
+
     # Crear el archivo principal del módulo
     cat > "$work_dir/${module_name}.php" << EOF
 <?php
@@ -465,9 +465,9 @@ EOF
 update_translation_files() {
     local work_dir="$1"
     local module_name="$2"
-    
+
     print_status "Actualizando archivos de traducción: placetopaypayment -> $module_name"
-    
+
     local translations_dir="$work_dir/translations"
     if [[ -d "$translations_dir" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -478,7 +478,7 @@ update_translation_files() {
             find "$translations_dir" -type f -name "*.php" -exec sed -i "s/placetopaypayment/$module_name/g" {} \;
         fi
     fi
-    
+
     # Actualizar templates (.tpl)
     local views_dir="$work_dir/views"
     if [[ -d "$views_dir" ]]; then
@@ -489,7 +489,7 @@ update_translation_files() {
             # Linux
             find "$views_dir" -type f -name "*.tpl" -exec sed -i "s/mod='placetopaypayment'/mod='$module_name'/g" {} \;
         fi
-        
+
         # Renombrar el template principal si existe
         if [[ -f "$views_dir/templates/admin/placetopaypayment.tpl" ]]; then
             mv "$views_dir/templates/admin/placetopaypayment.tpl" "$views_dir/templates/admin/$module_name.tpl"
@@ -503,19 +503,19 @@ update_root_files() {
     local module_name="$2"
     local namespace_name="$3"
     local main_class_name="$4"
-    
+
     print_status "Actualizando archivos raíz: use statements y referencias hardcodeadas"
-    
+
     # Archivos a actualizar
     local files=("process.php" "redirect.php" "sonda.php")
-    
+
     for file in "${files[@]}"; do
         if [[ -f "$work_dir/$file" ]]; then
             if [[ "$OSTYPE" == "darwin"* ]]; then
                 # macOS
                 # Actualizar namespace del PaymentLogger
                 sed -i '' "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$work_dir/$file"
-                
+
                 # Actualizar instanciación de clase (ej: new PlacetoPayPayment() -> new Banchilechile())
                 sed -i '' "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
             else
@@ -525,7 +525,7 @@ update_root_files() {
             fi
         fi
     done
-    
+
     # Actualizar helpers.php - fallback en getModuleName()
     if [[ -f "$work_dir/helpers.php" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -536,7 +536,7 @@ update_root_files() {
             sed -i "s/\$moduleName = 'placetopaypayment';/\$moduleName = '${module_name}';/g" "$work_dir/helpers.php"
         fi
     fi
-    
+
     # Actualizar templates admin (admin_order.tpl) - IDs y referencias
     local admin_order_tpl="$work_dir/views/templates/admin/admin_order.tpl"
     if [[ -f "$admin_order_tpl" ]]; then
@@ -557,26 +557,26 @@ update_internal_references() {
     local work_dir="$1"
     local module_name="$2"
     local namespace_name="$3"
-    
+
     print_status "Actualizando referencias internas: placetopay -> $module_name"
-    
+
     # Convertir el nombre del módulo a snake_case para usar en nombres de tabla/función
     # Ejemplo: banchilechile -> banchile_chile (aunque sin mayúsculas no se aplica, lo dejamos por si acaso)
     local snake_case_name=$(echo "$module_name" | sed 's/\([a-z]\)\([A-Z]\)/\1_\2/g' | tr '[:upper:]' '[:lower:]')
-    
+
     # Archivos fuente donde hacer los reemplazos
     local files_to_update=$(find "$work_dir/src" -type f -name "*.php")
-    
+
     for file in $files_to_update; do
         if [[ -f "$file" ]]; then
             if [[ "$OSTYPE" == "darwin"* ]]; then
                 # macOS
                 # Reemplazar nombre de tabla de pagos
                 sed -i '' "s/'payment_placetopay'/'payment_${snake_case_name}'/g" "$file"
-                
+
                 # Reemplazar función versionComparePlaceToPay
                 sed -i '' "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$file"
-                
+
                 # Reemplazar función insertPaymentPlaceToPay
                 sed -i '' "s/insertPaymentPlaceToPay/insertPayment${namespace_name}/g" "$file"
             else
@@ -587,7 +587,7 @@ update_internal_references() {
             fi
         fi
     done
-    
+
     # Actualizar helpers.php también
     if [[ -f "$work_dir/helpers.php" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -602,7 +602,7 @@ update_internal_references() {
 get_project_name() {
     local client="$1"
     local country_name="$2"
-    
+
     if [[ "$client" == "Placetopay" ]]; then
         # Convertir nombre del país a minúsculas y sin espacios
         echo "prestashop-placetopay-$(echo "$country_name" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')"
@@ -617,7 +617,7 @@ copy_country_config_template() {
     local target_file="$1"
     local template_name="$2"
     local template_file="${BASE_DIR}/config/templates/${template_name}.php"
-    
+
     if [[ -f "$template_file" ]]; then
         print_status "Copiando template de CountryConfig: $template_name"
         cp "$template_file" "$target_file"
@@ -630,9 +630,9 @@ copy_country_config_template() {
 install_composer_dependencies() {
     local work_dir="$1"
     local php_version="$2"
-    
+
     print_status "Instalando dependencias de Composer con PHP $php_version..."
-    
+
     # Actualizar la versión de PHP en composer.json (siguiendo el patrón del Makefile)
     local composer_file="$work_dir/composer.json"
     if [[ -f "$composer_file" ]]; then
@@ -647,13 +647,17 @@ install_composer_dependencies() {
             sed -i 's/"php": "[>=^~].*"/"php": ">='"${php_version}"'"/' "$composer_file"
         fi
     fi
-    
+
     # Eliminar composer.lock si existe
     rm -rf "$work_dir/composer.lock"
-    
+
     # Instalar dependencias con la versión específica de PHP
     cd "$work_dir"
-    
+
+    hash=`head -c 32 /dev/urandom | md5sum | awk '{print $1}'`
+
+    sed -i "s/prestashop-gateway/prestashop-gateway-$hash/g" "$work_dir/composer.json"
+
     # Verificar si existe el comando php con la versión específica
     if command -v "php${php_version}" >/dev/null 2>&1; then
         print_status "Usando php${php_version} para instalar dependencias..."
@@ -662,20 +666,30 @@ install_composer_dependencies() {
         print_warning "php${php_version} no encontrado, usando php por defecto..."
         php "$(which composer)" install --no-dev 2>&1 | grep -v "^$" || true
     fi
-    
+
+    # Evitar conflictos de spl_autoload
+    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" $work_dir/vendor/composer/autoload_real.php
+    sed -i -E "s/ComposerStaticInit([a-zA-Z0-9])/ComposerStaticInit$hash/g" $work_dir/vendor/composer/autoload_real.php
+    sed -i -E "s/'ComposerStaticInit([a-zA-Z0-9])'/'ComposerStaticInit$hash'/g" $work_dir/vendor/composer/autoload_real.php
+
+    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" $work_dir/vendor/composer/autoload_static.php
+    sed -i -E "s/ComposerStaticInit([a-zA-Z0-9])/ComposerStaticInit$hash/g" $work_dir/vendor/composer/autoload_static.php
+
+    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" $work_dir/vendor/autoload.php
+
     cd "$BASE_DIR"
 }
 
 # Función para limpiar archivos innecesarios del vendor (siguiendo el Makefile)
 cleanup_vendor_files() {
     local work_dir="$1"
-    
+
     print_status "Limpiando archivos innecesarios del vendor..."
-    
+
     # Eliminar directorios .git* y squizlabs (usando find como en el Makefile)
     find "$work_dir" -type d -name ".git*" -exec rm -rf {} + 2>/dev/null || true
     find "$work_dir" -type d -name "squizlabs" -exec rm -rf {} + 2>/dev/null || true
-    
+
     # Limpiar vendor exactamente como en el Makefile (líneas 34-41)
     rm -rf "$work_dir/vendor/bin"
     rm -rf "$work_dir/vendor/alejociro/redirection/tests"
@@ -685,17 +699,21 @@ cleanup_vendor_files() {
     rm -rf "$work_dir/vendor/guzzlehttp/guzzle/docs"
     rm -rf "$work_dir/vendor/guzzlehttp/guzzle/tests"
     rm -rf "$work_dir/vendor/guzzlehttp/streams/tests"
+    rm -Rf "$work_dir/.phpactor.json"
+    rm -Rf "$work_dir/.php-cs-fixer.cache"
+    rm -Rf "$work_dir/.vimrc.setup"
+    rm -Rf "$work_dir/*.log"
 }
 
 # Función para limpiar archivos de desarrollo del build (siguiendo el Makefile líneas 25-33)
 cleanup_build_files() {
     local work_dir="$1"
-    
+
     print_status "Eliminando archivos de desarrollo innecesarios..."
-    
+
     # Eliminar .git* (ya se hizo con find, pero por si acaso)
     rm -rf "$work_dir/.git"*
-    
+
     # Eliminar según el Makefile
     rm -rf "$work_dir/.idea"
     rm -rf "$work_dir/config"*
@@ -705,7 +723,7 @@ cleanup_build_files() {
     rm -rf "$work_dir/composer."*
     rm -rf "$work_dir/.php_cs.cache"
     rm -rf "$work_dir"/*.md
-    
+
     # Eliminar logos y scripts de generación (adicionales para white label)
     rm -rf "$work_dir/logos"
     rm -rf "$work_dir"/*.sh
@@ -718,36 +736,36 @@ create_white_label_version_with_php() {
     local prestashop_version="$3"
     local config
     config=$(get_client_config "$client_key")
-    
+
     if [[ -z "$config" ]]; then
         print_error "Cliente desconocido: $client_key"
         return 1
     fi
-    
+
     # Parsear configuración
     parse_config "$config"
-    
+
     # Generar CLIENT_ID si no está definido en la configuración
     if [[ -z "$CLIENT_ID" ]]; then
         CLIENT_ID=$(get_client_id "$CLIENT" "$COUNTRY_NAME")
         print_warning "CLIENT_ID no encontrado en config, generando: $CLIENT_ID"
     fi
-    
+
     # Obtener nombre del namespace desde CLIENT_ID
     local namespace_name
     namespace_name=$(get_namespace_name "$CLIENT_ID")
-    
+
     # Determinar nombre del proyecto base
     local project_name_base
     project_name_base=$(get_project_name "$CLIENT" "$COUNTRY_NAME")
-    
+
     # Agregar versión de PrestaShop al nombre del proyecto
     local project_name="${project_name_base}-${prestashop_version}"
-    
+
     print_status "Creando versión de marca blanca: $project_name"
     print_status "Cliente: $CLIENT, País: $COUNTRY_NAME ($COUNTRY_CODE), CLIENT_ID: $CLIENT_ID"
     print_status "Namespace: $namespace_name, PHP: $php_version"
-    
+
     # El nombre del módulo debe ser único por cliente (sin guiones para PrestaShop)
     # PrestaShop es estricto: nombre_carpeta = nombre_archivo = nombre_clase (sin guiones)
     # Ejemplos:
@@ -757,9 +775,9 @@ create_white_label_version_with_php() {
     local module_name=$(echo "${CLIENT_ID}" | tr -d '-')
     local work_dir="$TEMP_DIR/$module_name"
     mkdir -p "$work_dir"
-    
+
     print_status "Nombre del módulo: $module_name"
-    
+
     # Copiar todos los archivos (como cp -pr en el Makefile, pero usando rsync para excluir lo necesario)
     print_status "Copiando archivos fuente..."
     rsync -a \
@@ -773,7 +791,7 @@ create_white_label_version_with_php() {
         --exclude='placetopaypayment.php' \
         --exclude='woocommerce-gateway-placetopay/' \
         "$BASE_DIR/" "$work_dir/" 2>/dev/null || true
-    
+
     # Copiar template de CountryConfig.php si existe
     if [[ -n "$TEMPLATE_FILE" ]]; then
         print_status "Usando template personalizado: $TEMPLATE_FILE"
@@ -781,7 +799,7 @@ create_white_label_version_with_php() {
     else
         print_warning "No se especificó template_file, manteniendo CountryConfig.php original"
     fi
-    
+
     # Copiar el logo correcto según el cliente (antes de borrar la carpeta logos)
     if [[ -n "$LOGO_FILE" ]]; then
         print_status "Copiando logo: $LOGO_FILE"
@@ -791,71 +809,71 @@ create_white_label_version_with_php() {
             print_warning "Logo no encontrado: $work_dir/logos/$LOGO_FILE"
         fi
     fi
-    
+
     # Reemplazar namespaces y nombres de clases para cliente específico
     replace_namespaces "$work_dir" "$namespace_name"
     replace_class_names "$work_dir" "$namespace_name"
-    
+
     # Reemplazar constantes de configuración de la base de datos
     replace_configuration_constants "$work_dir" "$CLIENT_ID" "$namespace_name"
-    
+
     # Actualizar getModuleName() para retornar el nombre correcto del módulo
     update_module_name_function "$work_dir" "$module_name"
-    
+
     # Actualizar namespace y nombre del paquete en composer.json antes de instalar dependencias
     # IMPORTANTE: Esto debe hacerse ANTES de composer install para generar hash único del autoloader
     update_composer_namespace "$work_dir" "$namespace_name" "$CLIENT_ID"
     update_spl_autoload_namespace "$work_dir" "$namespace_name"
-    
+
     # Crear archivo principal del módulo con nombre único
     create_main_module_file "$work_dir" "$module_name" "$namespace_name"
-    
+
     # Obtener el nombre de la clase principal para actualizar referencias
     local main_class_name="$(echo ${module_name:0:1} | tr '[:lower:]' '[:upper:]')${module_name:1}"
-    
+
     # Actualizar referencias a la clase en process.php, redirect.php, sonda.php
     update_class_references "$work_dir" "$main_class_name"
-    
+
     # Actualizar archivos de traducción
     update_translation_files "$work_dir" "$module_name"
-    
+
     # Actualizar archivos raíz (process.php, redirect.php, sonda.php, helpers.php, templates)
     update_root_files "$work_dir" "$module_name" "$namespace_name" "$main_class_name"
-    
+
     # Actualizar referencias internas hardcodeadas (tablas, funciones)
     update_internal_references "$work_dir" "$module_name" "$namespace_name"
-    
+
     # Instalar dependencias de composer con la versión específica de PHP
     install_composer_dependencies "$work_dir" "$php_version"
-    
+
     # Limpiar archivos innecesarios del vendor
     cleanup_vendor_files "$work_dir"
-    
+
     # Limpiar archivos de desarrollo
     cleanup_build_files "$work_dir"
-    
+
     # Crear archivo ZIP
     print_status "Creando archivo ZIP..."
     mkdir -p "$OUTPUT_DIR"
     cd "$TEMP_DIR"
     zip -rq "$OUTPUT_DIR/$project_name.zip" "$module_name"
     cd "$BASE_DIR"
-    
+
     # Limpiar directorio temporal de este build
     rm -rf "$work_dir"
-    
+
     print_success "Creado: $OUTPUT_DIR/$project_name.zip (carpeta interna: $module_name)"
 }
 
 # Función para crear todas las versiones de marca blanca para un cliente
 create_white_label_version() {
     local client_key="$1"
-    
+
     print_status "========================================="
     print_status "Procesando cliente: $client_key"
     print_status "========================================="
     echo
-    
+
     # Generar una versión para cada versión de PHP/PrestaShop
     local i=0
     for php_version in "${PHP_VERSIONS[@]}"; do
@@ -869,32 +887,32 @@ create_white_label_version() {
 # Función principal
 main() {
     print_status "Iniciando proceso de generación de marca blanca..."
-    
+
     # Verificar que existe el archivo de configuración
     if [[ ! -f "$CONFIG_FILE" ]]; then
         print_error "Archivo de configuración no encontrado: $CONFIG_FILE"
         print_error "Por favor asegúrate de que el archivo config/clients.php existe."
         exit 1
     fi
-    
+
     # Limpiar builds anteriores
     print_status "Limpiando builds anteriores..."
     rm -rf "$TEMP_DIR" "$OUTPUT_DIR"
     mkdir -p "$TEMP_DIR" "$OUTPUT_DIR"
-    
+
     # Procesar cada configuración de cliente
     for client_key in $(get_all_clients); do
         create_white_label_version "$client_key"
         echo
     done
-    
+
     # Limpiar directorio temporal
     print_status "Limpiando archivos temporales..."
     rm -rf "$TEMP_DIR"
-    
+
     print_success "¡Generación de marca blanca completada!"
     print_status "Los archivos generados están en: $OUTPUT_DIR"
-    
+
     # Listar archivos generados
     echo
     print_status "Versiones de marca blanca generadas:"
@@ -951,7 +969,7 @@ case "${1:-}" in
             print_status "Generando versión de marca blanca para: $1"
             rm -rf "$TEMP_DIR" "$OUTPUT_DIR"
             mkdir -p "$TEMP_DIR" "$OUTPUT_DIR"
-            
+
             create_white_label_version "$1"
             rm -rf "$TEMP_DIR"
             print_success "¡Generación de marca blanca completada para $1!"
