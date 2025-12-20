@@ -23,7 +23,7 @@ if (versionComparePlaceToPay('1.7.0.0', '<')) {
             case substr($className, 0, 6) === 'Dnetix':
                 $src = __DIR__ . '/vendor/dnetix/redirection/src';
 
-                if (is_dir($src)) {
+                if (!is_dir($src)) {
                     $src = __DIR__ . '/vendor/alejociro/redirection/src';
                 }
 
