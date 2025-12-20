@@ -467,6 +467,61 @@ update_translation_files() {
     fi
 }
 
+# Función para actualizar archivos raíz (process.php, redirect.php, sonda.php, helpers.php)
+update_root_files() {
+    local work_dir="$1"
+    local module_name="$2"
+    local namespace_name="$3"
+    local main_class_name="$4"
+    
+    print_status "Actualizando archivos raíz: use statements y referencias hardcodeadas"
+    
+    # Archivos a actualizar
+    local files=("process.php" "redirect.php" "sonda.php")
+    
+    for file in "${files[@]}"; do
+        if [[ -f "$work_dir/$file" ]]; then
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                # macOS
+                # Actualizar namespace del PaymentLogger
+                sed -i '' "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$work_dir/$file"
+                
+                # Actualizar instanciación de clase (ej: new PlacetoPayPayment() -> new Banchilechile())
+                sed -i '' "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
+            else
+                # Linux
+                sed -i "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$work_dir/$file"
+                sed -i "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
+            fi
+        fi
+    done
+    
+    # Actualizar helpers.php - fallback en getModuleName()
+    if [[ -f "$work_dir/helpers.php" ]]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS - Actualizar el fallback de placetopaypayment a module_name
+            sed -i '' "s/\$moduleName = 'placetopaypayment';/\$moduleName = '${module_name}';/g" "$work_dir/helpers.php"
+        else
+            # Linux
+            sed -i "s/\$moduleName = 'placetopaypayment';/\$moduleName = '${module_name}';/g" "$work_dir/helpers.php"
+        fi
+    fi
+    
+    # Actualizar templates admin (admin_order.tpl) - IDs y referencias
+    local admin_order_tpl="$work_dir/views/templates/admin/admin_order.tpl"
+    if [[ -f "$admin_order_tpl" ]]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            sed -i '' "s/id=\"placetopaypayment_/id=\"${module_name}_/g" "$admin_order_tpl"
+            sed -i '' "s/#placetopaypayment_/#${module_name}_/g" "$admin_order_tpl"
+        else
+            # Linux
+            sed -i "s/id=\"placetopaypayment_/id=\"${module_name}_/g" "$admin_order_tpl"
+            sed -i "s/#placetopaypayment_/#${module_name}_/g" "$admin_order_tpl"
+        fi
+    fi
+}
+
 # Función para actualizar referencias internas hardcodeadas
 update_internal_references() {
     local work_dir="$1"
@@ -732,6 +787,9 @@ create_white_label_version_with_php() {
     
     # Actualizar archivos de traducción
     update_translation_files "$work_dir" "$module_name"
+    
+    # Actualizar archivos raíz (process.php, redirect.php, sonda.php, helpers.php, templates)
+    update_root_files "$work_dir" "$module_name" "$namespace_name" "$main_class_name"
     
     # Actualizar referencias internas hardcodeadas (tablas, funciones)
     update_internal_references "$work_dir" "$module_name" "$namespace_name"
