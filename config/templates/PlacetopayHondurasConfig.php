@@ -15,9 +15,7 @@ abstract class CountryConfig
     public static function getEndpoints(): array
     {
         return [
-            Environment::DEVELOPMENT => 'https://checkout-hn.placetopay.dev',
-            Environment::TEST => 'https://checkout-test.placetopay.com',
-            Environment::PRODUCTION => 'https://checkout.placetopay.com',
+            Environment::PRODUCTION => 'https://pagoenlinea.bancatlan.hn',
         ];
     }
 }

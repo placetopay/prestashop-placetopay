@@ -2482,6 +2482,14 @@ class PlacetoPayPayment extends PaymentModule
             Environment::CUSTOM => $this->ll('Custom'),
         ];
 
+        $endpoints = CountryConfig::getEndpoints();
+
+        foreach ($options as $key => $value) {
+            if (!array_key_exists($key, $endpoints)) {
+                unset($options[$key]);
+            }
+        }
+
         return $this->getOptionList($options);
     }
 
@@ -2617,17 +2625,6 @@ class PlacetoPayPayment extends PaymentModule
     private function getFieldsConnection(): array
     {
         $fields = [
-            [
-                'type' => 'select',
-                'label' => $this->ll('Client'),
-                'name' => self::CLIENT,
-                'required' => true,
-                'options' => [
-                    'id' => 'value',
-                    'name' => 'label',
-                    'query' => $this->getOptionListCountries(),
-                ],
-            ],
             [
                 'type' => 'select',
                 'label' => $this->ll('Environment'),

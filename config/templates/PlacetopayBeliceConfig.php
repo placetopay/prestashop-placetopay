@@ -15,10 +15,7 @@ abstract class CountryConfig
     public static function getEndpoints(): array
     {
         return [
-            Environment::DEVELOPMENT => 'https://checkout-bz.placetopay.dev',
-            Environment::TEST => 'https://checkout-test.placetopay.com',
-            Environment::PRODUCTION => 'https://checkout.placetopay.com',
+            Environment::PRODUCTION => 'https://abgateway.atlabank.com',
         ];
     }
 }
-

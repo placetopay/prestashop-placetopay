@@ -15,7 +15,6 @@ abstract class CountryConfig
     public static function getEndpoints(): array
     {
         return [
-            Environment::DEVELOPMENT => 'https://checkout-co.placetopay.dev',
             Environment::TEST => 'https://checkout.test.avalpaycenter.com',
             Environment::PRODUCTION => 'https://checkout.avalpaycenter.com',
         ];
