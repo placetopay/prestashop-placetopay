@@ -77,7 +77,29 @@ if (!function_exists('breakLine')) {
 if (!function_exists('getModuleName')) {
     function getModuleName(): string
     {
-        return 'placetopaypayment';
+        // Detectar el nombre del módulo basándose en la ruta del archivo
+        static $moduleName;
+        
+        if ($moduleName === null) {
+            // Obtener la ruta del directorio del módulo actual
+            $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+            foreach ($backtrace as $trace) {
+                if (isset($trace['file']) && strpos($trace['file'], '/modules/') !== false) {
+                    // Extraer el nombre del módulo de la ruta
+                    if (preg_match('#/modules/([^/]+)/#', $trace['file'], $matches)) {
+                        $moduleName = $matches[1];
+                        break;
+                    }
+                }
+            }
+            
+            // Fallback al valor por defecto si no se pudo detectar
+            if ($moduleName === null) {
+                $moduleName = 'placetopaypayment';
+            }
+        }
+        
+        return $moduleName;
     }
 }
 

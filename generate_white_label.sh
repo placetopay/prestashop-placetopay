@@ -173,24 +173,30 @@ replace_class_names() {
     local work_dir="$1"
     local namespace_name="$2"
     
-    print_status "Renombrando clases con sufijo: $namespace_name"
+    print_status "Renombrando clases: PlacetoPayPayment -> ${namespace_name}Payment"
     
     # Primero renombrar los archivos
     if [[ -f "$work_dir/src/Models/PlacetoPayPayment.php" ]]; then
-        mv "$work_dir/src/Models/PlacetoPayPayment.php" "$work_dir/src/Models/PlacetoPayPayment${namespace_name}.php"
+        mv "$work_dir/src/Models/PlacetoPayPayment.php" "$work_dir/src/Models/${namespace_name}Payment.php"
     fi
     
     # Reemplazar declaración y referencias de clase en archivos
     if [[ "$OSTYPE" == "darwin"* ]]; then
         # macOS
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/class PlacetoPayPayment /class PlacetoPayPayment${namespace_name} /g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/PlacetoPayPayment::/PlacetoPayPayment${namespace_name}::/g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/new PlacetoPayPayment(/new PlacetoPayPayment${namespace_name}(/g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/class PlacetoPayPayment /class ${namespace_name}Payment /g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/PlacetoPayPayment::/\${namespace_name}Payment::/g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/new PlacetoPayPayment(/new ${namespace_name}Payment(/g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/extends PlacetoPayPayment/extends ${namespace_name}Payment/g" {} \;
+        
+        # Eliminar el use de Constants\Client que no existe
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "/use.*Constants\\\\Client;/d" {} \;
     else
         # Linux
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/class PlacetoPayPayment /class PlacetoPayPayment${namespace_name} /g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/PlacetoPayPayment::/PlacetoPayPayment${namespace_name}::/g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/new PlacetoPayPayment(/new PlacetoPayPayment${namespace_name}(/g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/class PlacetoPayPayment /class ${namespace_name}Payment /g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/PlacetoPayPayment::/\${namespace_name}Payment::/g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/new PlacetoPayPayment(/new ${namespace_name}Payment(/g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/extends PlacetoPayPayment/extends ${namespace_name}Payment/g" {} \;
+        find "$work_dir/src" -type f -name "*.php" -exec sed -i "/use.*Constants\\\\Client;/d" {} \;
     fi
 }
 
@@ -243,14 +249,84 @@ update_spl_autoload_namespace() {
     if [[ -f "$autoload_file" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS
+            # Actualizar la llamada a versionComparePlaceToPay en la línea 5
+            sed -i '' "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$autoload_file"
+            
+            # Actualizar comentarios
+            sed -i '' "s/PlacetoPay and Dnetix/${namespace_name} and Dnetix/g" "$autoload_file"
+            sed -i '' "s/load PlacetoPay/load ${namespace_name}/g" "$autoload_file"
+            
             # Actualizar la verificación del namespace en el switch
             sed -i '' "s/substr(\$className, 0, 10) === 'PlacetoPay'/substr(\$className, 0, ${#namespace_name}) === '${namespace_name}'/g" "$autoload_file"
             # Actualizar el str_replace
             sed -i '' "s|str_replace('PlacetoPay\\\\\\\\', '', \$className)|str_replace('${namespace_name}\\\\\\\\', '', \$className)|g" "$autoload_file"
         else
             # Linux
+            sed -i "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$autoload_file"
+            sed -i "s/PlacetoPay and Dnetix/${namespace_name} and Dnetix/g" "$autoload_file"
+            sed -i "s/load PlacetoPay/load ${namespace_name}/g" "$autoload_file"
             sed -i "s/substr(\$className, 0, 10) === 'PlacetoPay'/substr(\$className, 0, ${#namespace_name}) === '${namespace_name}'/g" "$autoload_file"
             sed -i "s|str_replace('PlacetoPay\\\\\\\\', '', \$className)|str_replace('${namespace_name}\\\\\\\\', '', \$className)|g" "$autoload_file"
+        fi
+    fi
+}
+
+# Función para actualizar referencias a la clase en archivos de proceso
+update_class_references() {
+    local work_dir="$1"
+    local main_class_name="$2"
+    
+    print_status "Actualizando referencias a clase principal: PlacetoPayPayment -> $main_class_name"
+    
+    # Archivos que instancian la clase directamente
+    local files_to_update=(
+        "$work_dir/process.php"
+        "$work_dir/redirect.php"
+        "$work_dir/sonda.php"
+    )
+    
+    for file in "${files_to_update[@]}"; do
+        if [[ -f "$file" ]]; then
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                # macOS
+                sed -i '' "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$file"
+                sed -i '' "s/PlacetoPayPayment()/\${main_class_name}()/g" "$file"
+            else
+                # Linux
+                sed -i "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$file"
+                sed -i "s/PlacetoPayPayment()/\${main_class_name}()/g" "$file"
+            fi
+        fi
+    done
+    
+    # Actualizar el controlador Front (controllers/front/sonda.php)
+    local controller_file="$work_dir/controllers/front/sonda.php"
+    if [[ -f "$controller_file" ]]; then
+        # Convertir nombre a snake_case para función
+        local function_suffix=$(echo "$main_class_name" | tr '[:upper:]' '[:lower:]')
+        
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            # Actualizar nombre de clase del controlador
+            sed -i '' "s/class PlacetoPayPaymentSondaModuleFrontController/class ${main_class_name}SondaModuleFrontController/g" "$controller_file"
+            # Actualizar llamada a función
+            sed -i '' "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${function_suffix}()/g" "$controller_file"
+        else
+            # Linux
+            sed -i "s/class PlacetoPayPaymentSondaModuleFrontController/class ${main_class_name}SondaModuleFrontController/g" "$controller_file"
+            sed -i "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${function_suffix}()/g" "$controller_file"
+        fi
+    fi
+    
+    # Actualizar nombre de función en sonda.php
+    if [[ -f "$work_dir/sonda.php" ]]; then
+        # Convertir el nombre de la clase a snake_case para la función
+        # Ejemplo: Banchilechile -> banchilechile
+        local function_suffix=$(echo "$main_class_name" | tr '[:upper:]' '[:lower:]')
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${function_suffix}/g" "$work_dir/sonda.php"
+        else
+            sed -i "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${function_suffix}/g" "$work_dir/sonda.php"
         fi
     fi
 }
@@ -268,7 +344,7 @@ replace_configuration_constants() {
     
     print_status "Reemplazando constantes de configuración: PLACETOPAY_ -> ${const_prefix}_"
     
-    local payment_file="$work_dir/src/Models/PlacetoPayPayment${namespace_name}.php"
+    local payment_file="$work_dir/src/Models/${namespace_name}Payment.php"
     
     if [[ -f "$payment_file" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -332,20 +408,10 @@ create_main_module_file() {
     
     print_status "Creando archivo principal del módulo: ${module_name}.php"
     
-    # Nombre de la clase sin namespace (PascalCase sin guiones)
-    # Ejemplo: placetopay-getnet-chile -> PlacetopayGetnetChile
-    local main_class_name=$(echo "$module_name" | awk -F'-' '{
-        result = ""
-        for (i=1; i<=NF; i++) {
-            word = $i
-            if (length(word) > 0) {
-                first = toupper(substr(word,1,1))
-                rest = tolower(substr(word,2))
-                result = result first rest
-            }
-        }
-        print result
-    }')
+    # Nombre de la clase (PascalCase, primera letra en mayúscula)
+    # El nombre del módulo ya no tiene guiones, así que solo capitalizamos la primera letra
+    # Ejemplo: banchilechile -> Banchilechile
+    local main_class_name="$(echo ${module_name:0:1} | tr '[:lower:]' '[:upper:]')${module_name:1}"
     
     # Crear el archivo principal del módulo
     cat > "$work_dir/${module_name}.php" << EOF
@@ -357,13 +423,94 @@ if (!defined('_PS_VERSION_')) {
 
 require_once 'spl_autoload.php';
 
-class ${main_class_name} extends ${namespace_name}\\Models\\PlacetoPayPayment${namespace_name}
+use ${namespace_name}\\Models\\${namespace_name}Payment;
+
+class ${main_class_name} extends ${namespace_name}Payment
 {
 }
 EOF
+}
+
+# Función para actualizar archivos de traducción
+update_translation_files() {
+    local work_dir="$1"
+    local module_name="$2"
     
-    # Eliminar el archivo original placetopaypayment.php
-    rm -f "$work_dir/placetopaypayment.php"
+    print_status "Actualizando archivos de traducción: placetopaypayment -> $module_name"
+    
+    local translations_dir="$work_dir/translations"
+    if [[ -d "$translations_dir" ]]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS
+            find "$translations_dir" -type f -name "*.php" -exec sed -i '' "s/placetopaypayment/$module_name/g" {} \;
+        else
+            # Linux
+            find "$translations_dir" -type f -name "*.php" -exec sed -i "s/placetopaypayment/$module_name/g" {} \;
+        fi
+    fi
+    
+    # Actualizar templates (.tpl)
+    local views_dir="$work_dir/views"
+    if [[ -d "$views_dir" ]]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            # macOS - Actualizar mod='placetopaypayment' en templates
+            find "$views_dir" -type f -name "*.tpl" -exec sed -i '' "s/mod='placetopaypayment'/mod='$module_name'/g" {} \;
+        else
+            # Linux
+            find "$views_dir" -type f -name "*.tpl" -exec sed -i "s/mod='placetopaypayment'/mod='$module_name'/g" {} \;
+        fi
+        
+        # Renombrar el template principal si existe
+        if [[ -f "$views_dir/templates/admin/placetopaypayment.tpl" ]]; then
+            mv "$views_dir/templates/admin/placetopaypayment.tpl" "$views_dir/templates/admin/$module_name.tpl"
+        fi
+    fi
+}
+
+# Función para actualizar referencias internas hardcodeadas
+update_internal_references() {
+    local work_dir="$1"
+    local module_name="$2"
+    local namespace_name="$3"
+    
+    print_status "Actualizando referencias internas: placetopay -> $module_name"
+    
+    # Convertir el nombre del módulo a snake_case para usar en nombres de tabla/función
+    # Ejemplo: banchilechile -> banchile_chile (aunque sin mayúsculas no se aplica, lo dejamos por si acaso)
+    local snake_case_name=$(echo "$module_name" | sed 's/\([a-z]\)\([A-Z]\)/\1_\2/g' | tr '[:upper:]' '[:lower:]')
+    
+    # Archivos fuente donde hacer los reemplazos
+    local files_to_update=$(find "$work_dir/src" -type f -name "*.php")
+    
+    for file in $files_to_update; do
+        if [[ -f "$file" ]]; then
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                # macOS
+                # Reemplazar nombre de tabla de pagos
+                sed -i '' "s/'payment_placetopay'/'payment_${snake_case_name}'/g" "$file"
+                
+                # Reemplazar función versionComparePlaceToPay
+                sed -i '' "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$file"
+                
+                # Reemplazar función insertPaymentPlaceToPay
+                sed -i '' "s/insertPaymentPlaceToPay/insertPayment${namespace_name}/g" "$file"
+            else
+                # Linux
+                sed -i "s/'payment_placetopay'/'payment_${snake_case_name}'/g" "$file"
+                sed -i "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$file"
+                sed -i "s/insertPaymentPlaceToPay/insertPayment${namespace_name}/g" "$file"
+            fi
+        fi
+    done
+    
+    # Actualizar helpers.php también
+    if [[ -f "$work_dir/helpers.php" ]]; then
+        if [[ "$OSTYPE" == "darwin"* ]]; then
+            sed -i '' "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$work_dir/helpers.php"
+        else
+            sed -i "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$work_dir/helpers.php"
+        fi
+    fi
 }
 
 # Función para obtener nombre del proyecto
@@ -516,13 +663,13 @@ create_white_label_version_with_php() {
     print_status "Cliente: $CLIENT, País: $COUNTRY_NAME ($COUNTRY_CODE), CLIENT_ID: $CLIENT_ID"
     print_status "Namespace: $namespace_name, PHP: $php_version"
     
-    # El nombre del módulo debe ser único por cliente (basado en CLIENT_ID)
-    # PrestaShop requiere que: nombre_carpeta = nombre_archivo_principal = nombre_clase
+    # El nombre del módulo debe ser único por cliente (sin guiones para PrestaShop)
+    # PrestaShop es estricto: nombre_carpeta = nombre_archivo = nombre_clase (sin guiones)
     # Ejemplos:
-    #   - banchile-chile -> banchile-chile-payment
-    #   - placetopay-colombia -> placetopay-colombia-payment
-    #   - getnet-chile -> getnet-chile-payment
-    local module_name="${CLIENT_ID}-payment"
+    #   - banchile-chile -> banchilechile
+    #   - placetopay-colombia -> placetopaycolombia
+    #   - getnet-chile -> getnetchile
+    local module_name=$(echo "${CLIENT_ID}" | tr -d '-')
     local work_dir="$TEMP_DIR/$module_name"
     mkdir -p "$work_dir"
     
@@ -538,6 +685,7 @@ create_white_label_version_with_php() {
         --exclude='*.sh' \
         --exclude='config/' \
         --exclude='src/Countries/' \
+        --exclude='placetopaypayment.php' \
         --exclude='woocommerce-gateway-placetopay/' \
         "$BASE_DIR/" "$work_dir/" 2>/dev/null || true
     
@@ -573,8 +721,20 @@ create_white_label_version_with_php() {
     update_composer_namespace "$work_dir" "$namespace_name"
     update_spl_autoload_namespace "$work_dir" "$namespace_name"
     
-    # Crear archivo principal del módulo con nombre único (banchile-chile-payment.php)
+    # Crear archivo principal del módulo con nombre único
     create_main_module_file "$work_dir" "$module_name" "$namespace_name"
+    
+    # Obtener el nombre de la clase principal para actualizar referencias
+    local main_class_name="$(echo ${module_name:0:1} | tr '[:lower:]' '[:upper:]')${module_name:1}"
+    
+    # Actualizar referencias a la clase en process.php, redirect.php, sonda.php
+    update_class_references "$work_dir" "$main_class_name"
+    
+    # Actualizar archivos de traducción
+    update_translation_files "$work_dir" "$module_name"
+    
+    # Actualizar referencias internas hardcodeadas (tablas, funciones)
+    update_internal_references "$work_dir" "$module_name" "$namespace_name"
     
     # Instalar dependencias de composer con la versión específica de PHP
     install_composer_dependencies "$work_dir" "$php_version"
