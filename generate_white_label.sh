@@ -438,12 +438,25 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+// Definir constante con el nombre del módulo para que getModuleName() lo detecte correctamente
+// Esto evita conflictos cuando múltiples módulos están instalados
+if (!defined('_MODULE_NAME_')) {
+    define('_MODULE_NAME_', '${module_name}');
+}
+
 require_once 'spl_autoload.php';
 
 use ${namespace_name}\\Models\\${namespace_name}Payment;
 
 class ${main_class_name} extends ${namespace_name}Payment
 {
+    public function __construct()
+    {
+        parent::__construct();
+        // Sobrescribir el nombre del módulo explícitamente para que PrestaShop lo detecte correctamente
+        // Esto evita que PrestaShop lea el nombre desde otro lugar durante la instalación
+        \$this->name = '${module_name}';
+    }
 }
 EOF
 }

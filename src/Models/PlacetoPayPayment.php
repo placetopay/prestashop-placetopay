@@ -512,7 +512,7 @@ class PlacetoPayPayment extends PaymentModule
 
         $order = $params['objOrder'] ?? $params['order'];
 
-        if ($order->module != getModuleName()) {
+        if ($order->module != $this->name) {
             return null;
         }
 
@@ -1622,7 +1622,7 @@ class PlacetoPayPayment extends PaymentModule
         $orderId = $params['id_order'];
         $bsOrder = new Order((int)$orderId);
 
-        if ($bsOrder->module !== getModuleName()) {
+        if ($bsOrder->module !== $this->name) {
             return null;
         }
 
@@ -1797,7 +1797,7 @@ class PlacetoPayPayment extends PaymentModule
         $helper->identifier = $this->identifier;
         $helper->submit_action = 'submitPlacetoPayConfiguration';
         $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false) . '&configure='
-            . getModuleName() . '&tab_module=' . $this->tab . '&module_name=' . getModuleName();
+            . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
         $helper->tpl_vars = [
             'fields_value' => $this->getConfigFieldsValues(),
@@ -1851,7 +1851,7 @@ class PlacetoPayPayment extends PaymentModule
     {
         $baseUrl = Context::getContext()->shop->getBaseURL(true);
 
-        return $baseUrl . 'modules/' . getModuleName() . '/' . $page . $params;
+        return $baseUrl . 'modules/' . $this->name . '/' . $page . $params;
     }
 
     final private function getScheduleTaskPath(): string
@@ -2008,7 +2008,7 @@ class PlacetoPayPayment extends PaymentModule
 
     final private function getThisModulePath(): string
     {
-        return _PS_MODULE_DIR_ . getModuleName();
+        return _PS_MODULE_DIR_ . $this->name;
     }
 
     final private function getRedirectPageFromStatus(): string
@@ -2749,7 +2749,7 @@ class PlacetoPayPayment extends PaymentModule
      */
     final private function ll(string $string): string
     {
-        return $this->l($string, getModuleName());
+        return $this->l($string, $this->name);
     }
 
     final private function lll(string $translation): string

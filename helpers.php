@@ -77,29 +77,32 @@ if (!function_exists('breakLine')) {
 if (!function_exists('getModuleName')) {
     function getModuleName(): string
     {
-        // Detectar el nombre del módulo basándose en la ruta del archivo
-        static $moduleName;
-        
-        if ($moduleName === null) {
-            // Obtener la ruta del directorio del módulo actual
-            $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
-            foreach ($backtrace as $trace) {
-                if (isset($trace['file']) && strpos($trace['file'], '/modules/') !== false) {
-                    // Extraer el nombre del módulo de la ruta
-                    if (preg_match('#/modules/([^/]+)/#', $trace['file'], $matches)) {
-                        $moduleName = $matches[1];
-                        break;
-                    }
-                }
-            }
-            
-            // Fallback al valor por defecto si no se pudo detectar
-            if ($moduleName === null) {
-                $moduleName = 'placetopaypayment';
+        if (defined('_MODULE_NAME_')) {
+            return _MODULE_NAME_;
+        }
+
+        static $moduleNameFromPath = null;
+        if ($moduleNameFromPath === null) {
+            $helpersPath = __FILE__;
+            if (preg_match('#/modules/([^/]+)/#', $helpersPath, $matches)) {
+                $moduleNameFromPath = $matches[1];
             }
         }
         
-        return $moduleName;
+        if ($moduleNameFromPath !== null) {
+            return $moduleNameFromPath;
+        }
+        
+        $backtrace = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        foreach ($backtrace as $trace) {
+            if (isset($trace['file']) && strpos($trace['file'], '/modules/') !== false) {
+                if (preg_match('#/modules/([^/]+)/#', $trace['file'], $matches)) {
+                    return $matches[1];
+                }
+            }
+        }
+        
+        return 'placetopaypayment';
     }
 }
 
