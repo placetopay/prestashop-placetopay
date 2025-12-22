@@ -433,17 +433,6 @@ use ${namespace_name}\\Models\\${namespace_name}Payment;
 
 class ${main_class_name} extends ${namespace_name}Payment
 {
-    public function __construct()
-    {
-        // CRÍTICO: Definir el nombre ANTES de llamar a parent::__construct()
-        // Esto asegura que cuando el constructor padre se ejecute, ya tenga el nombre correcto
-        // y PrestaShop pueda asociar correctamente el módulo con su carpeta
-        \$this->name = '${module_name}';
-        parent::__construct();
-        // Asegurar que el nombre se mantenga después del constructor padre
-        // (por si el constructor padre intenta cambiarlo)
-        \$this->name = '${module_name}';
-    }
 }
 EOF
 }

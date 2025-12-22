@@ -14,17 +14,12 @@ class PaymentLogger
     const ERROR = 3;
     const NOTIFY = 99;
 
-    public static function log(string $message, int $severity, int $errorCode, string $file, string $line, ?string $moduleName = null): bool
+    public static function log(string $message, int $severity, int $errorCode, string $file, string $line): bool
     {
-        if ($moduleName === null) {
-            $moduleName = getModuleName();
-        }
-        
         $format = sprintf("[%s:%d] => [%d]\n %s", $file, $line, $errorCode, $message);
 
-        $logger = self::getLogInstance($moduleName);
-        if ($logger) {
-            $logger->log($format, $severity, $errorCode);
+        if (self::getLogInstance()) {
+            self::getLogInstance()->log($format, $severity, $errorCode);
         }
 
         if ($severity >= self::WARNING) {
@@ -51,16 +46,12 @@ class PaymentLogger
         return true;
     }
 
-    public static function getLogFilename(?string $moduleName = null): string
+    public static function getLogFilename(): string
     {
-        if ($moduleName === null) {
-            $moduleName = getModuleName();
-        }
+        static $logfile = null;
 
-        static $logfiles = [];
-        
-        if (!isset($logfiles[$moduleName])) {
-            $filename = sprintf('%s_%s_%s.log', (isDebugEnable() ? 'dev' : 'prod'), date('Ymd'), $moduleName);
+        if (is_null($logfile)) {
+            $filename = sprintf('%s_%s_%s.log', (isDebugEnable() ? 'dev' : 'prod'), date('Ymd'), getModuleName());
 
             // PS < 1.7.0.0
             $pathLogs = '/log/';
@@ -71,37 +62,33 @@ class PaymentLogger
                 $pathLogs = '/app/logs/';
             }
 
-            $logfiles[$moduleName] = fixPath(_PS_ROOT_DIR_ . $pathLogs . $filename);
+            $logfile = fixPath(_PS_ROOT_DIR_ . $pathLogs . $filename);
         }
 
-        return $logfiles[$moduleName];
+        return $logfile;
     }
 
     /**
      * @return FileLogger|null
      */
-    private static function getLogInstance(?string $moduleName = null)
+    private static function getLogInstance()
     {
-        if ($moduleName === null) {
-            $moduleName = getModuleName();
-        }
-        
-        static $loggers = [];
-        
-        if (!isset($loggers[$moduleName])) {
-            $loggers[$moduleName] = false;
-            $logfile = self::getLogFilename($moduleName);
+        static $logger = null;
+
+        if (is_null($logger)) {
+            $logger = false;
+            $logfile = self::getLogFilename();
 
             if (!is_file($logfile) && is_writable(dirname($logfile))) {
                 file_put_contents($logfile, '');
             }
 
             if (is_writable($logfile)) {
-                $loggers[$moduleName] = new FileLogger(0);
-                $loggers[$moduleName]->setFilename($logfile);
+                $logger = new FileLogger(0);
+                $logger->setFilename($logfile);
             }
         }
 
-        return $loggers[$moduleName];
+        return $logger;
     }
 }
