@@ -125,7 +125,9 @@ class PlacetoPayPayment extends PaymentModule
 
     public function __construct()
     {
-        $this->name = getModuleName();
+        if (empty($this->name)) {
+            $this->name = getModuleName();
+        }
         $this->version = '5.0.0';
 
         $this->tab = 'payments_gateways';
@@ -177,6 +179,10 @@ class PlacetoPayPayment extends PaymentModule
 
     public function install()
     {
+        if (empty($this->name)) {
+            $this->name = getModuleName();
+        }
+        
         if (!parent::install()) {
             return false;
         }
@@ -1853,7 +1859,7 @@ class PlacetoPayPayment extends PaymentModule
 
     private function getLogFilePath(): string
     {
-        return PaymentLogger::getLogFilename();
+        return PaymentLogger::getLogFilename($this->name);
     }
 
     private function getCompanyDocument(): ?string
