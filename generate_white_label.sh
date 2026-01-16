@@ -201,23 +201,9 @@ replace_class_names() {
 }
 
 # Función para actualizar getModuleName() en helpers.php
-update_module_name_function() {
-    local work_dir="$1"
-    local module_name="$2"
-
-    print_status "Actualizando getModuleName() para retornar: $module_name"
-
-    local helpers_file="$work_dir/helpers.php"
-    if [[ -f "$helpers_file" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS
-            sed -i '' "s/return 'placetopaypayment';/return '${module_name}';/g" "$helpers_file"
-        else
-            # Linux
-            sed -i "s/return 'placetopaypayment';/return '${module_name}';/g" "$helpers_file"
-        fi
-    fi
-}
+# NOTA: Ya no es necesaria porque getModuleName() usa _MODULE_NAME_ (siempre definida)
+# y la detección por ruta (cada módulo tiene su propia copia de helpers.php)
+# El fallback nunca debería ejecutarse en condiciones normales
 
 # Función para actualizar el namespace y nombre del paquete en composer.json
 # Esto genera un hash único del autoloader para cada cliente, evitando conflictos
@@ -438,11 +424,8 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-// Definir constante con el nombre del módulo para que getModuleName() lo detecte correctamente
-// Esto evita conflictos cuando múltiples módulos están instalados
-if (!defined('_MODULE_NAME_')) {
-    define('_MODULE_NAME_', '${module_name}');
-}
+// Cada módulo tiene sus propias funciones únicas (getModuleName${namespace_name}, getPathCMS${namespace_name}, etc.)
+// Ya no es necesario definir _MODULE_NAME_ porque cada función retorna directamente el nombre del módulo
 
 require_once 'spl_autoload.php';
 
@@ -450,13 +433,6 @@ use ${namespace_name}\\Models\\${namespace_name}Payment;
 
 class ${main_class_name} extends ${namespace_name}Payment
 {
-    public function __construct()
-    {
-        parent::__construct();
-        // Sobrescribir el nombre del módulo explícitamente para que PrestaShop lo detecte correctamente
-        // Esto evita que PrestaShop lea el nombre desde otro lugar durante la instalación
-        \$this->name = '${module_name}';
-    }
 }
 EOF
 }
@@ -518,10 +494,16 @@ update_root_files() {
 
                 # Actualizar instanciación de clase (ej: new PlacetoPayPayment() -> new Banchilechile())
                 sed -i '' "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
+                
+                # Actualizar llamadas a getPathCMS() y getModuleName() por las versiones renombradas
+                sed -i '' "s/getPathCMS(/getPathCMS${namespace_name}(/g" "$work_dir/$file"
+                sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
             else
                 # Linux
                 sed -i "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$work_dir/$file"
                 sed -i "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
+                sed -i "s/getPathCMS(/getPathCMS${namespace_name}(/g" "$work_dir/$file"
+                sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
             fi
         fi
     done
@@ -579,21 +561,59 @@ update_internal_references() {
 
                 # Reemplazar función insertPaymentPlaceToPay
                 sed -i '' "s/insertPaymentPlaceToPay/insertPayment${namespace_name}/g" "$file"
+                
+                # Reemplazar llamadas a getModuleName() por getModuleName{Namespace}()
+                sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$file"
             else
                 # Linux
                 sed -i "s/'payment_placetopay'/'payment_${snake_case_name}'/g" "$file"
                 sed -i "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$file"
                 sed -i "s/insertPaymentPlaceToPay/insertPayment${namespace_name}/g" "$file"
+                sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$file"
+            fi
+        fi
+    done
+    
+    # También actualizar en archivos raíz (process.php, redirect.php, sonda.php)
+    local root_files=("process.php" "redirect.php" "sonda.php" "controllers/front/sonda.php")
+    for file in "${root_files[@]}"; do
+        if [[ -f "$work_dir/$file" ]]; then
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
+            else
+                sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
             fi
         fi
     done
 
-    # Actualizar helpers.php también
+    # Actualizar helpers.php - renombrar funciones para que sean únicas por módulo
     if [[ -f "$work_dir/helpers.php" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
+            # Renombrar versionComparePlaceToPay
             sed -i '' "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$work_dir/helpers.php"
+            
+            # Renombrar getModuleName() a getModuleName{Namespace}()
+            sed -i '' "s/function getModuleName()/function getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
+            sed -i '' "s/if (!function_exists('getModuleName'))/if (!function_exists('getModuleName${namespace_name}'))/g" "$work_dir/helpers.php"
+            
+            # Renombrar getPathCMS() a getPathCMS{Namespace}()
+            sed -i '' "s/function getPathCMS(/function getPathCMS${namespace_name}(/g" "$work_dir/helpers.php"
+            sed -i '' "s/if (!function_exists('getPathCMS'))/if (!function_exists('getPathCMS${namespace_name}'))/g" "$work_dir/helpers.php"
+            
+            # Actualizar la llamada a getModuleName() dentro de getPathCMS
+            sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
+            
+            # Actualizar el fallback para que retorne el nombre del módulo correcto
+            sed -i '' "s/return 'placetopaypayment';/return '${module_name}';/g" "$work_dir/helpers.php"
         else
+            # Linux
             sed -i "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$work_dir/helpers.php"
+            sed -i "s/function getModuleName()/function getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
+            sed -i "s/if (!function_exists('getModuleName'))/if (!function_exists('getModuleName${namespace_name}'))/g" "$work_dir/helpers.php"
+            sed -i "s/function getPathCMS(/function getPathCMS${namespace_name}(/g" "$work_dir/helpers.php"
+            sed -i "s/if (!function_exists('getPathCMS'))/if (!function_exists('getPathCMS${namespace_name}'))/g" "$work_dir/helpers.php"
+            sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
+            sed -i "s/return 'placetopaypayment';/return '${module_name}';/g" "$work_dir/helpers.php"
         fi
     fi
 }
@@ -639,12 +659,14 @@ install_composer_dependencies() {
         # Actualizar versión de PHP usando sed (compatible con macOS y Linux)
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS usa -i '' para sed
-            sed -i '' 's/"php": "[0-9]\.[0-9]\.[0-9]"/"php": "'"${php_version}"'"/' "$composer_file"
-            sed -i '' 's/"php": "[>=^~].*"/"php": ">='"${php_version}"'"/' "$composer_file"
+            # Reemplazar solo en la sección require (línea que contiene "php" después de "require")
+            sed -i '' "/\"require\"/,/}/ s|\"php\": \".*\"|\"php\": \">=${php_version}\"|g" "$composer_file"
+            # También actualizar platform si existe
+            sed -i '' "/\"platform\"/,/}/ s|\"php\": \".*\"|\"php\": \"${php_version}\"|g" "$composer_file"
         else
             # Linux usa -i sin argumento
-            sed -i 's/"php": "[0-9]\.[0-9]\.[0-9]"/"php": "'"${php_version}"'"/' "$composer_file"
-            sed -i 's/"php": "[>=^~].*"/"php": ">='"${php_version}"'"/' "$composer_file"
+            sed -i "/\"require\"/,/}/ s|\"php\": \".*\"|\"php\": \">=${php_version}\"|g" "$composer_file"
+            sed -i "/\"platform\"/,/}/ s|\"php\": \".*\"|\"php\": \"${php_version}\"|g" "$composer_file"
         fi
     fi
 
@@ -656,7 +678,12 @@ install_composer_dependencies() {
 
     hash=`head -c 32 /dev/urandom | md5sum | awk '{print $1}'`
 
-    sed -i "s/prestashop-gateway/prestashop-gateway-$hash/g" "$work_dir/composer.json"
+    # Actualizar el nombre del paquete en composer.json para evitar conflictos de autoloader
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s/prestashop-gateway/prestashop-gateway-$hash/g" "$work_dir/composer.json"
+    else
+        sed -i "s/prestashop-gateway/prestashop-gateway-$hash/g" "$work_dir/composer.json"
+    fi
 
     # Verificar si existe el comando php con la versión específica
     if command -v "php${php_version}" >/dev/null 2>&1; then
@@ -816,9 +843,6 @@ create_white_label_version_with_php() {
 
     # Reemplazar constantes de configuración de la base de datos
     replace_configuration_constants "$work_dir" "$CLIENT_ID" "$namespace_name"
-
-    # Actualizar getModuleName() para retornar el nombre correcto del módulo
-    update_module_name_function "$work_dir" "$module_name"
 
     # Actualizar namespace y nombre del paquete en composer.json antes de instalar dependencias
     # IMPORTANTE: Esto debe hacerse ANTES de composer install para generar hash único del autoloader
