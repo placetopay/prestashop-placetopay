@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Generar versiones de marca blanca del plugin PrestaShop PlacetoPay
 # Este script crea versiones personalizadas para diferentes clientes
@@ -494,7 +494,7 @@ update_root_files() {
 
                 # Actualizar instanciación de clase (ej: new PlacetoPayPayment() -> new Banchilechile())
                 sed -i '' "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
-                
+
                 # Actualizar llamadas a getPathCMS() y getModuleName() por las versiones renombradas
                 sed -i '' "s/getPathCMS(/getPathCMS${namespace_name}(/g" "$work_dir/$file"
                 sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
@@ -561,7 +561,7 @@ update_internal_references() {
 
                 # Reemplazar función insertPaymentPlaceToPay
                 sed -i '' "s/insertPaymentPlaceToPay/insertPayment${namespace_name}/g" "$file"
-                
+
                 # Reemplazar llamadas a getModuleName() por getModuleName{Namespace}()
                 sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$file"
             else
@@ -573,7 +573,7 @@ update_internal_references() {
             fi
         fi
     done
-    
+
     # También actualizar en archivos raíz (process.php, redirect.php, sonda.php)
     local root_files=("process.php" "redirect.php" "sonda.php" "controllers/front/sonda.php")
     for file in "${root_files[@]}"; do
@@ -591,18 +591,18 @@ update_internal_references() {
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # Renombrar versionComparePlaceToPay
             sed -i '' "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$work_dir/helpers.php"
-            
+
             # Renombrar getModuleName() a getModuleName{Namespace}()
             sed -i '' "s/function getModuleName()/function getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
             sed -i '' "s/if (!function_exists('getModuleName'))/if (!function_exists('getModuleName${namespace_name}'))/g" "$work_dir/helpers.php"
-            
+
             # Renombrar getPathCMS() a getPathCMS{Namespace}()
             sed -i '' "s/function getPathCMS(/function getPathCMS${namespace_name}(/g" "$work_dir/helpers.php"
             sed -i '' "s/if (!function_exists('getPathCMS'))/if (!function_exists('getPathCMS${namespace_name}'))/g" "$work_dir/helpers.php"
-            
+
             # Actualizar la llamada a getModuleName() dentro de getPathCMS
             sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
-            
+
             # Actualizar el fallback para que retorne el nombre del módulo correcto
             sed -i '' "s/return 'placetopaypayment';/return '${module_name}';/g" "$work_dir/helpers.php"
         else
@@ -729,7 +729,11 @@ cleanup_vendor_files() {
     rm -Rf "$work_dir/.phpactor.json"
     rm -Rf "$work_dir/.php-cs-fixer.cache"
     rm -Rf "$work_dir/.vimrc.setup"
+    rm -Rf "$work_dir/*.hasts"
+    rm -Rf "$work_dir/*.hasaia"
+    rm -Rf "$work_dir/*.sql"
     rm -Rf "$work_dir/*.log"
+    rm -Rf "$work_dir/*.diff"
 }
 
 # Función para limpiar archivos de desarrollo del build (siguiendo el Makefile líneas 25-33)
@@ -761,6 +765,7 @@ create_white_label_version_with_php() {
     local client_key="$1"
     local php_version="$2"
     local prestashop_version="$3"
+    local plugin_version="$4"
     local config
     config=$(get_client_config "$client_key")
 
@@ -787,7 +792,7 @@ create_white_label_version_with_php() {
     project_name_base=$(get_project_name "$CLIENT" "$COUNTRY_NAME")
 
     # Agregar versión de PrestaShop al nombre del proyecto
-    local project_name="${project_name_base}-${prestashop_version}"
+    local project_name="${project_name_base}-${plugin_version}-${prestashop_version}"
 
     print_status "Creando versión de marca blanca: $project_name"
     print_status "Cliente: $CLIENT, País: $COUNTRY_NAME ($COUNTRY_CODE), CLIENT_ID: $CLIENT_ID"
@@ -892,6 +897,7 @@ create_white_label_version_with_php() {
 # Función para crear todas las versiones de marca blanca para un cliente
 create_white_label_version() {
     local client_key="$1"
+    local plugin_version="$2"
 
     print_status "========================================="
     print_status "Procesando cliente: $client_key"
@@ -902,7 +908,7 @@ create_white_label_version() {
     local i=0
     for php_version in "${PHP_VERSIONS[@]}"; do
         local prestashop_version="${PRESTASHOP_VERSIONS[$i]}"
-        create_white_label_version_with_php "$client_key" "$php_version" "$prestashop_version"
+        create_white_label_version_with_php "$client_key" "$php_version" "$prestashop_version" "$plugin_version"
         echo
         i=$((i + 1))
     done
@@ -910,6 +916,7 @@ create_white_label_version() {
 
 # Función principal
 main() {
+    local plugin_version="$1"
     print_status "Iniciando proceso de generación de marca blanca..."
 
     # Verificar que existe el archivo de configuración
@@ -926,7 +933,8 @@ main() {
 
     # Procesar cada configuración de cliente
     for client_key in $(get_all_clients); do
-        create_white_label_version "$client_key"
+        create_white_label_version "$client_key" "$plugin_version"
+
         echo
     done
 
@@ -942,12 +950,12 @@ main() {
     print_status "Versiones de marca blanca generadas:"
     ls -la "$OUTPUT_DIR"/*.zip 2>/dev/null | while read -r line; do
         echo "  $line"
-    done || print_warning "No se encontraron archivos ZIP en el directorio de salida"
+    done || print_warning "No se encontraron archivos ZIP en el directorio de salida: $OUTPUT_DIR"
 }
 
 # Mostrar información de uso
 usage() {
-    echo "Uso: $0 [OPCIONES] [CLIENTE]"
+    echo "Uso: $0 [OPCIONES] [CLIENTE] [VERSION]"
     echo ""
     echo "Generar versiones de marca blanca del plugin PrestaShop PlacetoPay"
     echo ""
@@ -955,10 +963,12 @@ usage() {
     echo "  -h, --help    Mostrar este mensaje de ayuda"
     echo "  -l, --list    Listar configuraciones de clientes disponibles"
     echo "  CLIENTE       Generar solo para un cliente específico (opcional)"
+    echo "  VERSION       Generar .zip para cargar en GitHub tag (opcional)"
     echo ""
     echo "Clientes disponibles:"
     for client in $(get_all_clients); do
         config=$(get_client_config "$client")
+
         if [[ -n "$config" ]]; then
             parse_config "$config"
             echo "  - $client: $CLIENT ($COUNTRY_NAME - $COUNTRY_CODE)"
@@ -987,21 +997,28 @@ case "${1:-}" in
         main
         ;;
     *)
-        # Verificar si es un cliente válido
-        config=$(get_client_config "$1")
-        if [[ -n "$config" ]]; then
-            print_status "Generando versión de marca blanca para: $1"
-            rm -rf "$TEMP_DIR" "$OUTPUT_DIR"
-            mkdir -p "$TEMP_DIR" "$OUTPUT_DIR"
-
-            create_white_label_version "$1"
-            rm -rf "$TEMP_DIR"
-            print_success "¡Generación de marca blanca completada para $1!"
+        if [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            main "$1"
         else
-            print_error "Opción desconocida: $1"
-            echo ""
-            usage
-            exit 1
+            # Verificar si es un cliente válido
+            config=$(get_client_config "$1")
+
+            if [[ -n "$config" ]]; then
+                print_status "Generando versión de marca blanca para: $1"
+                rm -rf "$TEMP_DIR" "$OUTPUT_DIR"
+                mkdir -p "$TEMP_DIR" "$OUTPUT_DIR"
+
+                create_white_label_version "$1" "${2-untagged}"
+
+                rm -rf "$TEMP_DIR"
+                print_success "¡Generación de marca blanca completada para $1!"
+            else
+                print_error "Opción desconocida: $1"
+                echo ""
+                usage
+
+                exit 1
+            fi
         fi
         ;;
 esac
