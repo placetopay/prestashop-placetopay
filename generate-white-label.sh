@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Generar versiones de marca blanca del plugin PrestaShop PlacetoPay
 # Este script crea versiones personalizadas para diferentes clientes
@@ -201,23 +201,9 @@ replace_class_names() {
 }
 
 # Función para actualizar getModuleName() en helpers.php
-update_module_name_function() {
-    local work_dir="$1"
-    local module_name="$2"
-
-    print_status "Actualizando getModuleName() para retornar: $module_name"
-
-    local helpers_file="$work_dir/helpers.php"
-    if [[ -f "$helpers_file" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS
-            sed -i '' "s/return 'placetopaypayment';/return '${module_name}';/g" "$helpers_file"
-        else
-            # Linux
-            sed -i "s/return 'placetopaypayment';/return '${module_name}';/g" "$helpers_file"
-        fi
-    fi
-}
+# NOTA: Ya no es necesaria porque getModuleName() usa _MODULE_NAME_ (siempre definida)
+# y la detección por ruta (cada módulo tiene su propia copia de helpers.php)
+# El fallback nunca debería ejecutarse en condiciones normales
 
 # Función para actualizar el namespace y nombre del paquete en composer.json
 # Esto genera un hash único del autoloader para cada cliente, evitando conflictos
@@ -319,31 +305,25 @@ update_class_references() {
     # Actualizar el controlador Front (controllers/front/sonda.php)
     local controller_file="$work_dir/controllers/front/sonda.php"
     if [[ -f "$controller_file" ]]; then
-        # Convertir nombre a snake_case para función
-        local function_suffix=$(echo "$main_class_name" | tr '[:upper:]' '[:lower:]')
-
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS
             # Actualizar nombre de clase del controlador
             sed -i '' "s/class PlacetoPayPaymentSondaModuleFrontController/class ${main_class_name}SondaModuleFrontController/g" "$controller_file"
             # Actualizar llamada a función
-            sed -i '' "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${function_suffix}()/g" "$controller_file"
+            sed -i '' "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
         else
             # Linux
             sed -i "s/class PlacetoPayPaymentSondaModuleFrontController/class ${main_class_name}SondaModuleFrontController/g" "$controller_file"
-            sed -i "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${function_suffix}()/g" "$controller_file"
+            sed -i "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
         fi
     fi
 
     # Actualizar nombre de función en sonda.php
     if [[ -f "$work_dir/sonda.php" ]]; then
-        # Convertir el nombre de la clase a snake_case para la función
-        # Ejemplo: Banchilechile -> banchilechile
-        local function_suffix=$(echo "$main_class_name" | tr '[:upper:]' '[:lower:]')
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${function_suffix}/g" "$work_dir/sonda.php"
+            sed -i '' "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${main_class_name}/g" "$work_dir/sonda.php"
         else
-            sed -i "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${function_suffix}/g" "$work_dir/sonda.php"
+            sed -i "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${main_class_name}/g" "$work_dir/sonda.php"
         fi
     fi
 }
@@ -438,11 +418,8 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
-// Definir constante con el nombre del módulo para que getModuleName() lo detecte correctamente
-// Esto evita conflictos cuando múltiples módulos están instalados
-if (!defined('_MODULE_NAME_')) {
-    define('_MODULE_NAME_', '${module_name}');
-}
+// Cada módulo tiene sus propias funciones únicas (getModuleName${namespace_name}, getPathCMS${namespace_name}, etc.)
+// Ya no es necesario definir _MODULE_NAME_ porque cada función retorna directamente el nombre del módulo
 
 require_once 'spl_autoload.php';
 
@@ -450,13 +427,6 @@ use ${namespace_name}\\Models\\${namespace_name}Payment;
 
 class ${main_class_name} extends ${namespace_name}Payment
 {
-    public function __construct()
-    {
-        parent::__construct();
-        // Sobrescribir el nombre del módulo explícitamente para que PrestaShop lo detecte correctamente
-        // Esto evita que PrestaShop lea el nombre desde otro lugar durante la instalación
-        \$this->name = '${module_name}';
-    }
 }
 EOF
 }
@@ -518,10 +488,16 @@ update_root_files() {
 
                 # Actualizar instanciación de clase (ej: new PlacetoPayPayment() -> new Banchilechile())
                 sed -i '' "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
+
+                # Actualizar llamadas a getPathCMS() y getModuleName() por las versiones renombradas
+                sed -i '' "s/getPathCMS(/getPathCMS${namespace_name}(/g" "$work_dir/$file"
+                sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
             else
                 # Linux
                 sed -i "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$work_dir/$file"
                 sed -i "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
+                sed -i "s/getPathCMS(/getPathCMS${namespace_name}(/g" "$work_dir/$file"
+                sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
             fi
         fi
     done
@@ -579,21 +555,59 @@ update_internal_references() {
 
                 # Reemplazar función insertPaymentPlaceToPay
                 sed -i '' "s/insertPaymentPlaceToPay/insertPayment${namespace_name}/g" "$file"
+
+                # Reemplazar llamadas a getModuleName() por getModuleName{Namespace}()
+                sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$file"
             else
                 # Linux
                 sed -i "s/'payment_placetopay'/'payment_${snake_case_name}'/g" "$file"
                 sed -i "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$file"
                 sed -i "s/insertPaymentPlaceToPay/insertPayment${namespace_name}/g" "$file"
+                sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$file"
             fi
         fi
     done
 
-    # Actualizar helpers.php también
+    # También actualizar en archivos raíz (process.php, redirect.php, sonda.php)
+    local root_files=("process.php" "redirect.php" "sonda.php" "controllers/front/sonda.php")
+    for file in "${root_files[@]}"; do
+        if [[ -f "$work_dir/$file" ]]; then
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
+            else
+                sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
+            fi
+        fi
+    done
+
+    # Actualizar helpers.php - renombrar funciones para que sean únicas por módulo
     if [[ -f "$work_dir/helpers.php" ]]; then
         if [[ "$OSTYPE" == "darwin"* ]]; then
+            # Renombrar versionComparePlaceToPay
             sed -i '' "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$work_dir/helpers.php"
+
+            # Renombrar getModuleName() a getModuleName{Namespace}()
+            sed -i '' "s/function getModuleName()/function getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
+            sed -i '' "s/if (!function_exists('getModuleName'))/if (!function_exists('getModuleName${namespace_name}'))/g" "$work_dir/helpers.php"
+
+            # Renombrar getPathCMS() a getPathCMS{Namespace}()
+            sed -i '' "s/function getPathCMS(/function getPathCMS${namespace_name}(/g" "$work_dir/helpers.php"
+            sed -i '' "s/if (!function_exists('getPathCMS'))/if (!function_exists('getPathCMS${namespace_name}'))/g" "$work_dir/helpers.php"
+
+            # Actualizar la llamada a getModuleName() dentro de getPathCMS
+            sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
+
+            # Actualizar el fallback para que retorne el nombre del módulo correcto
+            sed -i '' "s/return 'placetopaypayment';/return '${module_name}';/g" "$work_dir/helpers.php"
         else
+            # Linux
             sed -i "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$work_dir/helpers.php"
+            sed -i "s/function getModuleName()/function getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
+            sed -i "s/if (!function_exists('getModuleName'))/if (!function_exists('getModuleName${namespace_name}'))/g" "$work_dir/helpers.php"
+            sed -i "s/function getPathCMS(/function getPathCMS${namespace_name}(/g" "$work_dir/helpers.php"
+            sed -i "s/if (!function_exists('getPathCMS'))/if (!function_exists('getPathCMS${namespace_name}'))/g" "$work_dir/helpers.php"
+            sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
+            sed -i "s/return 'placetopaypayment';/return '${module_name}';/g" "$work_dir/helpers.php"
         fi
     fi
 }
@@ -639,12 +653,14 @@ install_composer_dependencies() {
         # Actualizar versión de PHP usando sed (compatible con macOS y Linux)
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS usa -i '' para sed
-            sed -i '' 's/"php": "[0-9]\.[0-9]\.[0-9]"/"php": "'"${php_version}"'"/' "$composer_file"
-            sed -i '' 's/"php": "[>=^~].*"/"php": ">='"${php_version}"'"/' "$composer_file"
+            # Reemplazar solo en la sección require (línea que contiene "php" después de "require")
+            sed -i '' "/\"require\"/,/}/ s|\"php\": \".*\"|\"php\": \">=${php_version}\"|g" "$composer_file"
+            # También actualizar platform si existe
+            sed -i '' "/\"platform\"/,/}/ s|\"php\": \".*\"|\"php\": \"${php_version}\"|g" "$composer_file"
         else
             # Linux usa -i sin argumento
-            sed -i 's/"php": "[0-9]\.[0-9]\.[0-9]"/"php": "'"${php_version}"'"/' "$composer_file"
-            sed -i 's/"php": "[>=^~].*"/"php": ">='"${php_version}"'"/' "$composer_file"
+            sed -i "/\"require\"/,/}/ s|\"php\": \".*\"|\"php\": \">=${php_version}\"|g" "$composer_file"
+            sed -i "/\"platform\"/,/}/ s|\"php\": \".*\"|\"php\": \"${php_version}\"|g" "$composer_file"
         fi
     fi
 
@@ -656,7 +672,12 @@ install_composer_dependencies() {
 
     hash=`head -c 32 /dev/urandom | md5sum | awk '{print $1}'`
 
-    sed -i "s/prestashop-gateway/prestashop-gateway-$hash/g" "$work_dir/composer.json"
+    # Actualizar el nombre del paquete en composer.json para evitar conflictos de autoloader
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        sed -i '' "s/prestashop-gateway/prestashop-gateway-$hash/g" "$work_dir/composer.json"
+    else
+        sed -i "s/prestashop-gateway/prestashop-gateway-$hash/g" "$work_dir/composer.json"
+    fi
 
     # Verificar si existe el comando php con la versión específica
     if command -v "php${php_version}" >/dev/null 2>&1; then
@@ -702,7 +723,11 @@ cleanup_vendor_files() {
     rm -Rf "$work_dir/.phpactor.json"
     rm -Rf "$work_dir/.php-cs-fixer.cache"
     rm -Rf "$work_dir/.vimrc.setup"
+    rm -Rf "$work_dir/*.hasts"
+    rm -Rf "$work_dir/*.hasaia"
+    rm -Rf "$work_dir/*.sql"
     rm -Rf "$work_dir/*.log"
+    rm -Rf "$work_dir/*.diff"
 }
 
 # Función para limpiar archivos de desarrollo del build (siguiendo el Makefile líneas 25-33)
@@ -734,6 +759,7 @@ create_white_label_version_with_php() {
     local client_key="$1"
     local php_version="$2"
     local prestashop_version="$3"
+    local plugin_version="$4"
     local config
     config=$(get_client_config "$client_key")
 
@@ -760,7 +786,7 @@ create_white_label_version_with_php() {
     project_name_base=$(get_project_name "$CLIENT" "$COUNTRY_NAME")
 
     # Agregar versión de PrestaShop al nombre del proyecto
-    local project_name="${project_name_base}-${prestashop_version}"
+    local project_name="${project_name_base}-${plugin_version}-${prestashop_version}"
 
     print_status "Creando versión de marca blanca: $project_name"
     print_status "Cliente: $CLIENT, País: $COUNTRY_NAME ($COUNTRY_CODE), CLIENT_ID: $CLIENT_ID"
@@ -817,9 +843,6 @@ create_white_label_version_with_php() {
     # Reemplazar constantes de configuración de la base de datos
     replace_configuration_constants "$work_dir" "$CLIENT_ID" "$namespace_name"
 
-    # Actualizar getModuleName() para retornar el nombre correcto del módulo
-    update_module_name_function "$work_dir" "$module_name"
-
     # Actualizar namespace y nombre del paquete en composer.json antes de instalar dependencias
     # IMPORTANTE: Esto debe hacerse ANTES de composer install para generar hash único del autoloader
     update_composer_namespace "$work_dir" "$namespace_name" "$CLIENT_ID"
@@ -868,6 +891,7 @@ create_white_label_version_with_php() {
 # Función para crear todas las versiones de marca blanca para un cliente
 create_white_label_version() {
     local client_key="$1"
+    local plugin_version="$2"
 
     print_status "========================================="
     print_status "Procesando cliente: $client_key"
@@ -878,7 +902,7 @@ create_white_label_version() {
     local i=0
     for php_version in "${PHP_VERSIONS[@]}"; do
         local prestashop_version="${PRESTASHOP_VERSIONS[$i]}"
-        create_white_label_version_with_php "$client_key" "$php_version" "$prestashop_version"
+        create_white_label_version_with_php "$client_key" "$php_version" "$prestashop_version" "$plugin_version"
         echo
         i=$((i + 1))
     done
@@ -886,6 +910,7 @@ create_white_label_version() {
 
 # Función principal
 main() {
+    local plugin_version="$1"
     print_status "Iniciando proceso de generación de marca blanca..."
 
     # Verificar que existe el archivo de configuración
@@ -902,7 +927,8 @@ main() {
 
     # Procesar cada configuración de cliente
     for client_key in $(get_all_clients); do
-        create_white_label_version "$client_key"
+        create_white_label_version "$client_key" "$plugin_version"
+
         echo
     done
 
@@ -918,12 +944,12 @@ main() {
     print_status "Versiones de marca blanca generadas:"
     ls -la "$OUTPUT_DIR"/*.zip 2>/dev/null | while read -r line; do
         echo "  $line"
-    done || print_warning "No se encontraron archivos ZIP en el directorio de salida"
+    done || print_warning "No se encontraron archivos ZIP en el directorio de salida: $OUTPUT_DIR"
 }
 
 # Mostrar información de uso
 usage() {
-    echo "Uso: $0 [OPCIONES] [CLIENTE]"
+    echo "Uso: $0 [OPCIONES] [CLIENTE] [VERSION]"
     echo ""
     echo "Generar versiones de marca blanca del plugin PrestaShop PlacetoPay"
     echo ""
@@ -931,10 +957,12 @@ usage() {
     echo "  -h, --help    Mostrar este mensaje de ayuda"
     echo "  -l, --list    Listar configuraciones de clientes disponibles"
     echo "  CLIENTE       Generar solo para un cliente específico (opcional)"
+    echo "  VERSION       Generar .zip para cargar en GitHub tag (opcional)"
     echo ""
     echo "Clientes disponibles:"
     for client in $(get_all_clients); do
         config=$(get_client_config "$client")
+
         if [[ -n "$config" ]]; then
             parse_config "$config"
             echo "  - $client: $CLIENT ($COUNTRY_NAME - $COUNTRY_CODE)"
@@ -963,21 +991,28 @@ case "${1:-}" in
         main
         ;;
     *)
-        # Verificar si es un cliente válido
-        config=$(get_client_config "$1")
-        if [[ -n "$config" ]]; then
-            print_status "Generando versión de marca blanca para: $1"
-            rm -rf "$TEMP_DIR" "$OUTPUT_DIR"
-            mkdir -p "$TEMP_DIR" "$OUTPUT_DIR"
-
-            create_white_label_version "$1"
-            rm -rf "$TEMP_DIR"
-            print_success "¡Generación de marca blanca completada para $1!"
+        if [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            main "$1"
         else
-            print_error "Opción desconocida: $1"
-            echo ""
-            usage
-            exit 1
+            # Verificar si es un cliente válido
+            config=$(get_client_config "$1")
+
+            if [[ -n "$config" ]]; then
+                print_status "Generando versión de marca blanca para: $1"
+                rm -rf "$TEMP_DIR" "$OUTPUT_DIR"
+                mkdir -p "$TEMP_DIR" "$OUTPUT_DIR"
+
+                create_white_label_version "$1" "${2-untagged}"
+
+                rm -rf "$TEMP_DIR"
+                print_success "¡Generación de marca blanca completada para $1!"
+            else
+                print_error "Opción desconocida: $1"
+                echo ""
+                usage
+
+                exit 1
+            fi
         fi
         ;;
 esac

@@ -11,6 +11,7 @@ try {
     $pathCMS = getPathCMS('process.php');
 
     require fixPath($pathCMS . '/config/config.inc.php');
+    require fixPath($pathCMS . '/init.php');
     require fixPath(sprintf('%s/%2$s/%2$s.php', rtrim(_PS_MODULE_DIR_, '/'), getModuleName()));
 
     if (!Context::getContext()->customer->isLogged()

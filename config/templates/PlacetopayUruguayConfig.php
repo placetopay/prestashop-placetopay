@@ -15,10 +15,8 @@ abstract class CountryConfig
     public static function getEndpoints(): array
     {
         return [
-            Environment::DEVELOPMENT => 'https://checkout-uy.placetopay.dev',
-            Environment::TEST => 'https://checkout-test.placetopay.com',
-            Environment::PRODUCTION => 'https://checkout.placetopay.com',
+            Environment::TEST => 'https://uy-uat-checkout.placetopay.com',
+            Environment::PRODUCTION => 'https://checkout.placetopay.uy',
         ];
     }
 }
-

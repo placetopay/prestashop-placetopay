@@ -756,13 +756,30 @@ class PlacetoPayPayment extends PaymentModule
         } elseif (!empty($inputStream = Tools::file_get_contents("php://input"))) {
             // On resolve function called process
             sleep(5);
-            $input = json_decode($inputStream, 1);
 
-            $notification = new Notification((array)$input, $this->getTranKey());
+            $input = json_decode($inputStream, true);
 
-            if (!$notification->isValidNotification()) {
+            $expectedSignature = sprintf(
+                '%s%s%s%s',
+                $input['requestId'],
+                $input['status']['status'],
+                $input['status']['date'],
+                $this->getTranKey()
+            );
+
+            if (strpos($input['signature'], ':') === false) {
+                $input['signature'] = 'sha1:' . $input['signature'];
+            }
+
+            [$algo, $signature] = explode(':', $input['signature'], 2);
+
+            if (isDebugEnable()) {
+                PaymentLogger::log('Signature algorithm: ' . $algo, PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
+            }
+
+            if ($hashSignature = hash($algo, $expectedSignature) !== $signature) {
                 if (isDebugEnable()) {
-                    die('Change signature value in your request to: ' . $notification->makeSignature());
+                    die('Change signature value in your request to: ' . $hashSignature);
                 }
 
                 $message = 'Notification is not valid, process canceled. Input request:' . PHP_EOL . print_r($input, true);
