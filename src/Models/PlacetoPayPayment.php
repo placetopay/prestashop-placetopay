@@ -1870,7 +1870,7 @@ class PlacetoPayPayment extends PaymentModule
 
     private function getLogFilePath(): string
     {
-        return PaymentLogger::getLogFilename($this->name);
+        return PaymentLogger::getLogFilename();
     }
 
     private function getCompanyDocument(): ?string
