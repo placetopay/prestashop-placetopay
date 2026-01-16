@@ -6,17 +6,18 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
-## [5.0.0 (2025-12-17)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.8...4.0.9)
+## [5.0.0 (2026-01-15)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.9...5.0.0)
 
 ### Added
 
-- Generate zips by tenant config
+- Generate zips by tenant config.
+- Support sha256 as hash algorithm in notifications.
 
 ## [4.0.9 (2025-03-28)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.8...4.0.9)
 
 ### Updated
 
-- Update branding for clients
+- Update branding for clients.
 
 ## [4.0.8 (2025-03-07)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.7...4.0.8)
 

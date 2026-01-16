@@ -305,31 +305,25 @@ update_class_references() {
     # Actualizar el controlador Front (controllers/front/sonda.php)
     local controller_file="$work_dir/controllers/front/sonda.php"
     if [[ -f "$controller_file" ]]; then
-        # Convertir nombre a snake_case para función
-        local function_suffix=$(echo "$main_class_name" | tr '[:upper:]' '[:lower:]')
-
         if [[ "$OSTYPE" == "darwin"* ]]; then
             # macOS
             # Actualizar nombre de clase del controlador
             sed -i '' "s/class PlacetoPayPaymentSondaModuleFrontController/class ${main_class_name}SondaModuleFrontController/g" "$controller_file"
             # Actualizar llamada a función
-            sed -i '' "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${function_suffix}()/g" "$controller_file"
+            sed -i '' "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
         else
             # Linux
             sed -i "s/class PlacetoPayPaymentSondaModuleFrontController/class ${main_class_name}SondaModuleFrontController/g" "$controller_file"
-            sed -i "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${function_suffix}()/g" "$controller_file"
+            sed -i "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
         fi
     fi
 
     # Actualizar nombre de función en sonda.php
     if [[ -f "$work_dir/sonda.php" ]]; then
-        # Convertir el nombre de la clase a snake_case para la función
-        # Ejemplo: Banchilechile -> banchilechile
-        local function_suffix=$(echo "$main_class_name" | tr '[:upper:]' '[:lower:]')
         if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${function_suffix}/g" "$work_dir/sonda.php"
+            sed -i '' "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${main_class_name}/g" "$work_dir/sonda.php"
         else
-            sed -i "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${function_suffix}/g" "$work_dir/sonda.php"
+            sed -i "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${main_class_name}/g" "$work_dir/sonda.php"
         fi
     fi
 }
