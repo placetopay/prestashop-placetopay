@@ -103,7 +103,6 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_ORDER_CONFIRMATION = 'index.php?controller=order-confirmation';
     const PAGE_ORDER_HISTORY = 'index.php?controller=history';
     const PAGE_ORDER_DETAILS = 'index.php?controller=order-detail';
-    const PAGE_HOME = '';
 
     const MIN_VERSION_PS = '1.6.1.0';
     const MAX_VERSION_PS = '8.2.3';
@@ -537,6 +536,7 @@ class PlacetoPayPayment extends PaymentModule
         if (empty($cart->id)) {
             $message = 'Cart cannot be loaded or an order has already been placed using this cart';
             PaymentLogger::log($message, PaymentLogger::ERROR, 18, __FILE__, __LINE__);
+
             Tools::redirect('authentication.php?back=order.php');
         }
 
@@ -546,6 +546,7 @@ class PlacetoPayPayment extends PaymentModule
             // @codingStandardsIgnoreLine
             $message = 'Payment not allowed, customer has payment pending and not allowed but with payment pending is disable';
             PaymentLogger::log($message, PaymentLogger::ERROR, 7, __FILE__, __LINE__);
+
             Tools::redirect('authentication.php?back=order.php');
         }
 
@@ -898,8 +899,14 @@ class PlacetoPayPayment extends PaymentModule
 
     public function resolveRedirectUrl($cartId, $order): string
     {
+        $page = $this->getRedirectPageFromStatus();
+
+        if ($page && strtolower(substr($page, 0, 4)) === 'http') {
+            return $page;
+        }
+
         return __PS_BASE_URI__
-            . $this->getRedirectPageFromStatus()
+            . $page
             . '&id_cart=' . $cartId
             . '&id_module=' . $this->id
             . '&id_order=' . $order->id
@@ -2035,7 +2042,7 @@ class PlacetoPayPayment extends PaymentModule
                 $redirectTo = self::PAGE_ORDER_HISTORY;
                 break;
             case self:: SHOW_ON_RETURN_HOME:
-                $redirectTo = self::PAGE_HOME;
+                $redirectTo = $this->context->shop->getBaseURL(true);
                 break;
             case self::SHOW_ON_RETURN_DEFAULT:
             default:
