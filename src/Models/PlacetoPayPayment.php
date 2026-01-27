@@ -100,10 +100,9 @@ class PlacetoPayPayment extends PaymentModule
     const OPTION_DISABLED = '0';
     const ORDER_STATE = 'PS_OS_PLACETOPAY';
 
-    const PAGE_ORDER_CONFIRMATION = 'order-confirmation.php';
-    const PAGE_ORDER_HISTORY = 'history.php';
+    const PAGE_ORDER_CONFIRMATION = 'index.php?controller=order-confirmation';
+    const PAGE_ORDER_HISTORY = 'index.php?controller=history';
     const PAGE_ORDER_DETAILS = 'index.php?controller=order-detail';
-    const PAGE_HOME = '';
 
     const MIN_VERSION_PS = '1.6.1.0';
     const MAX_VERSION_PS = '8.2.3';
@@ -126,7 +125,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '5.0.0';
+        $this->version = '5.0.1';
 
         $this->tab = 'payments_gateways';
 
@@ -537,6 +536,7 @@ class PlacetoPayPayment extends PaymentModule
         if (empty($cart->id)) {
             $message = 'Cart cannot be loaded or an order has already been placed using this cart';
             PaymentLogger::log($message, PaymentLogger::ERROR, 18, __FILE__, __LINE__);
+
             Tools::redirect('authentication.php?back=order.php');
         }
 
@@ -546,6 +546,7 @@ class PlacetoPayPayment extends PaymentModule
             // @codingStandardsIgnoreLine
             $message = 'Payment not allowed, customer has payment pending and not allowed but with payment pending is disable';
             PaymentLogger::log($message, PaymentLogger::ERROR, 7, __FILE__, __LINE__);
+
             Tools::redirect('authentication.php?back=order.php');
         }
 
@@ -815,7 +816,7 @@ class PlacetoPayPayment extends PaymentModule
 
         $paymentId = $paymentPlaceToPay['id_payment'];
         $cartId = $paymentPlaceToPay['id_order'];
-        $requestId = $paymentPlaceToPay['id_request'];
+        $requestId = (int)$paymentPlaceToPay['id_request'];
         $reference = $paymentPlaceToPay['reference'];
         $oldStatus = $paymentPlaceToPay['status'];
         $order = $this->getOrderByCartId($cartId);
@@ -898,9 +899,15 @@ class PlacetoPayPayment extends PaymentModule
 
     public function resolveRedirectUrl($cartId, $order): string
     {
+        $page = $this->getRedirectPageFromStatus();
+
+        if ($page && strtolower(substr($page, 0, 4)) === 'http') {
+            return $page;
+        }
+
         return __PS_BASE_URI__
-            . $this->getRedirectPageFromStatus()
-            . '?id_cart=' . $cartId
+            . $page
+            . '&id_cart=' . $cartId
             . '&id_module=' . $this->id
             . '&id_order=' . $order->id
             . '&key=' . $order->secure_key;
@@ -951,6 +958,7 @@ class PlacetoPayPayment extends PaymentModule
 
                     if (!$requestId) {
                         echo 'Request ID payment is not valid.' . breakLine(2);
+
                         continue;
                     }
 
@@ -2034,7 +2042,7 @@ class PlacetoPayPayment extends PaymentModule
                 $redirectTo = self::PAGE_ORDER_HISTORY;
                 break;
             case self:: SHOW_ON_RETURN_HOME:
-                $redirectTo = self::PAGE_HOME;
+                $redirectTo = $this->context->shop->getBaseURL(true);
                 break;
             case self::SHOW_ON_RETURN_DEFAULT:
             default:
@@ -2500,7 +2508,7 @@ class PlacetoPayPayment extends PaymentModule
 
         $endpoints = CountryConfig::getEndpoints();
 
-        foreach ($options as $key => $value) {
+        foreach (array_keys($options) as $key) {
             if (!array_key_exists($key, $endpoints)) {
                 unset($options[$key]);
             }

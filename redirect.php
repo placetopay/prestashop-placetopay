@@ -16,12 +16,14 @@ try {
 
     if (!Context::getContext()->customer->isLogged() && !Context::getContext()->customer->is_guest) {
         PaymentLogger::log('Access not allowed', PaymentLogger::WARNING, 17, __FILE__, __LINE__);
+
         Tools::redirect('authentication.php?back=order.php');
     }
 
     $cart = Context::getContext()->cart;
     if (!Validate::isLoadedObject($cart)) {
         PaymentLogger::log('Cart not found', PaymentLogger::ERROR, 18, __FILE__, __LINE__);
+
         Tools::redirect('authentication.php?back=order.php');
     }
 

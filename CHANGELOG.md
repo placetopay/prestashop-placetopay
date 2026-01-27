@@ -6,113 +6,99 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+## [5.0.1 (2026-01-27)](https://github.com/placetopay/prestashop-placetopay/compare/5.0.0...5.0.1)
+
+### Fixed
+- Return pages on home and detail payment configurations returning's webcheckout.
+
 ## [5.0.0 (2026-01-15)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.9...5.0.0)
 
 ### Added
-
 - Generate zips by tenant config.
 - Support sha256 as hash algorithm in notifications.
 
 ## [4.0.9 (2025-03-28)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.8...4.0.9)
 
 ### Updated
-
 - Update branding for clients.
 
 ## [4.0.8 (2025-03-07)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.7...4.0.8)
 
 ### Fixed
-
 - Add sleep for a race condition in return and notification process.
 
 ## [4.0.7 (2025-02-10)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.6...4.0.7)
 
 ### Added
-
 - Add resolve module logo by client.
 
 ## [4.0.6 (2024-10-09)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.5...4.0.6)
 
 ### Fixed
-
 - Resolve redirect when the payment was resolve before.
 
 ## [4.0.5 (2024-09-26)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.4...4.0.5)
 
 ### Added
-
 - Add brand image in payment option
 
 ## [4.0.4 (2024-06-20)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.3...4.0.4)
 
 ### Added
-
 - Add information in the readme.
 
 ## [4.0.4 (2024-06-05)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.3...4.0.4)
 
 ### Fixed
-
 - Fix method reset for uninstall and install the component.
 
 ## [4.0.3 (2024-01-08)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.2...4.0.3)
 
 ### Removed
-
 - Remove docker installation options (and update readme).
 
 ### Updated
-
 - Change method to get installments of the payment.
 - Change message of approved payment and remove default messages in the payment detail.
 
 ### Fixed
-
 - Fix Order details view in show backend administration.
 
 ## [4.0.2 (2023-12-05)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.1...4.0.2)
 
 ### Fixed
-
 - Resolve endpoint by Client.
 
 ## [4.0.1 (2023-11-30)](https://github.com/placetopay/prestashop-placetopay/compare/4.0.0...4.0.1)
 
 ### Updated
-
 - Hide lightbox option for CL.
 
 ## [4.0.0 (2023-11-01)](https://github.com/placetopay/prestashop-placetopay/compare/3.8.2...4.0.0)
 
 ### Added
-
 - Enable support for Prestashop >= 8.0.
 
 ### Removed
-
 - Drop support for Prestashop <= 1.6.
 
 ## [3.8.2 (2023-10-27)](https://github.com/placetopay/prestashop-placetopay/compare/3.8.1...3.8.2)
 
 ### Added
-
 - Hide default payment approved message when it is not.
 
 ## [3.8.1 (2023-08-23)](https://github.com/placetopay/prestashop-placetopay/compare/3.8.0...3.8.1)
 
 ### Added
-
 - Add lightbox to process payments.
 
 ## [3.8.0 (2023-07-05)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.6...3.8.0)
 
 ### Added
-
 - Add branding by client country (it's defined in PS).
 - Add modifiers support: UY.
 
 ### Removed
-
 - Remove currency validation, now it depends from response of WC.
 - Remove payments methods enable, now it depends from configurations in WC.
 - Remove connection type configuration, only supports REST messages (using JSON).
@@ -120,31 +106,26 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 ## [3.7.6 (2023-05-30)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.5...3.7.6)
 
 ### Fixed
-
 - Fix total amount and base amount of the payment.
 
 ## [3.7.5 (2023-04-24)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.4...3.7.5)
 
 ### Fixed
-
 - Fix amount base of the payment. (code overwrite in commit)
 
 ## [3.7.4 (2023-03-30)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.3...3.7.4)
 
 ### Added
-
 - Add UY country as option in country list.
 
 ## [3.7.3 (2023-03-10)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.2...3.7.3)
 
 ### Fixed
-
 - Fix messages showed after declined  or canceled payments, always it showed success message
 
 ## [3.7.2 (2022-10-28)](https://github.com/placetopay/prestashop-placetopay/compare/3.7.1...3.7.2)
 
 ### Fixed
-
 - Fix amount base of the payment. Now the base has the value of the shipping and the amount of the products.
 - Fix locale sent to request in WC
 

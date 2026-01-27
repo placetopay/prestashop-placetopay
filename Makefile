@@ -1,5 +1,5 @@
 # Usage:
-# make compile PLUGIN_VERSION=5.0.0
+# make compile PLUGIN_VERSION=5.0.1
 
 .PHONY: compile
 compile:
