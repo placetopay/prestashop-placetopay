@@ -100,8 +100,8 @@ class PlacetoPayPayment extends PaymentModule
     const OPTION_DISABLED = '0';
     const ORDER_STATE = 'PS_OS_PLACETOPAY';
 
-    const PAGE_ORDER_CONFIRMATION = 'order-confirmation.php';
-    const PAGE_ORDER_HISTORY = 'history.php';
+    const PAGE_ORDER_CONFIRMATION = 'index.php?controller=order-confirmation';
+    const PAGE_ORDER_HISTORY = 'index.php?controller=history';
     const PAGE_ORDER_DETAILS = 'index.php?controller=order-detail';
     const PAGE_HOME = '';
 
@@ -815,7 +815,7 @@ class PlacetoPayPayment extends PaymentModule
 
         $paymentId = $paymentPlaceToPay['id_payment'];
         $cartId = $paymentPlaceToPay['id_order'];
-        $requestId = $paymentPlaceToPay['id_request'];
+        $requestId = (int)$paymentPlaceToPay['id_request'];
         $reference = $paymentPlaceToPay['reference'];
         $oldStatus = $paymentPlaceToPay['status'];
         $order = $this->getOrderByCartId($cartId);
@@ -900,7 +900,7 @@ class PlacetoPayPayment extends PaymentModule
     {
         return __PS_BASE_URI__
             . $this->getRedirectPageFromStatus()
-            . '?id_cart=' . $cartId
+            . '&id_cart=' . $cartId
             . '&id_module=' . $this->id
             . '&id_order=' . $order->id
             . '&key=' . $order->secure_key;
@@ -951,6 +951,7 @@ class PlacetoPayPayment extends PaymentModule
 
                     if (!$requestId) {
                         echo 'Request ID payment is not valid.' . breakLine(2);
+
                         continue;
                     }
 
@@ -2500,7 +2501,7 @@ class PlacetoPayPayment extends PaymentModule
 
         $endpoints = CountryConfig::getEndpoints();
 
-        foreach ($options as $key => $value) {
+        foreach (array_keys($options) as $key) {
             if (!array_key_exists($key, $endpoints)) {
                 unset($options[$key]);
             }
