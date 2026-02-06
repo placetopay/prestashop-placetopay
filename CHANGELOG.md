@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+## [5.0.2 (2026-02-06)](https://github.com/placetopay/prestashop-placetopay/compare/5.0.1...5.0.2)
+
+### Fixed
+- Fix tax calculation in cases where the tax is included in the price of the product and the tax is not applied to the shipping cost.
+
 ## [5.0.1 (2026-01-27)](https://github.com/placetopay/prestashop-placetopay/compare/5.0.0...5.0.1)
 
 ### Fixed
