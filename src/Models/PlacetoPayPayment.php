@@ -125,7 +125,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '5.0.1';
+        $this->version = '5.0.2';
 
         $this->tab = 'payments_gateways';
 
@@ -554,10 +554,44 @@ class PlacetoPayPayment extends PaymentModule
         $currency = new Currency($cart->id_currency);
         $invoiceAddress = new Address($cart->id_address_invoice);
         $deliveryAddress = new Address($cart->id_address_delivery);
-        $totalAmount = (float)$cart->getOrderTotal(true);
-        $totalAmountWithoutTaxes = (float)$cart->getOrderTotal(false);
+        $totalAmount = $cart->getOrderTotal(true, Cart::BOTH);
 
-        $taxAmount = $totalAmount - $totalAmountWithoutTaxes;
+        $productsBase = $cart->getOrderTotal(false, Cart::ONLY_PRODUCTS);
+        $productsTotal = $cart->getOrderTotal(true, Cart::ONLY_PRODUCTS);
+
+        $wrappingBase = $cart->getOrderTotal(false, Cart::ONLY_WRAPPING);
+        $wrappingTotal = $cart->getOrderTotal(true, Cart::ONLY_WRAPPING);
+
+        $shippingBase = $cart->getOrderTotal(false, Cart::ONLY_SHIPPING);
+        $shippingTotal = $cart->getOrderTotal(true, Cart::ONLY_SHIPPING);
+
+        $discountBase = $cart->getOrderTotal(false, Cart::ONLY_DISCOUNTS);
+        $discountTotal = $cart->getOrderTotal(true, Cart::ONLY_DISCOUNTS);
+
+        $productsTaxable = ($productsTotal > $productsBase);
+        $shippingTaxable = ($shippingTotal > $shippingBase);
+        $wrappingTaxable = ($wrappingTotal > $wrappingBase);
+
+        $taxBase = 0;
+        $taxAmount = 0;
+
+        if ($productsTaxable) {
+            $taxBase += $productsBase;
+            $taxAmount += ($productsTotal - $productsBase);
+        }
+
+        if ($shippingTaxable) {
+            $taxBase += $shippingBase;
+            $taxAmount += ($shippingTotal - $shippingBase);
+        }
+
+        if ($wrappingTaxable) {
+            $taxBase += $wrappingBase;
+            $taxAmount += ($wrappingTotal - $wrappingBase);
+        }
+
+        $taxBase -= $discountBase;
+        $taxAmount -= ($discountTotal - $discountBase);
 
         if (!Validate::isLoadedObject($customer)) {
             throw new PaymentException('Invalid customer', 301);
@@ -663,7 +697,7 @@ class PlacetoPayPayment extends PaymentModule
                     [
                         'kind' => 'valueAddedTax',
                         'amount' => $taxAmount,
-                        'base' => $totalAmountWithoutTaxes,
+                        'base' => $taxBase,
                     ]
                 ];
             }
