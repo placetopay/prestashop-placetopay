@@ -16,6 +16,7 @@ abstract class CountryConfig
     {
         return [
             Environment::TEST => 'https://checkout.test.avalpaycenter.com',
+            Environment::UAT => 'https://checkout.uat.avalpaycenter.com',
             Environment::PRODUCTION => 'https://checkout.avalpaycenter.com',
         ];
     }

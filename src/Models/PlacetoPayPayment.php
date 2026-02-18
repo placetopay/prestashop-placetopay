@@ -2538,6 +2538,7 @@ class PlacetoPayPayment extends PaymentModule
             Environment::PRODUCTION => $this->ll('Production'),
             Environment::TEST => $this->ll('Test'),
             Environment::DEVELOPMENT => $this->ll('Development'),
+            Environment::UAT => $this->ll('UAT'),
         ];
 
         $endpoints = CountryConfig::getEndpoints();

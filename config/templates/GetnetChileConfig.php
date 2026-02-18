@@ -16,6 +16,7 @@ abstract class CountryConfig
     {
         return [
             Environment::TEST => 'https://checkout.test.getnet.cl',
+            Environment::UAT => 'https://checkout.uat.getnet.cl',
             Environment::PRODUCTION => 'https://checkout.getnet.cl',
         ];
     }
