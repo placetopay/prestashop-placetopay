@@ -125,7 +125,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '5.0.2';
+        $this->version = '5.0.3';
 
         $this->tab = 'payments_gateways';
 
@@ -2551,7 +2551,7 @@ class PlacetoPayPayment extends PaymentModule
             }
         }
 
-        if(isDebugEnable()) {
+        if(isDebugEnable() || CountryConfig::COUNTRY_CODE != CountryCode::COLOMBIA) {
             $options[Environment::CUSTOM] = $this->ll('Custom');
         }
 
