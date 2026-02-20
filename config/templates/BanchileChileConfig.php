@@ -16,6 +16,7 @@ abstract class CountryConfig
     {
         return [
             Environment::TEST => 'https://checkout.test.banchilepagos.cl',
+            Environment::UAT => 'https://checkout.uat.banchilepagos.cl',
             Environment::PRODUCTION => 'https://checkout.banchilepagos.cl',
         ];
     }

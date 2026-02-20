@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+## [5.0.3 (2026-02-18)](https://github.com/placetopay/prestashop-placetopay/compare/5.0.2...5.0.3)
+
+### Added
+- Add uat environments.
+- Set expiration minutes in 30 minutes by default.
+
 ## [5.0.2 (2026-02-06)](https://github.com/placetopay/prestashop-placetopay/compare/5.0.1...5.0.2)
 
 ### Fixed
