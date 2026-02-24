@@ -63,7 +63,6 @@ class RemoteAddress
     /**
      * Set list of trusted proxy addresses
      *
-     * @param  array $trustedProxies
      * @return RemoteAddress
      */
     public function setTrustedProxies(array $trustedProxies)
@@ -96,11 +95,7 @@ class RemoteAddress
             return $ip;
         }
 
-        // direct IP address
-        if (isset($_SERVER['REMOTE_ADDR'])) {
-            return $_SERVER['REMOTE_ADDR'];
-        }
-        return '';
+        return $_SERVER['REMOTE_ADDR'] ?? '';
     }
 
     /**
@@ -116,10 +111,12 @@ class RemoteAddress
         ) {
             return false;
         }
+
         $header = $this->proxyHeader;
         if (!isset($_SERVER[$header]) || empty($_SERVER[$header])) {
             return false;
         }
+
         // Extract IPs
         $ips = explode(',', $_SERVER[$header]);
         // trim, so we can compare against trusted proxies properly
@@ -127,9 +124,10 @@ class RemoteAddress
         // remove trusted proxy IPs
         $ips = array_diff($ips, $this->trustedProxies);
         // Any left?
-        if (empty($ips)) {
+        if ($ips === []) {
             return false;
         }
+
         // Since we've removed any known, trusted proxy servers, the right-most
         // address represents the first IP we do not know about -- i.e., we do
         // not know if it is a proxy server, or a client. As such, we treat it
@@ -155,6 +153,7 @@ class RemoteAddress
         if (0 !== strpos($header, 'HTTP_')) {
             $header = 'HTTP_' . $header;
         }
+
         return $header;
     }
 }

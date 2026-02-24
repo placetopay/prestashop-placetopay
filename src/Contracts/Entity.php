@@ -11,7 +11,6 @@ abstract class Entity
 
     /**
      * Extracts the information for the entity.
-     * @return array
      */
     abstract public function toArray(): array;
 
@@ -21,9 +20,11 @@ abstract class Entity
             if (is_array($data)) {
                 $data = new $class($data);
             }
+
             if (!($data instanceof $class)) {
                 $data = null;
             }
+
             $this->{$attribute} = $data;
         }
 

@@ -15,17 +15,28 @@ class Settings extends Entity
     use LoaderTrait;
 
     public const TP_REST = 'rest';
+
     public const TP_SOAP = 'soap';
+
     protected $type = self::TP_REST;
+
     protected $baseUrl = '';
+
     protected $timeout = 15;
+
     protected $verifySsl = true;
+
     protected $login;
+
     protected $tranKey;
+
     protected $headers = [];
+
     protected $authAdditional = [];
-    protected $client = null;
-    protected $carrier = null;
+
+    protected $client;
+
+    protected $carrier;
 
     public function __construct(array $data)
     {
@@ -113,6 +124,7 @@ class Settings extends Entity
                 'verify' => $this->verifySsl(),
             ]);
         }
+
         return $this->client;
     }
 

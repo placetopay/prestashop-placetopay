@@ -9,9 +9,13 @@ use \PrestaShopLogger;
 class PaymentLogger
 {
     const DEBUG = 0;
+
     const INFO = 1;
+
     const WARNING = 2;
+
     const ERROR = 3;
+
     const NOTIFY = 99;
 
     public static function log(string $message, int $severity, int $errorCode, string $file, string $line): bool
