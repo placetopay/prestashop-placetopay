@@ -2538,9 +2538,9 @@ class PlacetoPayPayment extends PaymentModule
     {
         $options = [
             Environment::PRODUCTION => $this->ll('Production'),
+            Environment::UAT => $this->ll('UAT'),
             Environment::TEST => $this->ll('Test'),
             Environment::DEVELOPMENT => $this->ll('Development'),
-            Environment::UAT => $this->ll('UAT'),
         ];
 
         $endpoints = CountryConfig::getEndpoints();
@@ -2551,7 +2551,7 @@ class PlacetoPayPayment extends PaymentModule
             }
         }
 
-        if(isDebugEnable() || CountryConfig::COUNTRY_CODE != CountryCode::COLOMBIA) {
+        if(isDebugEnable() || CountryConfig::COUNTRY_CODE === CountryCode::COLOMBIA) {
             $options[Environment::CUSTOM] = $this->ll('Custom');
         }
 
