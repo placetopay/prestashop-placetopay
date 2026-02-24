@@ -14,4 +14,6 @@ interface CountryCode
     public const CHILE = 'CL';
 
     public const URUGUAY = 'UY';
+
+    public const COLOMBIA = 'CO';
 }

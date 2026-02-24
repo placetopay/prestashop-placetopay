@@ -87,7 +87,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAYMENT_BUTTON_IMAGE = 'PLACETOPAY_PAYMENT_BUTTON_IMAGE';
     const LOGIN = 'PLACETOPAY_LOGIN';
     const TRAN_KEY = 'PLACETOPAY_TRANKEY';
-    const EXPIRATION_TIME_MINUTES_DEFAULT = 120; // 2 Hours
+    const EXPIRATION_TIME_MINUTES_DEFAULT = 30; // 30 Minutes
     const EXPIRATION_TIME_MINUTES_MIN = 10; // 10 Minutes
 
     const LIGHTBOX = 'PLACETOPAY_LIGHTBOX';
@@ -125,7 +125,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '5.0.2';
+        $this->version = '5.0.3';
 
         $this->tab = 'payments_gateways';
 
@@ -1515,17 +1515,18 @@ class PlacetoPayPayment extends PaymentModule
                 $formErrors[] = sprintf('%s %s', $this->ll('Telephone contact'), $this->ll('is required.'));
             }
 
-            // Connection Configuration
-            if (!Tools::getValue(self::EXPIRATION_TIME_MINUTES)) {
-                $formErrors[] = sprintf('%s %s', $this->ll('Expiration time to pay'), $this->ll('is required.'));
-            } elseif (filter_var(Tools::getValue(self::EXPIRATION_TIME_MINUTES), FILTER_VALIDATE_INT) === false
-                || Tools::getValue(self::EXPIRATION_TIME_MINUTES) < self::EXPIRATION_TIME_MINUTES_MIN) {
-                $formErrors[] = sprintf(
-                    '%s %s (min %d)',
-                    $this->ll('Expiration time to pay'),
-                    $this->ll('is not valid.'),
-                    self::EXPIRATION_TIME_MINUTES_MIN
-                );
+            if (isDebugEnable()) {
+                if (!Tools::getValue(self::EXPIRATION_TIME_MINUTES)) {
+                    $formErrors[] = sprintf('%s %s', $this->ll('Expiration time to pay'), $this->ll('is required.'));
+                } elseif (filter_var(Tools::getValue(self::EXPIRATION_TIME_MINUTES), FILTER_VALIDATE_INT) === false
+                    || Tools::getValue(self::EXPIRATION_TIME_MINUTES) < self::EXPIRATION_TIME_MINUTES_MIN) {
+                    $formErrors[] = sprintf(
+                        '%s %s (min %d)',
+                        $this->ll('Expiration time to pay'),
+                        $this->ll('is not valid.'),
+                        self::EXPIRATION_TIME_MINUTES_MIN
+                    );
+                }
             }
 
             if (!Tools::getValue(self::ENVIRONMENT)) {
@@ -1561,8 +1562,9 @@ class PlacetoPayPayment extends PaymentModule
             Configuration::updateValue(self::COMPANY_NAME, Tools::getValue(self::COMPANY_NAME));
             Configuration::updateValue(self::EMAIL_CONTACT, Tools::getValue(self::EMAIL_CONTACT));
             Configuration::updateValue(self::TELEPHONE_CONTACT, Tools::getValue(self::TELEPHONE_CONTACT));
-            // Configuration
-            Configuration::updateValue(self::EXPIRATION_TIME_MINUTES, Tools::getValue(self::EXPIRATION_TIME_MINUTES));
+            if (isDebugEnable()) {
+                Configuration::updateValue(self::EXPIRATION_TIME_MINUTES, Tools::getValue(self::EXPIRATION_TIME_MINUTES));
+            }
             Configuration::updateValue(self::SHOW_ON_RETURN, Tools::getValue(self::SHOW_ON_RETURN));
             Configuration::updateValue(self::CIFIN_MESSAGE, Tools::getValue(self::CIFIN_MESSAGE));
             Configuration::updateValue(
@@ -1954,7 +1956,7 @@ class PlacetoPayPayment extends PaymentModule
 
         return !is_numeric($minutes) || $minutes < self::EXPIRATION_TIME_MINUTES_MIN
             ? self::EXPIRATION_TIME_MINUTES_DEFAULT
-            : $minutes;
+            : (int) $minutes;
     }
 
     private function getShowOnReturn(): string
@@ -2538,6 +2540,7 @@ class PlacetoPayPayment extends PaymentModule
             Environment::PRODUCTION => $this->ll('Production'),
             Environment::TEST => $this->ll('Test'),
             Environment::DEVELOPMENT => $this->ll('Development'),
+            Environment::UAT => $this->ll('UAT'),
         ];
 
         $endpoints = CountryConfig::getEndpoints();
@@ -2548,7 +2551,7 @@ class PlacetoPayPayment extends PaymentModule
             }
         }
 
-        if(isDebugEnable()) {
+        if(isDebugEnable() || CountryConfig::COUNTRY_CODE != CountryCode::COLOMBIA) {
             $options[Environment::CUSTOM] = $this->ll('Custom');
         }
 
@@ -2603,14 +2606,19 @@ class PlacetoPayPayment extends PaymentModule
 
     private function getFieldsConfiguration(): array
     {
-        $fields = [
-            [
+        $fields = [];
+
+        if (isDebugEnable()) {
+            $fields[] = [
                 'type' => 'text',
                 'label' => $this->ll('Expiration time to pay'),
                 'name' => self::EXPIRATION_TIME_MINUTES,
                 'required' => true,
                 'autocomplete' => 'off',
-            ],
+            ];
+        }
+
+        $fields = array_merge($fields, [
             [
                 'type' => 'select',
                 'label' => $this->lll('Returning from %s show'),
@@ -2657,7 +2665,7 @@ class PlacetoPayPayment extends PaymentModule
                 'is_bool' => true,
                 'values' => $this->getOptionSwitch(),
             ],
-        ];
+        ]);
 
         if ($this->getDefaultPrestashopCountry() === CountryCode::URUGUAY) {
             $fields = array_merge($fields, [
