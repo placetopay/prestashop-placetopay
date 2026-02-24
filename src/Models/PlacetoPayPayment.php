@@ -1966,7 +1966,9 @@ class PlacetoPayPayment extends PaymentModule
 
     private function getTransUnionMessage(): string
     {
-        return $this->getCurrentValueOf(self::CIFIN_MESSAGE);
+        return $this->countrySupportsTransUnion()
+            ? $this->getCurrentValueOf(self::CIFIN_MESSAGE)
+            : self::OPTION_DISABLED;
     }
 
     private function getAllowBuyWithPendingPayments(): bool
@@ -2551,7 +2553,7 @@ class PlacetoPayPayment extends PaymentModule
             }
         }
 
-        if(isDebugEnable() || CountryConfig::COUNTRY_CODE === CountryCode::COLOMBIA) {
+        if(isDebugEnable() || $this->getDefaultPrestashopCountry() === CountryCode::COLOMBIA) {
             $options[Environment::CUSTOM] = $this->ll('Custom');
         }
 
@@ -2630,13 +2632,21 @@ class PlacetoPayPayment extends PaymentModule
                     'query' => $this->getOptionListShowOnReturn(),
                 ],
             ],
-            [
-                'type' => 'switch',
-                'label' => $this->ll('Enable TransUnion message?'),
-                'name' => self::CIFIN_MESSAGE,
-                'is_bool' => true,
-                'values' => $this->getOptionSwitch(),
-            ],
+        ]);
+
+        if ($this->countrySupportsTransUnion()) {
+            $fields = array_merge($fields, [
+                [
+                    'type' => 'switch',
+                    'label' => $this->ll('Enable TransUnion message?'),
+                    'name' => self::CIFIN_MESSAGE,
+                    'is_bool' => true,
+                    'values' => $this->getOptionSwitch(),
+                ],
+            ]);
+        }
+
+        $fields = array_merge($fields, [
             [
                 'type' => 'switch',
                 'label' => $this->ll('Allow buy with pending payments?'),
@@ -2840,6 +2850,13 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         return false;
+    }
+
+    private function countrySupportsTransUnion(): bool
+    {
+        return in_array($this->getDefaultPrestashopCountry(), [
+            CountryCode::COLOMBIA
+        ], true);
     }
 
     /**
