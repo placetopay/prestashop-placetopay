@@ -46,9 +46,9 @@
 							{dateFormat date=$order.date_add full=1}
 						</td>
 						<td class="history_price" data-value="{$order.total_paid}">
-							<span class="price">
-                                {Tools::displayPrice($order.total_paid)}
-							</span>
+						<span class="price">
+							{$order.total_paid_display|escape:'html':'UTF-8'}
+						</span>
 						</td>
 						<td class="history_method">{$order.payment|escape:'html':'UTF-8'}</td>
 						<td class="history_cus">{$order.cus|escape:'html':'UTF-8'|default:'000000'}</td>

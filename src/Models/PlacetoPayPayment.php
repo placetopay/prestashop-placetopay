@@ -2389,9 +2389,12 @@ class PlacetoPayPayment extends PaymentModule
         if ($orders) {
             foreach ($orders as &$order) {
                 $myOrder = new Order((int)$order['id_order']);
+
                 if (Validate::isLoadedObject($myOrder)) {
                     $order['virtual'] = $myOrder->isVirtual(false);
                 }
+
+                $order['total_paid_display'] = $this->formatPriceForOrder($order);
             }
 
             $lastOrder = new Order((int)$orders[0]['id_order']);
@@ -2407,6 +2410,25 @@ class PlacetoPayPayment extends PaymentModule
         ]);
 
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/front/history.tpl'));
+    }
+
+    private function formatPriceForOrder(array $order): string
+    {
+        $currencyId = isset($order['id_currency']) ? (int) $order['id_currency'] : 0;
+        $amount = isset($order['total_paid']) ? (float) $order['total_paid'] : 0.0;
+
+        if ($currencyId <= 0) {
+            return (string) $amount;
+        }
+
+        $currency = new Currency($currencyId);
+        $isoCode = isset($currency->iso_code) ? $currency->iso_code : '';
+
+        if (method_exists($this->context, 'getCurrentLocale') && !empty($isoCode)) {
+            return $this->context->getCurrentLocale()->formatPrice($amount, $isoCode);
+        }
+
+        return Tools::displayPrice($amount, $currency);
     }
 
     private function getSetup(): string
