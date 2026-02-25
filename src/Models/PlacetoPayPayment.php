@@ -2828,10 +2828,23 @@ class PlacetoPayPayment extends PaymentModule
         $currency_order = new Currency($cart->id_currency);
         $currencies_module = $this->getCurrency($cart->id_currency);
 
+        if ($currencies_module instanceof Currency) {
+            return (int) $currency_order->id === (int) $currencies_module->id;
+        }
+
         if (is_array($currencies_module)) {
             foreach ($currencies_module as $currency_module) {
-                if ($currency_order->id == $currency_module['id_currency']) {
-                    return true;
+                if ($currency_module instanceof Currency) {
+                    if ((int) $currency_order->id === (int) $currency_module->id) {
+                        return true;
+                    }
+                    continue;
+                }
+
+                if (is_array($currency_module) && isset($currency_module['id_currency'])) {
+                    if ((int) $currency_order->id === (int) $currency_module['id_currency']) {
+                        return true;
+                    }
                 }
             }
         }
