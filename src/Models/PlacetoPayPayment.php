@@ -108,6 +108,11 @@ class PlacetoPayPayment extends PaymentModule
     const MAX_VERSION_PS = '8.2.3';
 
     /**
+     * @var int
+     */
+    public $is_eu_compatible;
+
+    /**
      * @var string
      */
     private $tablePayment = _DB_PREFIX_ . 'payment_placetopay';

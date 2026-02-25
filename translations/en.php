@@ -122,7 +122,7 @@ $_MODULE['<{placetopaypayment}prestashop>response_bacd494fa77f84ab85ea0b4f5b3326
 $_MODULE['<{placetopaypayment}prestashop>response_13dba24862cf9128167a59100e154c8d'] = 'Print';
 $_MODULE['<{placetopaypayment}prestashop>response_5f7ae98bdc36ea2686daed151216abf6'] = 'Retry payment';
 $_MODULE['<{placetopaypayment}prestashop>response_91a1bd08a417cbd1ce9ee50d8c67bab6'] = 'Payment History';
-$_MODULE['<{placetopaypayment}prestashop>setting_539fa2e06ba86d40021c702405354de6'] = 'This module allows you to accept payments by %s.';
+$_MODULE['<{placetopaypayment}prestashop>setting_539fa2e06ba86d40021c702405354de6'] = 'This module allows you to accept payments by';
 $_MODULE['<{placetopaypayment}prestashop>setting_aae39cdce5349ef19bbad1fa8d9158e5'] = 'You need to configure your %s account before using this module.';
 $_MODULE['<{placetopaypayment}prestashop>setting_a2b787ad97ab6f553dded04fc19dab01'] = 'Notification URL';
 $_MODULE['<{placetopaypayment}prestashop>setting_d66be00270dd3d64aad0834d24367dad'] = 'Scheduler task path';
