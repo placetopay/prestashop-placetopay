@@ -12,7 +12,7 @@ use Throwable;
  */
 class PaymentException extends Exception
 {
-    public function __construct($message = '', $code = 0, Throwable $previous = null)
+    public function __construct(string $message = '', int $code = 0, ?Throwable $previous = null)
     {
         PaymentLogger::log($message, PaymentLogger::ERROR, $code, $this->getFile(), $this->getLine());
 

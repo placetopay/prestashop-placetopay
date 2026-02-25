@@ -37,7 +37,7 @@ class PaymentLogger
         return true;
     }
 
-    public static function logInDatabase(string $message, int $severity = self::INFO, int $errorCode = null): bool
+    public static function logInDatabase(string $message, int $severity = self::INFO, int $errorCode = 0): bool
     {
         try {
             $errorCode = $errorCode > 0 ? $errorCode : 999;

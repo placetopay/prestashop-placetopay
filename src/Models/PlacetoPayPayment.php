@@ -521,7 +521,7 @@ class PlacetoPayPayment extends PaymentModule
 
         switch ($this->getShowOnReturn()) {
             case self::SHOW_ON_RETURN_PSE_LIST:
-                $viewOnReturn = $this->getPaymentPSEList($order->id_customer);
+                $viewOnReturn = $this->getPaymentPSEList((int)$order->id_customer);
                 break;
             case self::SHOW_ON_RETURN_DETAILS:
             case self::SHOW_ON_RETURN_DEFAULT:
@@ -854,7 +854,7 @@ class PlacetoPayPayment extends PaymentModule
         }
 
         $paymentId = $paymentPlaceToPay['id_payment'];
-        $cartId = $paymentPlaceToPay['id_order'];
+        $cartId = (int)$paymentPlaceToPay['id_order'];
         $requestId = (int)$paymentPlaceToPay['id_request'];
         $reference = $paymentPlaceToPay['reference'];
         $oldStatus = $paymentPlaceToPay['status'];
@@ -936,7 +936,7 @@ class PlacetoPayPayment extends PaymentModule
         }
     }
 
-    public function resolveRedirectUrl($cartId, $order): string
+    public function resolveRedirectUrl(int $cartId, Order $order): string
     {
         $page = $this->getRedirectPageFromStatus();
 
@@ -2117,27 +2117,25 @@ class PlacetoPayPayment extends PaymentModule
         return !empty($rows[0]) ? $rows[0] : false;
     }
 
-    private function getIdByCartId($id_cart): ?int
+    private function getIdByCartId(int $cartId): ?int
     {
         $sql = 'SELECT `id_order`
             FROM `' . _DB_PREFIX_ . 'orders`
-            WHERE `id_cart` = ' . (int)$id_cart;
+            WHERE `id_cart` = ' . (int)$cartId;
 
         $result = Db::getInstance()->getValue($sql);
 
-        return !empty($result) ? (int)$result : false;
+        return !empty($result) ? (int)$result : null;
     }
 
     /**
-     * @param null $cartId
-     * @return Order|null
      * @throws PrestaShopDatabaseException
      * @throws \PrestaShopException
      */
-    private function getOrderByCartId($cartId = null)
+    private function getOrderByCartId(int $cartId): ?Order
     {
         if (versionComparePlaceToPay('1.7.1.0', '>=')) {
-            if (!is_null(Shop::getTotalShops()) && Shop::getTotalShops() > 1) {
+            if ((int)Shop::getTotalShops() > 1) {
                 $orderId = $this->getIdByCartId($cartId);
             } else {
                 $orderId = Order::getIdByCartId($cartId);
@@ -2206,20 +2204,8 @@ class PlacetoPayPayment extends PaymentModule
         return $result;
     }
 
-    /**
-     * Get customer orders
-     *
-     * @param $id_customer Customer id
-     * @param bool $show_hidden_status Display or not hidden order statuses
-     * @param Context|null $context
-     * @return array
-     */
-    private function getCustomerOrders($id_customer, $show_hidden_status = false, Context $context = null)
+    private function getCustomerOrders(int $customerId): array
     {
-        if (!$context) {
-            $context = Context::getContext();
-        }
-
         $sql = 'SELECT o.`id_order`, o.`id_currency`, o.`payment`, o.`invoice_number`, pp.`date` date_add,
                       pp.`reference`, pp.`amount` total_paid, pp.`authcode` cus,
                       (SELECT SUM(od.`product_quantity`)
@@ -2227,35 +2213,35 @@ class PlacetoPayPayment extends PaymentModule
                       WHERE od.`id_order` = o.`id_order`) nb_products
         FROM `' . $this->tableOrder . '` o
             JOIN `' . $this->tablePayment . '` pp ON pp.id_order = o.id_cart
-        WHERE o.`id_customer` = ' . (int)$id_customer .
+        WHERE o.`id_customer` = ' . $customerId .
             Shop::addSqlRestriction(Shop::SHARE_ORDER) . '
         GROUP BY o.`id_order`
         ORDER BY o.`date_add` DESC';
 
-        $res = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
+        $orders = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
 
-        if (!$res) {
+        if (!$orders) {
             return [];
         }
 
-        foreach ($res as $key => $val) {
-            $res2 = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
+        foreach ($orders as $index => $order) {
+            $status = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
                 SELECT os.`id_order_state`, osl.`name` AS order_state, os.`invoice`, os.`color` AS order_state_color
                 FROM `' . _DB_PREFIX_ . 'order_history` oh
                 LEFT JOIN `' . _DB_PREFIX_ . 'order_state` os ON (os.`id_order_state` = oh.`id_order_state`)
                 INNER JOIN `' . _DB_PREFIX_ . 'order_state_lang` osl ON (
-                    os.`id_order_state` = osl.`id_order_state` AND osl.`id_lang` = ' . (int)$context->language->id . '
+                    os.`id_order_state` = osl.`id_order_state` AND osl.`id_lang` = ' . (int)Context::getContext()->language->id . '
                 )
-            WHERE oh.`id_order` = ' . (int)$val['id_order'] . (!$show_hidden_status ? ' AND os.`hidden` != 1' : '') . '
+            WHERE oh.`id_order` = ' . (int)$order['id_order'] . '
             ORDER BY oh.`date_add` DESC, oh.`id_order_history` DESC
             LIMIT 1');
 
-            if ($res2) {
-                $res[$key] = array_merge($res[$key], $res2[0]);
+            if ($status) {
+                $orders[$index] = array_merge($orders[$index], $status[0]);
             }
         }
 
-        return $res;
+        return $orders;
     }
 
     /**
@@ -2391,11 +2377,7 @@ class PlacetoPayPayment extends PaymentModule
         return $status;
     }
 
-    /**
-     * @param $customerId
-     * @return string
-     */
-    private function getPaymentPSEList($customerId)
+    private function getPaymentPSEList(int $customerId): string
     {
         $orders = self::getCustomerOrders($customerId);
         $isPaid = false;
