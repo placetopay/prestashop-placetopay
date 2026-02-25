@@ -302,21 +302,33 @@ update_class_references() {
         fi
     done
 
-    # Actualizar el controlador Front (controllers/front/sonda.php)
-    local controller_file="$work_dir/controllers/front/sonda.php"
-    if [[ -f "$controller_file" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS
-            # Actualizar nombre de clase del controlador
-            sed -i '' "s/class PlacetoPayPaymentSondaModuleFrontController/class ${main_class_name}SondaModuleFrontController/g" "$controller_file"
-            # Actualizar llamada a función
-            sed -i '' "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
-        else
-            # Linux
-            sed -i "s/class PlacetoPayPaymentSondaModuleFrontController/class ${main_class_name}SondaModuleFrontController/g" "$controller_file"
-            sed -i "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
+    declare -A front_controllers
+    front_controllers[sonda]=Sonda
+    front_controllers[redirect]=Redirect
+    front_controllers[process]=Process
+
+    for controller_key in "${!front_controllers[@]}"; do
+        local controller_file="$work_dir/controllers/front/${controller_key}.php"
+        local class_suffix="${front_controllers[$controller_key]}"
+
+        if [[ -f "$controller_file" ]]; then
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                # macOS
+                sed -i '' "s/class PlacetoPayPayment${class_suffix}ModuleFrontController/class ${main_class_name}${class_suffix}ModuleFrontController/g" "$controller_file"
+            else
+                # Linux
+                sed -i "s/class PlacetoPayPayment${class_suffix}ModuleFrontController/class ${main_class_name}${class_suffix}ModuleFrontController/g" "$controller_file"
+            fi
+
+            if [[ "$controller_key" == "sonda" ]]; then
+                if [[ "$OSTYPE" == "darwin"* ]]; then
+                    sed -i '' "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
+                else
+                    sed -i "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
+                fi
+            fi
         fi
-    fi
+    done
 
     # Actualizar nombre de función en sonda.php
     if [[ -f "$work_dir/sonda.php" ]]; then
@@ -498,6 +510,20 @@ update_root_files() {
                 sed -i "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
                 sed -i "s/getPathCMS(/getPathCMS${namespace_name}(/g" "$work_dir/$file"
                 sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
+            fi
+        fi
+    done
+
+    for file in "${files[@]}"; do
+        if [[ -f "$work_dir/controllers/front/$file" ]]; then
+            local working_file="$work_dir/controllers/front/$file"
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                # macOS
+                # Actualizar namespace del PaymentLogger
+                sed -i '' "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$working_file"
+            else
+                # Linux
+                sed -i "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$working_file"
             fi
         fi
     done

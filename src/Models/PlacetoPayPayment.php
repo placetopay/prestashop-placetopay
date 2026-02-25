@@ -402,14 +402,14 @@ class PlacetoPayPayment extends PaymentModule
             ]);
 
             $paymentUrl = $this->getAllowBuyWithPendingPayments() == self::OPTION_ENABLED
-                ? $this->getUrl('redirect.php')
+                ? $this->getModuleLink('redirect')
                 : 'javascript:;';
 
             $this->context->smarty->assign('payment_url', $paymentUrl);
         } else {
             $hasPendingTransaction = false;
 
-            $this->context->smarty->assign('payment_url', $this->getUrl('redirect.php'));
+            $this->context->smarty->assign('payment_url', $this->getModuleLink('redirect'));
         }
 
         $allowPayment = $this->getAllowBuyWithPendingPayments() == self::OPTION_ENABLED || !$hasPendingTransaction;
@@ -465,13 +465,13 @@ class PlacetoPayPayment extends PaymentModule
         $this->createOrderState();
 
         $content = $this->displayBrandMessage();
-        $action = $this->getUrl('redirect.php');
+        $action = $this->getModuleLink('redirect');
         $lastPendingTransaction = $this->getLastPendingTransaction($params['cart']->id_customer);
 
         if (!empty($lastPendingTransaction)) {
             $content .= $this->displayPendingPaymentMessage($lastPendingTransaction);
             $action = $this->getAllowBuyWithPendingPayments() == self::OPTION_ENABLED
-                ? $this->getUrl('redirect.php')
+                ? $this->getModuleLink('redirect')
                 : null;
         }
 
@@ -542,7 +542,7 @@ class PlacetoPayPayment extends PaymentModule
             $message = 'Cart cannot be loaded or an order has already been placed using this cart';
             PaymentLogger::log($message, PaymentLogger::ERROR, 18, __FILE__, __LINE__);
 
-            Tools::redirect('authentication.php?back=order.php');
+            Tools::redirect(Context::getContext()->link->getPageLink('order', true, null, 'step=1'));
         }
 
         $lastPendingTransaction = $this->getLastPendingTransaction($cart->id_customer);
@@ -552,7 +552,7 @@ class PlacetoPayPayment extends PaymentModule
             $message = 'Payment not allowed, customer has payment pending and not allowed but with payment pending is disable';
             PaymentLogger::log($message, PaymentLogger::ERROR, 7, __FILE__, __LINE__);
 
-            Tools::redirect('authentication.php?back=order.php');
+            Tools::redirect(Context::getContext()->link->getPageLink('order', true, null, 'step=1'));
         }
 
         $customer = new Customer($cart->id_customer);
@@ -645,7 +645,7 @@ class PlacetoPayPayment extends PaymentModule
 
             // After order create in validateOrder
             $reference = $this->currentOrderReference;
-            $returnUrl = $this->getUrl('process.php', '?_=' . $this->reference($reference));
+            $returnUrl = $this->getModuleLink('process', ['_' => $this->reference($reference)]);
 
             // Request payment
             $request = [
@@ -850,7 +850,7 @@ class PlacetoPayPayment extends PaymentModule
                 die($message . PHP_EOL);
             }
 
-            Tools::redirect('authentication.php?back=order.php');
+            Tools::redirect(Context::getContext()->link->getPageLink('order', true, null, 'step=1'));
         }
 
         $paymentId = $paymentPlaceToPay['id_payment'];
@@ -967,7 +967,7 @@ class PlacetoPayPayment extends PaymentModule
 
             PaymentLogger::log($message, PaymentLogger::WARNING, 16, __FILE__, __LINE__);
 
-            Tools::redirect('authentication.php?back=order.php');
+            Tools::redirect(Context::getContext()->link->getPageLink('order', true, null, 'step=1'));
         }
 
         echo 'Begins ' . date('Ymd H:i:s') . '.' . breakLine();
@@ -1613,7 +1613,7 @@ class PlacetoPayPayment extends PaymentModule
                 'is_set_credentials' => $this->isSetCredentials(),
                 'warning_compliancy' => (!$this->isCompliancy() ? $this->getCompliancyMessage() : ''),
                 'version' => $this->getPluginVersion(),
-                'url_notification' => $this->getUrl('process.php'),
+                'url_notification' => $this->getModuleLink('process'),
                 'schedule_task' => $this->getScheduleTaskPath(),
                 'log_file' => $this->getLogFilePath(),
                 'log_database' => $this->context->link->getAdminLink('AdminLogs'),
@@ -1905,11 +1905,15 @@ class PlacetoPayPayment extends PaymentModule
             : Configuration::get($name);
     }
 
-    private function getUrl($page, $params = ''): string
+    private function getModuleLink(string $controller, array $params = []): string
     {
+        if (!empty($controller)) {
+            return $this->context->link->getModuleLink($this->name, $controller, $params, true);
+        }
+
         $baseUrl = Context::getContext()->shop->getBaseURL(true);
 
-        return $baseUrl . 'modules/' . $this->name . '/' . $page . $params;
+        return $baseUrl . 'modules/' . $this->name . '/';
     }
 
     private function getScheduleTaskPath(): string
@@ -2415,7 +2419,7 @@ class PlacetoPayPayment extends PaymentModule
             isDebugEnable() ? 'DEBUG' : 'PRODUCTION'
         );
         $setup .= sprintf('Plugin [%s]', $this->getPluginVersion()) . breakLine();
-        $setup .= sprintf('URL Base [%s]', $this->getUrl('')) . breakLine();
+        $setup .= sprintf('URL Base [%s]', $this->getModuleLink('')) . breakLine();
         $setup .= sprintf('Logs [%s]', $this->getLogFilePath()) . breakLine();
         $setup .= sprintf('%s [%s]', $this->ll('Country'), $this->getDefaultPrestashopCountry()) . breakLine();
         $setup .= sprintf('%s [%s]', $this->ll('Environment'), $this->getEnvironment()) . breakLine();
