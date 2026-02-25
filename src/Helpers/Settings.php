@@ -16,8 +16,6 @@ class Settings extends Entity
 
     public const TP_REST = 'rest';
 
-    public const TP_SOAP = 'soap';
-
     protected $type = self::TP_REST;
 
     protected $baseUrl = '';
@@ -52,7 +50,7 @@ class Settings extends Entity
             $data['baseUrl'] .= '/';
         }
 
-        if (isset($data['type']) && in_array($data['type'], [self::TP_SOAP, self::TP_REST])) {
+        if (isset($data['type']) && in_array($data['type'], [self::TP_REST])) {
             $this->type = $data['type'];
         }
 
@@ -73,16 +71,6 @@ class Settings extends Entity
     public function baseUrl(string $endpoint = ''): string
     {
         return $this->baseUrl . $endpoint;
-    }
-
-    public function wsdl(): string
-    {
-        return $this->baseUrl('soap/redirect?wsdl');
-    }
-
-    public function location(): ?string
-    {
-        return $this->baseUrl('soap/redirect');
     }
 
     public function timeout(): int
