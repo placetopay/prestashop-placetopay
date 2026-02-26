@@ -73,11 +73,11 @@
             </tr>
             <tr valign="top">
                 <td>{l s='Total amount' mod='placetopaypayment'}</td>
-                <td><b>{Tools::displayPrice($transaction['amount'])}</b></td>
+                <td><b>{$transaction['amount_display']|escape:'html':'UTF-8'}</b></td>
             </tr>
             <tr valign="top">
                 <td>{l s='Tax' mod='placetopaypayment'}</td>
-                <td><b>{Tools::displayPrice($transaction['tax'])}</b></td>
+                <td><b>{$transaction['tax_display']|escape:'html':'UTF-8'}</b></td>
             </tr>
             {if !empty($transaction['franchise_name'])}
                 <tr valign="top">

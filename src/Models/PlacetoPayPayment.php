@@ -2295,7 +2295,8 @@ class PlacetoPayPayment extends PaymentModule
         $taxAmount = $totalAmount - (float)($cart->getOrderTotal(false, Cart::BOTH));
         $payerName = '';
         $payerEmail = !empty($transaction['payer_email']) ? $transaction['payer_email'] : null;
-        $transaction['tax'] = $taxAmount;
+        $transaction['amount_display'] = $this->formatPriceAmount((float) $totalAmount, (int) $cart->id_currency);
+        $transaction['tax_display'] = $this->formatPriceAmount((float) $taxAmount, (int) $cart->id_currency);
 
         // Customer data
         $customer = new Customer((int)($order->id_customer));
@@ -2418,6 +2419,11 @@ class PlacetoPayPayment extends PaymentModule
         $currencyId = isset($order['id_currency']) ? (int) $order['id_currency'] : 0;
         $amount = isset($order['total_paid']) ? (float) $order['total_paid'] : 0.0;
 
+        return $this->formatPriceAmount($amount, $currencyId);
+    }
+
+    private function formatPriceAmount(float $amount, int $currencyId): string
+    {
         if ($currencyId <= 0) {
             return (string) $amount;
         }
@@ -2425,7 +2431,6 @@ class PlacetoPayPayment extends PaymentModule
         $currency = new Currency($currencyId);
         $isoCode = isset($currency->iso_code) ? $currency->iso_code : '';
 
-        // 9.0.0+ compatibility: use Context method to format price with locale
         if (method_exists($this->context, 'getCurrentLocale') && !empty($isoCode)) {
             return $this->context->getCurrentLocale()->formatPrice($amount, $isoCode);
         }
