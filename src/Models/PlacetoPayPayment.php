@@ -63,7 +63,7 @@ use Validate;
  * @property string tab
  * @property string author
  *
- * @see https://devdocs.prestashop.com/1.7/modules/creation/tutorial/
+ * @see https://devdocs.prestashop-project.org/8/modules/creation/tutorial/
  */
 class PlacetoPayPayment extends PaymentModule
 {
@@ -104,7 +104,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_ORDER_HISTORY = 'index.php?controller=history';
     const PAGE_ORDER_DETAILS = 'index.php?controller=order-detail';
 
-    const MIN_VERSION_PS = '1.7.8.0';
+    const MIN_VERSION_PS = '8.0.0';
     const MAX_VERSION_PS = '9.0.3';
 
     /**
@@ -352,7 +352,7 @@ class PlacetoPayPayment extends PaymentModule
 
 
     /**
-     * PrestaShop 1.7
+     * PrestaShop 8/9
      * @param $params
      * @return array
      * @throws PaymentException
@@ -974,7 +974,7 @@ class PlacetoPayPayment extends PaymentModule
     }
 
     /**
-     * @see https://github.com/PrestaShop/PrestaShop/blob/1.7.8.7/classes/Language.php#L772
+     * @see https://github.com/PrestaShop/PrestaShop/blob/8.0.0/classes/Language.php
      */
     private function getLocaleById(int $langId): string
     {

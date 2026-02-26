@@ -187,8 +187,8 @@ Copiar y modificar un template existente con los endpoints correctos.
 
 ## 📌 Compatibilidad
 
-- Este sistema genera módulos compatibles con PrestaShop >= 1.7 (incluye 8.x y 9.x).
-- Versiones anteriores a 1.7 ya no están soportadas.
+- Este sistema genera módulos compatibles con PrestaShop >= 8 (incluye 9.x).
+- Versiones anteriores a 8 ya no están soportadas.
 
 ## 📝 Notas Importantes
 

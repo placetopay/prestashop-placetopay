@@ -6,21 +6,19 @@ For more information about the component and the functionalities it offers, visi
 
 ## Prerequisites
 
-- `prestashop` >= 1.7.x _recommended: >= 8.x (supports 9.x)
-- `php` >= 7.2.5 _recommended: >= 8.1_
+- `prestashop` >= 8.x (supports 9.x)
+- `php` >= 7.4.33 _recommended: >= 8.1_
 - `ext-curl`
-- `ext-json`
 - `ext-mbstring`
 
 ## Compatibility Version
 
-Supported PrestaShop versions (legacy 1.6 and below are no longer supported):
+Supported PrestaShop versions (8.x and 9.x only):
 
-| PrestaShop | Plugin | PHP      | Comments                  |
-|------------|--------|----------|---------------------------|
-| 1.7.x      | 3.*    | >= 7.2.5 | Supported                 |
-| 8.x.x      | 4.*    | >= 7.4   | Supported                 |
-| 9.x.x      | 6.*    | >= 8.1   | Supported (recommended)   |
+| PrestaShop | Plugin | PHP       | Comments                  |
+|------------|--------|-----------|---------------------------|
+| 8.x.x      | 6.*    | >= 7.4.33 | Supported                 |
+| 9.x.x      | 6.*    | >= 8.1    | Supported (recommended)   |
 
 ## Releases
 
