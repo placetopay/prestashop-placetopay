@@ -104,8 +104,8 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_ORDER_HISTORY = 'index.php?controller=history';
     const PAGE_ORDER_DETAILS = 'index.php?controller=order-detail';
 
-    const MIN_VERSION_PS = '1.6.1.0';
-    const MAX_VERSION_PS = '8.2.3';
+    const MIN_VERSION_PS = '1.7.0.0';
+    const MAX_VERSION_PS = '9.0.3';
 
     /**
      * @var int
@@ -130,7 +130,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '5.0.3';
+        $this->version = '6.0.0';
 
         $this->tab = 'payments_gateways';
 
