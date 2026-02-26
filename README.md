@@ -6,7 +6,7 @@ For more information about the component and the functionalities it offers, visi
 
 ## Prerequisites
 
-- `prestashop` >= 1.7.x _recommended: >= 8.x
+- `prestashop` >= 1.7.x _recommended: >= 8.x (supports 9.x)
 - `php` >= 7.2.5 _recommended: >= 8.1_
 - `ext-curl`
 - `ext-json`
@@ -14,21 +14,13 @@ For more information about the component and the functionalities it offers, visi
 
 ## Compatibility Version
 
-| PrestaShop | Plugin  | PHP          | End of Life                                                                                              | Comments                          |
-|------------|---------|--------------|----------------------------------------------------------------------------------------------------------|-----------------------------------|
-| 1.5.x      | ~2.6.4  | ~5.6         | [July, 2016](https://www.prestashop.com/en/blog/prestashop-security-release)                             | `@unmanteined`                    |
-| 1.6.0      | >=2.6.4 | ~5.6         | [June, 2019](https://www.prestashop.com/en/blog/maintenance-extension-prestashop-1-6)                    | `@unmanteined`                    |
-| 1.6.1      | >=2.6.4 | >=5.6 <= 7.1 | [June, 2019](https://www.prestashop.com/en/blog/maintenance-extension-prestashop-1-6)                    | `@unmanteined`                    |
-| 1.7.0      | 3.*     | ~7.1         | [November, 2018](https://build.prestashop.com/news/announcing-our-2017-release-schedule/)                | 1.7.0.0 / 1.7.0.6  `@deprecated`  |
-| 1.7.1      | 3.*     | ~7.1         | [April, 2019](https://build.prestashop.com/howtos/misc/2017-release-schedule/)                           | 1.7.1.0 / 1.7.1.2  `@deprecated`  |
-| 1.7.2      | 3.*     | ~7.1         | [July, 2019](https://build.prestashop.com/howtos/misc/2017-release-schedule/)                            | 1.7.2.0 / 1.7.2.5  `@deprecated`  |
-| 1.7.3      | 3.*     | ~7.1         | [February, 2020](https://build.prestashop.com/howtos/misc/2017-release-schedule/)                        | 1.7.3.0 / 1.7.3.4  `@deprecated`  |
-| 1.7.4      | 3.*     | ~7.1         | [July, 2020](https://build.prestashop.com/news/announcing-end-of-support-for-obsolete-php-versions/)     | 1.7.4.0 / 1.7.4.4  `@deprecated`  |
-| 1.7.5      | 3.*     | >=7.1 <= 7.2 | [December, 2020](https://build.prestashop.com/news/announcing-end-of-support-for-obsolete-php-versions/) | 1.7.5.0 / 1.7.5.2  `@deprecated`  |
-| 1.7.6      | 3.*     | >=7.1 <= 7.2 | [July, 2021](https://build.prestashop.com/news/announcing-end-of-support-for-obsolete-php-versions/)     | 1.7.6.0 / 1.7.6.9  `@deprecated`  |
-| 1.7.7      | 3.*     | >=7.1 <= 7.3 | December, 2022                                                                                           | 1.7.7.0 / 1.7.7.8  `@deprecated`  |
-| 1.7.8      | 3.*     | >=7.1 <= 7.4 | September, 2023                                                                                          | 1.7.8.0 / 1.7.8.11 `@deprecated`  |
-| 8.x.x      | 4.*     | >= 7.2.5     | March, 2024                                                                                              | 8.0.x   / 8.1.x    `@manteined`   |
+Supported PrestaShop versions (legacy 1.6 and below are no longer supported):
+
+| PrestaShop | Plugin | PHP      | Comments                  |
+|------------|--------|----------|---------------------------|
+| 1.7.x      | 3.*    | >= 7.2.5 | Supported                 |
+| 8.x.x      | 4.*    | >= 7.4   | Supported                 |
+| 9.x.x      | 6.*    | >= 8.1   | Supported (recommended)   |
 
 ## Releases
 
