@@ -2395,6 +2395,7 @@ class PlacetoPayPayment extends PaymentModule
                 }
 
                 $order['total_paid_display'] = $this->formatPriceForOrder($order);
+                $order['order_state_is_dark'] = $this->isDarkColor($order['order_state_color'] ?? null);
             }
 
             $lastOrder = new Order((int)$orders[0]['id_order']);
@@ -2424,11 +2425,31 @@ class PlacetoPayPayment extends PaymentModule
         $currency = new Currency($currencyId);
         $isoCode = isset($currency->iso_code) ? $currency->iso_code : '';
 
+        // 9.0.0+ compatibility: use Context method to format price with locale
         if (method_exists($this->context, 'getCurrentLocale') && !empty($isoCode)) {
             return $this->context->getCurrentLocale()->formatPrice($amount, $isoCode);
         }
 
         return Tools::displayPrice($amount, $currency);
+    }
+
+    private function isDarkColor(?string $hex): bool
+    {
+        if (empty($hex)) {
+            return false;
+        }
+
+        $hex = ltrim($hex, '#');
+        if (strlen($hex) !== 6) {
+            return false;
+        }
+
+        $red = hexdec(substr($hex, 0, 2));
+        $green = hexdec(substr($hex, 2, 2));
+        $blue = hexdec(substr($hex, 4, 2));
+        $brightness = (int) ((($red * 299) + ($green * 587) + ($blue * 114)) / 1000);
+
+        return $brightness <= 128;
     }
 
     private function getSetup(): string
