@@ -104,7 +104,7 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_ORDER_HISTORY = 'index.php?controller=history';
     const PAGE_ORDER_DETAILS = 'index.php?controller=order-detail';
 
-    const MIN_VERSION_PS = '1.7.0.0';
+    const MIN_VERSION_PS = '1.7.8.0';
     const MAX_VERSION_PS = '9.0.3';
 
     /**
@@ -219,16 +219,12 @@ class PlacetoPayPayment extends PaymentModule
             $error = 'Error registering paymentReturn hook';
         }
 
-        $hookPaymentName = versionComparePlaceToPay('1.7.0.0', '>=') ? 'paymentOptions' : 'payment';
-
-        if (empty($error) && !$this->registerHook($hookPaymentName)) {
-            $error = sprintf('Error on install registering %s hook', $hookPaymentName);
+        if (empty($error) && !$this->registerHook('paymentOptions')) {
+            $error = 'Error on install registering paymentOptions hook';
         }
 
-        $hookOrderName = versionComparePlaceToPay('1.7.0.0', '>=') ? 'displayAdminOrderMainBottom' : 'displayAdminOrderLeft';
-
-        if (empty($error) && !$this->registerHook($hookOrderName)) {
-            $error = sprintf('Error on install registering %s hook', $hookOrderName);
+        if (empty($error) && !$this->registerHook('displayAdminOrderMainBottom')) {
+            $error = 'Error on install registering displayAdminOrderMainBottom hook';
         }
 
         if (empty($error)) {
@@ -354,75 +350,6 @@ class PlacetoPayPayment extends PaymentModule
         return $contentExtra . $this->displayConfiguration() . $this->renderForm();
     }
 
-    /**
-     * PrestaShop 1.6
-     *
-     * @param array $params
-     * @return string
-     * @throws PaymentException
-     */
-    public function hookPayment($params)
-    {
-        if (isDebugEnable()) {
-            PaymentLogger::log(
-                'Trigger ' . __METHOD__ . ' in PS vr. ' . _PS_VERSION_,
-                PaymentLogger::DEBUG,
-                0,
-                __FILE__,
-                __LINE__
-            );
-        }
-
-        if (!$this->active) {
-            return null;
-        }
-
-        if (!$this->isSetCredentials()) {
-            PaymentLogger::log(
-                $this->lll('You need to configure your %s account before using this module.'),
-                PaymentLogger::WARNING,
-                6,
-                __FILE__,
-                __LINE__
-            );
-
-            return null;
-        }
-
-        $lastPendingTransaction = $this->getLastPendingTransaction($params['cart']->id_customer);
-
-        if (!empty($lastPendingTransaction)) {
-            $hasPendingTransaction = true;
-
-            $this->context->smarty->assign([
-                'last_order' => $lastPendingTransaction['reference'],
-                'last_authorization' => (string)$lastPendingTransaction['authcode'],
-                'store_email' => $this->getEmailContact(),
-                'store_phone' => $this->getTelephoneContact()
-            ]);
-
-            $paymentUrl = $this->getAllowBuyWithPendingPayments() == self::OPTION_ENABLED
-                ? $this->getModuleLink('redirect')
-                : 'javascript:;';
-
-            $this->context->smarty->assign('payment_url', $paymentUrl);
-        } else {
-            $hasPendingTransaction = false;
-
-            $this->context->smarty->assign('payment_url', $this->getModuleLink('redirect'));
-        }
-
-        $allowPayment = $this->getAllowBuyWithPendingPayments() == self::OPTION_ENABLED || !$hasPendingTransaction;
-
-        $this->context->smarty->assign('has_pending', $hasPendingTransaction);
-        $this->context->smarty->assign('site_name', Configuration::get('PS_SHOP_NAME'));
-        $this->context->smarty->assign('cifin_message', $this->getTransUnionMessage());
-        $this->context->smarty->assign('company_name', $this->getCompanyName());
-        $this->context->smarty->assign('allow_payment', $allowPayment);
-        $this->context->smarty->assign('url', $this->getImage());
-
-        return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook_1_6/payment.tpl'));
-    }
 
     /**
      * PrestaShop 1.7
@@ -1038,7 +965,8 @@ class PlacetoPayPayment extends PaymentModule
 
     private function getLocale($cart): string
     {
-        if (versionComparePlaceToPay('1.7.8.0', '>=') && $locale = Language::getLocaleById((int)($cart->id_lang))) {
+        $locale = Language::getLocaleById((int)($cart->id_lang));
+        if ($locale) {
             return str_replace('-', '_', $locale);
         }
 
@@ -1661,11 +1589,6 @@ class PlacetoPayPayment extends PaymentModule
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook/message_payment.tpl'));
     }
 
-    public function hookDisplayAdminOrderLeft($params)
-    {
-        return $this->orderDetails($params);
-    }
-
     public function hookDisplayAdminOrderMainBottom($params)
     {
         return $this->orderDetails($params);
@@ -2138,14 +2061,10 @@ class PlacetoPayPayment extends PaymentModule
      */
     private function getOrderByCartId(int $cartId): ?Order
     {
-        if (versionComparePlaceToPay('1.7.1.0', '>=')) {
-            if ((int)Shop::getTotalShops() > 1) {
-                $orderId = $this->getIdByCartId($cartId);
-            } else {
-                $orderId = Order::getIdByCartId($cartId);
-            }
+        if ((int)Shop::getTotalShops() > 1) {
+            $orderId = $this->getIdByCartId($cartId);
         } else {
-            $orderId = Order::getOrderByCartId($cartId);
+            $orderId = Order::getIdByCartId($cartId);
         }
 
         if (!$orderId) {
@@ -2868,10 +2787,6 @@ class PlacetoPayPayment extends PaymentModule
 
     private function showError(array $errors): string
     {
-        if (versionComparePlaceToPay('1.7.0.0', '<')) {
-            $errors = implode('<br>', $errors);
-        }
-
         return $this->displayError($errors);
     }
 
