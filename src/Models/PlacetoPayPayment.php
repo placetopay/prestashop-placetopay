@@ -757,7 +757,7 @@ class PlacetoPayPayment extends PaymentModule
                 echo $this->display($this->getThisModulePath(), fixPath('/views/templates/front/redirect.tpl'));
                 echo $this->resolveLightbox($redirectTo, $returnUrl);
             } else {
-                Tools::redirectLink($redirectTo);
+                Tools::redirect($redirectTo);
             }
         } catch (\Throwable $e) {
             $this->updateCurrentOrderWithError();
@@ -926,7 +926,7 @@ class PlacetoPayPayment extends PaymentModule
             }
 
             // Redirect to confirmation page
-            Tools::redirectLink($redirectTo);
+            Tools::redirect($redirectTo);
         } elseif (!$paymentRedirection->isSuccessful()) {
             throw new PaymentException($paymentRedirection->status()->message(), 13);
         } elseif (!$order) {
