@@ -19,8 +19,8 @@ OUTPUT_DIR="${BASE_DIR}/builds"
 CONFIG_FILE="${BASE_DIR}/config/clients.php"
 
 # Versiones de PHP y PrestaShop para generar
-declare -a PHP_VERSIONS=("7.2" "7.4" "8.1")
-declare -a PRESTASHOP_VERSIONS=("prestashop-1.7.x" "prestashop-8.x" "prestashop-9.x")
+declare -a PHP_VERSIONS=("7.4.33" "8.1")
+declare -a PRESTASHOP_VERSIONS=("prestashop-8.x" "prestashop-9.x")
 
 # Funciones para imprimir con colores
 print_status() {
@@ -28,15 +28,15 @@ print_status() {
 }
 
 print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
+    echo -e "${GREEN}[SUCC]${NC} $1"
 }
 
 print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "${YELLOW}[WARN]${NC} $1"
 }
 
 print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}[ERRO]${NC} $1"
 }
 
 # Función para obtener configuración de cliente desde archivo PHP
@@ -241,39 +241,6 @@ update_composer_namespace() {
     fi
 }
 
-# Función para actualizar el namespace en spl_autoload.php
-update_spl_autoload_namespace() {
-    local work_dir="$1"
-    local namespace_name="$2"
-
-    print_status "Actualizando namespace en spl_autoload.php: PlacetoPay -> $namespace_name"
-
-    local autoload_file="$work_dir/spl_autoload.php"
-    if [[ -f "$autoload_file" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS
-            # Actualizar la llamada a versionComparePlaceToPay en la línea 5
-            sed -i '' "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$autoload_file"
-
-            # Actualizar comentarios
-            sed -i '' "s/PlacetoPay and Dnetix/${namespace_name} and Dnetix/g" "$autoload_file"
-            sed -i '' "s/load PlacetoPay/load ${namespace_name}/g" "$autoload_file"
-
-            # Actualizar la verificación del namespace en el switch
-            sed -i '' "s/substr(\$className, 0, 10) === 'PlacetoPay'/substr(\$className, 0, ${#namespace_name}) === '${namespace_name}'/g" "$autoload_file"
-            # Actualizar el str_replace
-            sed -i '' "s|str_replace('PlacetoPay\\\\\\\\', '', \$className)|str_replace('${namespace_name}\\\\\\\\', '', \$className)|g" "$autoload_file"
-        else
-            # Linux
-            sed -i "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$autoload_file"
-            sed -i "s/PlacetoPay and Dnetix/${namespace_name} and Dnetix/g" "$autoload_file"
-            sed -i "s/load PlacetoPay/load ${namespace_name}/g" "$autoload_file"
-            sed -i "s/substr(\$className, 0, 10) === 'PlacetoPay'/substr(\$className, 0, ${#namespace_name}) === '${namespace_name}'/g" "$autoload_file"
-            sed -i "s|str_replace('PlacetoPay\\\\\\\\', '', \$className)|str_replace('${namespace_name}\\\\\\\\', '', \$className)|g" "$autoload_file"
-        fi
-    fi
-}
-
 # Función para actualizar referencias a la clase en archivos de proceso
 update_class_references() {
     local work_dir="$1"
@@ -302,21 +269,33 @@ update_class_references() {
         fi
     done
 
-    # Actualizar el controlador Front (controllers/front/sonda.php)
-    local controller_file="$work_dir/controllers/front/sonda.php"
-    if [[ -f "$controller_file" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS
-            # Actualizar nombre de clase del controlador
-            sed -i '' "s/class PlacetoPayPaymentSondaModuleFrontController/class ${main_class_name}SondaModuleFrontController/g" "$controller_file"
-            # Actualizar llamada a función
-            sed -i '' "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
-        else
-            # Linux
-            sed -i "s/class PlacetoPayPaymentSondaModuleFrontController/class ${main_class_name}SondaModuleFrontController/g" "$controller_file"
-            sed -i "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
+    declare -A front_controllers
+    front_controllers[sonda]=Sonda
+    front_controllers[redirect]=Redirect
+    front_controllers[process]=Process
+
+    for controller_key in "${!front_controllers[@]}"; do
+        local controller_file="$work_dir/controllers/front/${controller_key}.php"
+        local class_suffix="${front_controllers[$controller_key]}"
+
+        if [[ -f "$controller_file" ]]; then
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                # macOS
+                sed -i '' "s/class PlacetoPayPayment${class_suffix}ModuleFrontController/class ${main_class_name}${class_suffix}ModuleFrontController/g" "$controller_file"
+            else
+                # Linux
+                sed -i "s/class PlacetoPayPayment${class_suffix}ModuleFrontController/class ${main_class_name}${class_suffix}ModuleFrontController/g" "$controller_file"
+            fi
+
+            if [[ "$controller_key" == "sonda" ]]; then
+                if [[ "$OSTYPE" == "darwin"* ]]; then
+                    sed -i '' "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
+                else
+                    sed -i "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
+                fi
+            fi
         fi
-    fi
+    done
 
     # Actualizar nombre de función en sonda.php
     if [[ -f "$work_dir/sonda.php" ]]; then
@@ -421,7 +400,7 @@ if (!defined('_PS_VERSION_')) {
 // Cada módulo tiene sus propias funciones únicas (getModuleName${namespace_name}, getPathCMS${namespace_name}, etc.)
 // Ya no es necesario definir _MODULE_NAME_ porque cada función retorna directamente el nombre del módulo
 
-require_once 'spl_autoload.php';
+require_once __DIR__ . '/vendor/autoload.php';
 
 use ${namespace_name}\\Models\\${namespace_name}Payment;
 
@@ -498,6 +477,20 @@ update_root_files() {
                 sed -i "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
                 sed -i "s/getPathCMS(/getPathCMS${namespace_name}(/g" "$work_dir/$file"
                 sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
+            fi
+        fi
+    done
+
+    for file in "${files[@]}"; do
+        if [[ -f "$work_dir/controllers/front/$file" ]]; then
+            local working_file="$work_dir/controllers/front/$file"
+            if [[ "$OSTYPE" == "darwin"* ]]; then
+                # macOS
+                # Actualizar namespace del PaymentLogger
+                sed -i '' "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$working_file"
+            else
+                # Linux
+                sed -i "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$working_file"
             fi
         fi
     done
@@ -670,7 +663,7 @@ install_composer_dependencies() {
     # Instalar dependencias con la versión específica de PHP
     cd "$work_dir"
 
-    hash=`head -c 32 /dev/urandom | md5sum | awk '{print $1}'`
+    hash=$(head -c 32 /dev/urandom | md5sum | awk '{print $1}')
 
     # Actualizar el nombre del paquete en composer.json para evitar conflictos de autoloader
     if [[ "$OSTYPE" == "darwin"* ]]; then
@@ -679,24 +672,27 @@ install_composer_dependencies() {
         sed -i "s/prestashop-gateway/prestashop-gateway-$hash/g" "$work_dir/composer.json"
     fi
 
+    # substring de la versión de PHP para usar en el comando (ej: 7.4.33 -> 7.4)
+    php_version=$(echo "$php_version" | cut -d. -f1-2)
+
     # Verificar si existe el comando php con la versión específica
     if command -v "php${php_version}" >/dev/null 2>&1; then
         print_status "Usando php${php_version} para instalar dependencias..."
-        php${php_version} "$(which composer)" install --no-dev 2>&1 | grep -v "^$" || true
+        "php${php_version}" "$(which composer)" install --no-dev 2>&1 | grep -v "^$" || true
     else
-        print_warning "php${php_version} no encontrado, usando php por defecto..."
-        php "$(which composer)" install --no-dev 2>&1 | grep -v "^$" || true
+        print_error "php${php_version} no encontrado, asegúrate de tenerlo instalado y en tu PATH"
+        exit 1
     fi
 
-    # Evitar conflictos de spl_autoload
-    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" $work_dir/vendor/composer/autoload_real.php
-    sed -i -E "s/ComposerStaticInit([a-zA-Z0-9])/ComposerStaticInit$hash/g" $work_dir/vendor/composer/autoload_real.php
-    sed -i -E "s/'ComposerStaticInit([a-zA-Z0-9])'/'ComposerStaticInit$hash'/g" $work_dir/vendor/composer/autoload_real.php
+    # Evitar conflictos de autoload
+    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" "$work_dir/vendor/composer/autoload_real.php"
+    sed -i -E "s/ComposerStaticInit([a-zA-Z0-9])/ComposerStaticInit$hash/g" "$work_dir/vendor/composer/autoload_real.php"
+    sed -i -E "s/'ComposerStaticInit([a-zA-Z0-9])'/'ComposerStaticInit$hash'/g" "$work_dir/vendor/composer/autoload_real.php"
 
-    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" $work_dir/vendor/composer/autoload_static.php
-    sed -i -E "s/ComposerStaticInit([a-zA-Z0-9])/ComposerStaticInit$hash/g" $work_dir/vendor/composer/autoload_static.php
+    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" "$work_dir/vendor/composer/autoload_static.php"
+    sed -i -E "s/ComposerStaticInit([a-zA-Z0-9])/ComposerStaticInit$hash/g" "$work_dir/vendor/composer/autoload_static.php"
 
-    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" $work_dir/vendor/autoload.php
+    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" "$work_dir/vendor/autoload.php"
 
     cd "$BASE_DIR"
 }
@@ -846,7 +842,6 @@ create_white_label_version_with_php() {
     # Actualizar namespace y nombre del paquete en composer.json antes de instalar dependencias
     # IMPORTANTE: Esto debe hacerse ANTES de composer install para generar hash único del autoloader
     update_composer_namespace "$work_dir" "$namespace_name" "$CLIENT_ID"
-    update_spl_autoload_namespace "$work_dir" "$namespace_name"
 
     # Crear archivo principal del módulo con nombre único
     create_main_module_file "$work_dir" "$module_name" "$namespace_name"

@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+## [6.0.0 (2026-02-26)](https://github.com/placetopay/prestashop-placetopay/compare/5.0.3...6.0.0)
+
+### Added
+- Add support for Prestashop 9.0.
+
+### Upgraded
+- Controllers (process, redirect) to use front controllers instead of admin controllers.
+- IMPORTANT: Notification URL used in Panel required changes to support new controllers.
+
+### Removed
+- Drop support for Prestashop <= 1.7.x (minimum is now 8.x).
+
 ## [5.0.3 (2026-02-24)](https://github.com/placetopay/prestashop-placetopay/compare/5.0.2...5.0.3)
 
 ### Added

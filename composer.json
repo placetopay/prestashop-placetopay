@@ -3,12 +3,11 @@
   "description": "Plugin for integration PlacetoPay gateway with PrestaShop CMS",
   "type": "plugin",
   "require": {
-    "php": ">=7.2.5",
+    "php": ">=7.4.33",
     "ext-curl": "*",
-    "ext-json": "*",
     "ext-mbstring": "*",
     "alejociro/redirection": "^1.0.16",
-    "guzzlehttp/guzzle": "^5.3.4 | ^7.0"
+    "guzzlehttp/guzzle": "^7.0"
   },
   "license": "MIT",
   "authors": [
@@ -30,14 +29,14 @@
     "squizlabs/php_codesniffer": "^3.2"
   },
   "scripts": {
-    "phpcs": "phpcs --standard=PSR2 src/ spl_autoload.php helpers.php index.php process.php redirect.php sonda.php",
+    "phpcs": "phpcs --standard=PSR2 src/ helpers.php index.php process.php redirect.php sonda.php",
     "test": [
       "@phpcs"
     ]
   },
   "config": {
     "platform": {
-      "php": "7.2.5"
+      "php": "7.4.33"
     }
   }
 }

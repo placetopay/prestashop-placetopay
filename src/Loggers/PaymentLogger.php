@@ -37,7 +37,7 @@ class PaymentLogger
         return true;
     }
 
-    public static function logInDatabase(string $message, int $severity = self::INFO, int $errorCode = null): bool
+    public static function logInDatabase(string $message, int $severity = self::INFO, int $errorCode = 0): bool
     {
         try {
             $errorCode = $errorCode > 0 ? $errorCode : 999;
@@ -57,14 +57,7 @@ class PaymentLogger
         if (is_null($logfile)) {
             $filename = sprintf('%s_%s_%s.log', (isDebugEnable() ? 'dev' : 'prod'), date('Ymd'), getModuleName());
 
-            // PS < 1.7.0.0
-            $pathLogs = '/log/';
-
-            if (version_compare(_PS_VERSION_, '1.7.4.0', '>=')) {
-                $pathLogs = '/var/logs/';
-            } elseif (version_compare(_PS_VERSION_, '1.7.0.0', '>=')) {
-                $pathLogs = '/app/logs/';
-            }
+            $pathLogs = '/var/logs/';
 
             $logfile = fixPath(_PS_ROOT_DIR_ . $pathLogs . $filename);
         }

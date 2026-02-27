@@ -46,15 +46,15 @@
 							{dateFormat date=$order.date_add full=1}
 						</td>
 						<td class="history_price" data-value="{$order.total_paid}">
-							<span class="price">
-                                {Tools::displayPrice($order.total_paid)}
-							</span>
+						<span class="price">
+							{$order.total_paid_display|escape:'html':'UTF-8'}
+						</span>
 						</td>
 						<td class="history_method">{$order.payment|escape:'html':'UTF-8'}</td>
 						<td class="history_cus">{$order.cus|escape:'html':'UTF-8'|default:'000000'}</td>
 						<td{if isset($order.order_state)} data-value="{$order.id_order_state}"{/if} class="history_state">
 							{if isset($order.order_state)}
-								<span class="label{if isset($order.order_state_color) && Tools::getBrightness($order.order_state_color) > 128} dark{/if}"{if isset($order.order_state_color) && $order.order_state_color} style="background-color:{$order.order_state_color|escape:'html':'UTF-8'}; border-color:{$order.order_state_color|escape:'html':'UTF-8'};"{/if}>
+							<span class="label{if isset($order.order_state_is_dark) && $order.order_state_is_dark} dark{/if}"{if isset($order.order_state_color) && $order.order_state_color} style="background-color:{$order.order_state_color|escape:'html':'UTF-8'}; border-color:{$order.order_state_color|escape:'html':'UTF-8'};"{/if}>
 									{$order.order_state|escape:'html':'UTF-8'}
 								</span>
 							{/if}

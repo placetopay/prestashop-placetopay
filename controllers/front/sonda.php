@@ -1,7 +1,6 @@
 <?php
 
-// @see https://devdocs.prestashop.com/1.7/development/architecture/legacy/legacy-controllers/
-// @see https://devdocs.prestashop.com/1.7/modules/concepts/controllers/front-controllers/#using-a-front-controller-as-a-cron-task
+// @see https://devdocs.prestashop-project.org/8/modules/concepts/controllers/front-controllers/
 class PlacetoPayPaymentSondaModuleFrontController extends ModuleFrontController
 {
     public $auth = false;

@@ -63,7 +63,7 @@ use Validate;
  * @property string tab
  * @property string author
  *
- * @see https://devdocs.prestashop.com/1.7/modules/creation/tutorial/
+ * @see https://devdocs.prestashop-project.org/8/modules/creation/tutorial/
  */
 class PlacetoPayPayment extends PaymentModule
 {
@@ -104,8 +104,8 @@ class PlacetoPayPayment extends PaymentModule
     const PAGE_ORDER_HISTORY = 'index.php?controller=history';
     const PAGE_ORDER_DETAILS = 'index.php?controller=order-detail';
 
-    const MIN_VERSION_PS = '1.6.1.0';
-    const MAX_VERSION_PS = '8.2.3';
+    const MIN_VERSION_PS = '8.0.0';
+    const MAX_VERSION_PS = '9.0.3';
 
     /**
      * @var int
@@ -130,7 +130,7 @@ class PlacetoPayPayment extends PaymentModule
     public function __construct()
     {
         $this->name = getModuleName();
-        $this->version = '5.0.3';
+        $this->version = '6.0.0';
 
         $this->tab = 'payments_gateways';
 
@@ -219,16 +219,12 @@ class PlacetoPayPayment extends PaymentModule
             $error = 'Error registering paymentReturn hook';
         }
 
-        $hookPaymentName = versionComparePlaceToPay('1.7.0.0', '>=') ? 'paymentOptions' : 'payment';
-
-        if (empty($error) && !$this->registerHook($hookPaymentName)) {
-            $error = sprintf('Error on install registering %s hook', $hookPaymentName);
+        if (empty($error) && !$this->registerHook('paymentOptions')) {
+            $error = 'Error on install registering paymentOptions hook';
         }
 
-        $hookOrderName = versionComparePlaceToPay('1.7.0.0', '>=') ? 'displayAdminOrderMainBottom' : 'displayAdminOrderLeft';
-
-        if (empty($error) && !$this->registerHook($hookOrderName)) {
-            $error = sprintf('Error on install registering %s hook', $hookOrderName);
+        if (empty($error) && !$this->registerHook('displayAdminOrderMainBottom')) {
+            $error = 'Error on install registering displayAdminOrderMainBottom hook';
         }
 
         if (empty($error)) {
@@ -354,78 +350,9 @@ class PlacetoPayPayment extends PaymentModule
         return $contentExtra . $this->displayConfiguration() . $this->renderForm();
     }
 
-    /**
-     * PrestaShop 1.6
-     *
-     * @param array $params
-     * @return string
-     * @throws PaymentException
-     */
-    public function hookPayment($params)
-    {
-        if (isDebugEnable()) {
-            PaymentLogger::log(
-                'Trigger ' . __METHOD__ . ' in PS vr. ' . _PS_VERSION_,
-                PaymentLogger::DEBUG,
-                0,
-                __FILE__,
-                __LINE__
-            );
-        }
-
-        if (!$this->active) {
-            return null;
-        }
-
-        if (!$this->isSetCredentials()) {
-            PaymentLogger::log(
-                $this->lll('You need to configure your %s account before using this module.'),
-                PaymentLogger::WARNING,
-                6,
-                __FILE__,
-                __LINE__
-            );
-
-            return null;
-        }
-
-        $lastPendingTransaction = $this->getLastPendingTransaction($params['cart']->id_customer);
-
-        if (!empty($lastPendingTransaction)) {
-            $hasPendingTransaction = true;
-
-            $this->context->smarty->assign([
-                'last_order' => $lastPendingTransaction['reference'],
-                'last_authorization' => (string)$lastPendingTransaction['authcode'],
-                'store_email' => $this->getEmailContact(),
-                'store_phone' => $this->getTelephoneContact()
-            ]);
-
-            $paymentUrl = $this->getAllowBuyWithPendingPayments() == self::OPTION_ENABLED
-                ? $this->getUrl('redirect.php')
-                : 'javascript:;';
-
-            $this->context->smarty->assign('payment_url', $paymentUrl);
-        } else {
-            $hasPendingTransaction = false;
-
-            $this->context->smarty->assign('payment_url', $this->getUrl('redirect.php'));
-        }
-
-        $allowPayment = $this->getAllowBuyWithPendingPayments() == self::OPTION_ENABLED || !$hasPendingTransaction;
-
-        $this->context->smarty->assign('has_pending', $hasPendingTransaction);
-        $this->context->smarty->assign('site_name', Configuration::get('PS_SHOP_NAME'));
-        $this->context->smarty->assign('cifin_message', $this->getTransUnionMessage());
-        $this->context->smarty->assign('company_name', $this->getCompanyName());
-        $this->context->smarty->assign('allow_payment', $allowPayment);
-        $this->context->smarty->assign('url', $this->getImage());
-
-        return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook_1_6/payment.tpl'));
-    }
 
     /**
-     * PrestaShop 1.7
+     * PrestaShop 8/9
      * @param $params
      * @return array
      * @throws PaymentException
@@ -465,13 +392,13 @@ class PlacetoPayPayment extends PaymentModule
         $this->createOrderState();
 
         $content = $this->displayBrandMessage();
-        $action = $this->getUrl('redirect.php');
+        $action = $this->getModuleLink('redirect');
         $lastPendingTransaction = $this->getLastPendingTransaction($params['cart']->id_customer);
 
         if (!empty($lastPendingTransaction)) {
             $content .= $this->displayPendingPaymentMessage($lastPendingTransaction);
             $action = $this->getAllowBuyWithPendingPayments() == self::OPTION_ENABLED
-                ? $this->getUrl('redirect.php')
+                ? $this->getModuleLink('redirect')
                 : null;
         }
 
@@ -521,7 +448,7 @@ class PlacetoPayPayment extends PaymentModule
 
         switch ($this->getShowOnReturn()) {
             case self::SHOW_ON_RETURN_PSE_LIST:
-                $viewOnReturn = $this->getPaymentPSEList($order->id_customer);
+                $viewOnReturn = $this->getPaymentPSEList((int)$order->id_customer);
                 break;
             case self::SHOW_ON_RETURN_DETAILS:
             case self::SHOW_ON_RETURN_DEFAULT:
@@ -542,7 +469,7 @@ class PlacetoPayPayment extends PaymentModule
             $message = 'Cart cannot be loaded or an order has already been placed using this cart';
             PaymentLogger::log($message, PaymentLogger::ERROR, 18, __FILE__, __LINE__);
 
-            Tools::redirect('authentication.php?back=order.php');
+            Tools::redirect(Context::getContext()->link->getPageLink('order', true, null, 'step=1'));
         }
 
         $lastPendingTransaction = $this->getLastPendingTransaction($cart->id_customer);
@@ -552,7 +479,7 @@ class PlacetoPayPayment extends PaymentModule
             $message = 'Payment not allowed, customer has payment pending and not allowed but with payment pending is disable';
             PaymentLogger::log($message, PaymentLogger::ERROR, 7, __FILE__, __LINE__);
 
-            Tools::redirect('authentication.php?back=order.php');
+            Tools::redirect(Context::getContext()->link->getPageLink('order', true, null, 'step=1'));
         }
 
         $customer = new Customer($cart->id_customer);
@@ -645,7 +572,7 @@ class PlacetoPayPayment extends PaymentModule
 
             // After order create in validateOrder
             $reference = $this->currentOrderReference;
-            $returnUrl = $this->getUrl('process.php', '?_=' . $this->reference($reference));
+            $returnUrl = $this->getModuleLink('process', ['_' => $this->reference($reference)]);
 
             // Request payment
             $request = [
@@ -757,7 +684,7 @@ class PlacetoPayPayment extends PaymentModule
                 echo $this->display($this->getThisModulePath(), fixPath('/views/templates/front/redirect.tpl'));
                 echo $this->resolveLightbox($redirectTo, $returnUrl);
             } else {
-                Tools::redirectLink($redirectTo);
+                Tools::redirect($redirectTo);
             }
         } catch (\Throwable $e) {
             $this->updateCurrentOrderWithError();
@@ -850,11 +777,11 @@ class PlacetoPayPayment extends PaymentModule
                 die($message . PHP_EOL);
             }
 
-            Tools::redirect('authentication.php?back=order.php');
+            Tools::redirect(Context::getContext()->link->getPageLink('order', true, null, 'step=1'));
         }
 
         $paymentId = $paymentPlaceToPay['id_payment'];
-        $cartId = $paymentPlaceToPay['id_order'];
+        $cartId = (int)$paymentPlaceToPay['id_order'];
         $requestId = (int)$paymentPlaceToPay['id_request'];
         $reference = $paymentPlaceToPay['reference'];
         $oldStatus = $paymentPlaceToPay['status'];
@@ -926,7 +853,7 @@ class PlacetoPayPayment extends PaymentModule
             }
 
             // Redirect to confirmation page
-            Tools::redirectLink($redirectTo);
+            Tools::redirect($redirectTo);
         } elseif (!$paymentRedirection->isSuccessful()) {
             throw new PaymentException($paymentRedirection->status()->message(), 13);
         } elseif (!$order) {
@@ -936,7 +863,7 @@ class PlacetoPayPayment extends PaymentModule
         }
     }
 
-    public function resolveRedirectUrl($cartId, $order): string
+    public function resolveRedirectUrl(int $cartId, Order $order): string
     {
         $page = $this->getRedirectPageFromStatus();
 
@@ -967,7 +894,7 @@ class PlacetoPayPayment extends PaymentModule
 
             PaymentLogger::log($message, PaymentLogger::WARNING, 16, __FILE__, __LINE__);
 
-            Tools::redirect('authentication.php?back=order.php');
+            Tools::redirect(Context::getContext()->link->getPageLink('order', true, null, 'step=1'));
         }
 
         echo 'Begins ' . date('Ymd H:i:s') . '.' . breakLine();
@@ -1038,7 +965,8 @@ class PlacetoPayPayment extends PaymentModule
 
     private function getLocale($cart): string
     {
-        if (versionComparePlaceToPay('1.7.8.0', '>=') && $locale = Language::getLocaleById((int)($cart->id_lang))) {
+        $locale = Language::getLocaleById((int)($cart->id_lang));
+        if ($locale) {
             return str_replace('-', '_', $locale);
         }
 
@@ -1046,7 +974,7 @@ class PlacetoPayPayment extends PaymentModule
     }
 
     /**
-     * @see https://github.com/PrestaShop/PrestaShop/blob/1.7.8.7/classes/Language.php#L772
+     * @see https://github.com/PrestaShop/PrestaShop/blob/8.0.0/classes/Language.php
      */
     private function getLocaleById(int $langId): string
     {
@@ -1613,7 +1541,7 @@ class PlacetoPayPayment extends PaymentModule
                 'is_set_credentials' => $this->isSetCredentials(),
                 'warning_compliancy' => (!$this->isCompliancy() ? $this->getCompliancyMessage() : ''),
                 'version' => $this->getPluginVersion(),
-                'url_notification' => $this->getUrl('process.php'),
+                'url_notification' => $this->getModuleLink('process'),
                 'schedule_task' => $this->getScheduleTaskPath(),
                 'log_file' => $this->getLogFilePath(),
                 'log_database' => $this->context->link->getAdminLink('AdminLogs'),
@@ -1659,11 +1587,6 @@ class PlacetoPayPayment extends PaymentModule
         ]);
 
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/hook/message_payment.tpl'));
-    }
-
-    public function hookDisplayAdminOrderLeft($params)
-    {
-        return $this->orderDetails($params);
     }
 
     public function hookDisplayAdminOrderMainBottom($params)
@@ -1905,11 +1828,15 @@ class PlacetoPayPayment extends PaymentModule
             : Configuration::get($name);
     }
 
-    private function getUrl($page, $params = ''): string
+    private function getModuleLink(string $controller, array $params = []): string
     {
+        if (!empty($controller)) {
+            return $this->context->link->getModuleLink($this->name, $controller, $params, true);
+        }
+
         $baseUrl = Context::getContext()->shop->getBaseURL(true);
 
-        return $baseUrl . 'modules/' . $this->name . '/' . $page . $params;
+        return $baseUrl . 'modules/' . $this->name . '/';
     }
 
     private function getScheduleTaskPath(): string
@@ -2117,33 +2044,27 @@ class PlacetoPayPayment extends PaymentModule
         return !empty($rows[0]) ? $rows[0] : false;
     }
 
-    private function getIdByCartId($id_cart): ?int
+    private function getIdByCartId(int $cartId): ?int
     {
         $sql = 'SELECT `id_order`
             FROM `' . _DB_PREFIX_ . 'orders`
-            WHERE `id_cart` = ' . (int)$id_cart;
+            WHERE `id_cart` = ' . (int)$cartId;
 
         $result = Db::getInstance()->getValue($sql);
 
-        return !empty($result) ? (int)$result : false;
+        return !empty($result) ? (int)$result : null;
     }
 
     /**
-     * @param null $cartId
-     * @return Order|null
      * @throws PrestaShopDatabaseException
      * @throws \PrestaShopException
      */
-    private function getOrderByCartId($cartId = null)
+    private function getOrderByCartId(int $cartId): ?Order
     {
-        if (versionComparePlaceToPay('1.7.1.0', '>=')) {
-            if (!is_null(Shop::getTotalShops()) && Shop::getTotalShops() > 1) {
-                $orderId = $this->getIdByCartId($cartId);
-            } else {
-                $orderId = Order::getIdByCartId($cartId);
-            }
+        if ((int)Shop::getTotalShops() > 1) {
+            $orderId = $this->getIdByCartId($cartId);
         } else {
-            $orderId = Order::getOrderByCartId($cartId);
+            $orderId = Order::getIdByCartId($cartId);
         }
 
         if (!$orderId) {
@@ -2206,20 +2127,8 @@ class PlacetoPayPayment extends PaymentModule
         return $result;
     }
 
-    /**
-     * Get customer orders
-     *
-     * @param $id_customer Customer id
-     * @param bool $show_hidden_status Display or not hidden order statuses
-     * @param Context|null $context
-     * @return array
-     */
-    private function getCustomerOrders($id_customer, $show_hidden_status = false, Context $context = null)
+    private function getCustomerOrders(int $customerId): array
     {
-        if (!$context) {
-            $context = Context::getContext();
-        }
-
         $sql = 'SELECT o.`id_order`, o.`id_currency`, o.`payment`, o.`invoice_number`, pp.`date` date_add,
                       pp.`reference`, pp.`amount` total_paid, pp.`authcode` cus,
                       (SELECT SUM(od.`product_quantity`)
@@ -2227,35 +2136,35 @@ class PlacetoPayPayment extends PaymentModule
                       WHERE od.`id_order` = o.`id_order`) nb_products
         FROM `' . $this->tableOrder . '` o
             JOIN `' . $this->tablePayment . '` pp ON pp.id_order = o.id_cart
-        WHERE o.`id_customer` = ' . (int)$id_customer .
+        WHERE o.`id_customer` = ' . $customerId .
             Shop::addSqlRestriction(Shop::SHARE_ORDER) . '
         GROUP BY o.`id_order`
         ORDER BY o.`date_add` DESC';
 
-        $res = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
+        $orders = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS($sql);
 
-        if (!$res) {
+        if (!$orders) {
             return [];
         }
 
-        foreach ($res as $key => $val) {
-            $res2 = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
+        foreach ($orders as $index => $order) {
+            $status = Db::getInstance(_PS_USE_SQL_SLAVE_)->executeS('
                 SELECT os.`id_order_state`, osl.`name` AS order_state, os.`invoice`, os.`color` AS order_state_color
                 FROM `' . _DB_PREFIX_ . 'order_history` oh
                 LEFT JOIN `' . _DB_PREFIX_ . 'order_state` os ON (os.`id_order_state` = oh.`id_order_state`)
                 INNER JOIN `' . _DB_PREFIX_ . 'order_state_lang` osl ON (
-                    os.`id_order_state` = osl.`id_order_state` AND osl.`id_lang` = ' . (int)$context->language->id . '
+                    os.`id_order_state` = osl.`id_order_state` AND osl.`id_lang` = ' . (int)Context::getContext()->language->id . '
                 )
-            WHERE oh.`id_order` = ' . (int)$val['id_order'] . (!$show_hidden_status ? ' AND os.`hidden` != 1' : '') . '
+            WHERE oh.`id_order` = ' . (int)$order['id_order'] . '
             ORDER BY oh.`date_add` DESC, oh.`id_order_history` DESC
             LIMIT 1');
 
-            if ($res2) {
-                $res[$key] = array_merge($res[$key], $res2[0]);
+            if ($status) {
+                $orders[$index] = array_merge($orders[$index], $status[0]);
             }
         }
 
-        return $res;
+        return $orders;
     }
 
     /**
@@ -2305,7 +2214,8 @@ class PlacetoPayPayment extends PaymentModule
         $taxAmount = $totalAmount - (float)($cart->getOrderTotal(false, Cart::BOTH));
         $payerName = '';
         $payerEmail = !empty($transaction['payer_email']) ? $transaction['payer_email'] : null;
-        $transaction['tax'] = $taxAmount;
+        $transaction['amount_display'] = $this->formatPriceAmount((float) $totalAmount, (int) $cart->id_currency);
+        $transaction['tax_display'] = $this->formatPriceAmount((float) $taxAmount, (int) $cart->id_currency);
 
         // Customer data
         $customer = new Customer((int)($order->id_customer));
@@ -2391,11 +2301,7 @@ class PlacetoPayPayment extends PaymentModule
         return $status;
     }
 
-    /**
-     * @param $customerId
-     * @return string
-     */
-    private function getPaymentPSEList($customerId)
+    private function getPaymentPSEList(int $customerId): string
     {
         $orders = self::getCustomerOrders($customerId);
         $isPaid = false;
@@ -2403,9 +2309,13 @@ class PlacetoPayPayment extends PaymentModule
         if ($orders) {
             foreach ($orders as &$order) {
                 $myOrder = new Order((int)$order['id_order']);
+
                 if (Validate::isLoadedObject($myOrder)) {
                     $order['virtual'] = $myOrder->isVirtual(false);
                 }
+
+                $order['total_paid_display'] = $this->formatPriceForOrder($order);
+                $order['order_state_is_dark'] = $this->isDarkColor($order['order_state_color'] ?? null);
             }
 
             $lastOrder = new Order((int)$orders[0]['id_order']);
@@ -2423,6 +2333,49 @@ class PlacetoPayPayment extends PaymentModule
         return $this->display($this->getThisModulePath(), fixPath('/views/templates/front/history.tpl'));
     }
 
+    private function formatPriceForOrder(array $order): string
+    {
+        $currencyId = isset($order['id_currency']) ? (int) $order['id_currency'] : 0;
+        $amount = isset($order['total_paid']) ? (float) $order['total_paid'] : 0.0;
+
+        return $this->formatPriceAmount($amount, $currencyId);
+    }
+
+    private function formatPriceAmount(float $amount, int $currencyId): string
+    {
+        if ($currencyId <= 0) {
+            return (string) $amount;
+        }
+
+        $currency = new Currency($currencyId);
+        $isoCode = isset($currency->iso_code) ? $currency->iso_code : '';
+
+        if (method_exists($this->context, 'getCurrentLocale') && !empty($isoCode)) {
+            return $this->context->getCurrentLocale()->formatPrice($amount, $isoCode);
+        }
+
+        return Tools::displayPrice($amount, $currency);
+    }
+
+    private function isDarkColor(?string $hex): bool
+    {
+        if (empty($hex)) {
+            return false;
+        }
+
+        $hex = ltrim($hex, '#');
+        if (strlen($hex) !== 6) {
+            return false;
+        }
+
+        $red = hexdec(substr($hex, 0, 2));
+        $green = hexdec(substr($hex, 2, 2));
+        $blue = hexdec(substr($hex, 4, 2));
+        $brightness = (int) ((($red * 299) + ($green * 587) + ($blue * 114)) / 1000);
+
+        return $brightness <= 128;
+    }
+
     private function getSetup(): string
     {
         $setup = $this->ll('Configuration') . breakLine();
@@ -2433,7 +2386,7 @@ class PlacetoPayPayment extends PaymentModule
             isDebugEnable() ? 'DEBUG' : 'PRODUCTION'
         );
         $setup .= sprintf('Plugin [%s]', $this->getPluginVersion()) . breakLine();
-        $setup .= sprintf('URL Base [%s]', $this->getUrl('')) . breakLine();
+        $setup .= sprintf('URL Base [%s]', $this->getModuleLink('')) . breakLine();
         $setup .= sprintf('Logs [%s]', $this->getLogFilePath()) . breakLine();
         $setup .= sprintf('%s [%s]', $this->ll('Country'), $this->getDefaultPrestashopCountry()) . breakLine();
         $setup .= sprintf('%s [%s]', $this->ll('Environment'), $this->getEnvironment()) . breakLine();
@@ -2834,10 +2787,6 @@ class PlacetoPayPayment extends PaymentModule
 
     private function showError(array $errors): string
     {
-        if (versionComparePlaceToPay('1.7.0.0', '<')) {
-            $errors = implode('<br>', $errors);
-        }
-
         return $this->displayError($errors);
     }
 
@@ -2846,10 +2795,23 @@ class PlacetoPayPayment extends PaymentModule
         $currency_order = new Currency($cart->id_currency);
         $currencies_module = $this->getCurrency($cart->id_currency);
 
+        if ($currencies_module instanceof Currency) {
+            return (int) $currency_order->id === (int) $currencies_module->id;
+        }
+
         if (is_array($currencies_module)) {
             foreach ($currencies_module as $currency_module) {
-                if ($currency_order->id == $currency_module['id_currency']) {
-                    return true;
+                if ($currency_module instanceof Currency) {
+                    if ((int) $currency_order->id === (int) $currency_module->id) {
+                        return true;
+                    }
+                    continue;
+                }
+
+                if (is_array($currency_module) && isset($currency_module['id_currency'])) {
+                    if ((int) $currency_order->id === (int) $currency_module['id_currency']) {
+                        return true;
+                    }
                 }
             }
         }

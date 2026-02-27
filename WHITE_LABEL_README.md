@@ -185,6 +185,11 @@ Copiar y modificar un template existente con los endpoints correctos.
 - El script requiere bash 3.2 o superior
 - Compatible con la versión de bash que viene por defecto en macOS
 
+## 📌 Compatibilidad
+
+- Este sistema genera módulos compatibles con PrestaShop >= 8 (incluye 9.x).
+- Versiones anteriores a 8 ya no están soportadas.
+
 ## 📝 Notas Importantes
 
 - Los templates son archivos PHP completos, no se modifican líneas de código
@@ -205,4 +210,3 @@ Copiar y modificar un template existente con los endpoints correctos.
 
 **Versión**: 1.0.0  
 **Última actualización**: Diciembre 2025
-
