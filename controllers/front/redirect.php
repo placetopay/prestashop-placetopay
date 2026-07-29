@@ -30,7 +30,7 @@ class PlacetoPayPaymentRedirectModuleFrontController extends ModuleFrontControll
         } catch (Throwable $e) {
             PaymentLogger::log($e->getMessage(), PaymentLogger::ERROR, 999, __FILE__, __LINE__);
 
-            die($e->getMessage());
+            die('An error occurred while processing the payment, contact the store administrator');
         }
     }
 }

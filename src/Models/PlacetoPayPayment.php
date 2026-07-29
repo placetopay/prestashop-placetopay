@@ -107,6 +107,12 @@ class PlacetoPayPayment extends PaymentModule
     const MIN_VERSION_PS = '8.0.0';
     const MAX_VERSION_PS = '9.0.3';
 
+    const PAYMENT_FILTERABLE_COLUMNS = ['reference', 'id_request', 'id_order', 'id_payment'];
+
+    const SIGNATURE_ALGORITHMS = ['sha1', 'sha256', 'sha512'];
+
+    const SIGNATURE_ALGORITHM_DEFAULT = 'sha1';
+
     /**
      * @var int
      */
@@ -582,7 +588,7 @@ class PlacetoPayPayment extends PaymentModule
                 'skipResult' => (bool)$this->getSkipResult(),
                 'ipAddress' => $ipAddress,
                 'expiration' => $expiration,
-                'userAgent' => $_SERVER['HTTP_USER_AGENT'],
+                'userAgent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
                 'buyer' => [
                     'name' => $deliveryAddress->firstname,
                     'surname' => $deliveryAddress->lastname,
@@ -726,32 +732,18 @@ class PlacetoPayPayment extends PaymentModule
 
             $input = json_decode($inputStream, true);
 
-            $expectedSignature = sprintf(
-                '%s%s%s%s',
-                $input['requestId'],
-                $input['status']['status'],
-                $input['status']['date'],
-                $this->getTranKey()
-            );
-
-            if (strpos($input['signature'], ':') === false) {
-                $input['signature'] = 'sha1:' . $input['signature'];
-            }
-
-            [$algo, $signature] = explode(':', $input['signature'], 2);
-
-            if (isDebugEnable()) {
-                PaymentLogger::log('Signature algorithm: ' . $algo, PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
-            }
-
-            if ($hashSignature = hash($algo, $expectedSignature) !== $signature) {
+            if (!$this->isValidNotification($input)) {
                 if (isDebugEnable()) {
-                    die('Change signature value in your request to: ' . $hashSignature);
+                    PaymentLogger::log(
+                        'Invalid notification, input request:' . PHP_EOL . print_r($input, true),
+                        PaymentLogger::DEBUG,
+                        0,
+                        __FILE__,
+                        __LINE__
+                    );
                 }
 
-                $message = 'Notification is not valid, process canceled. Input request:' . PHP_EOL . print_r($input, true);
-
-                throw new PaymentException($message, 501);
+                throw new PaymentException('Notification is not valid, process canceled', 501);
             }
 
             $requestId = (int)$input['requestId'];
@@ -1025,8 +1017,16 @@ class PlacetoPayPayment extends PaymentModule
         $conversion = 1;
         $authCode = '000000';
 
+        $cardId = (int)$cardId;
+        $currencyId = (int)$currencyId;
+        $requestId = (int)$requestId;
+        $status = (int)$status;
+        $amount = (float)$amount;
+        $ipAddress = pSQL($ipAddress);
+        $reference = pSQL($reference);
+
         $sql = "
-            INSERT INTO {$this->tablePayment} (
+            INSERT INTO `" . bqSQL($this->tablePayment) . "` (
                 id_order,
                 id_currency,
                 date,
@@ -2023,18 +2023,88 @@ class PlacetoPayPayment extends PaymentModule
         return $redirectTo;
     }
 
+    /*
+     * @param mixed $input Decoded body of the notification
+     */
+    private function isValidNotification($input): bool
+    {
+        if (!is_array($input)
+            || empty($input['requestId'])
+            || empty($input['signature'])
+            || !is_string($input['signature'])
+            || !isset($input['status']['status'], $input['status']['date'])
+        ) {
+            PaymentLogger::log(
+                'Notification without the required fields',
+                PaymentLogger::WARNING,
+                501,
+                __FILE__,
+                __LINE__
+            );
+
+            return false;
+        }
+
+        $algorithm = self::SIGNATURE_ALGORITHM_DEFAULT;
+        $signature = $input['signature'];
+
+        if (strpos($signature, ':') !== false) {
+            [$algorithm, $signature] = explode(':', $signature, 2);
+        }
+
+        if (!in_array($algorithm, self::SIGNATURE_ALGORITHMS, true)) {
+            PaymentLogger::log(
+                sprintf('Signature algorithm [%s] is not allowed', $algorithm),
+                PaymentLogger::WARNING,
+                501,
+                __FILE__,
+                __LINE__
+            );
+
+            return false;
+        }
+
+        if (isDebugEnable()) {
+            PaymentLogger::log('Signature algorithm: ' . $algorithm, PaymentLogger::DEBUG, 0, __FILE__, __LINE__);
+        }
+
+        $expectedSignature = hash($algorithm, sprintf(
+            '%s%s%s%s',
+            $input['requestId'],
+            $input['status']['status'],
+            $input['status']['date'],
+            $this->getTranKey()
+        ));
+
+        return hash_equals($expectedSignature, $signature);
+    }
+
     /**
      * Get any column from $this->tablePayment table
      * @return array|bool
      */
     private function getPaymentPlaceToPayBy(string $column, $value)
     {
+        $rows = [];
+
         try {
-            if (!empty($column) && !empty($value)) {
-                $rows = Db::getInstance()->ExecuteS("
+            if (!in_array($column, self::PAYMENT_FILTERABLE_COLUMNS, true)) {
+                PaymentLogger::log(
+                    sprintf('Column [%s] is not allowed to filter payments', $column),
+                    PaymentLogger::WARNING,
+                    15,
+                    __FILE__,
+                    __LINE__
+                );
+
+                return false;
+            }
+
+            if (!empty($value)) {
+                $rows = Db::getInstance()->ExecuteS('
                     SELECT *
-                    FROM  `{$this->tablePayment}`
-                    WHERE {$column} = '{$value}'
+                    FROM  `' . bqSQL($this->tablePayment) . '`
+                    WHERE `' . bqSQL($column) . "` = '" . pSQL((string)$value) . "'
                 ");
             }
         } catch (Exception $e) {
@@ -2106,6 +2176,7 @@ class PlacetoPayPayment extends PaymentModule
     private function getLastPendingTransaction($customerId)
     {
         $status = PaymentStatus::PENDING;
+        $customerId = (int)$customerId;
 
         try {
             $result = Db::getInstance()->ExecuteS("
@@ -2174,26 +2245,28 @@ class PlacetoPayPayment extends PaymentModule
     {
         try {
             $result = Db::getInstance()->ExecuteS(
-                "SELECT * FROM `{$this->tablePayment}` WHERE `id_order` = {$cartId}"
+                'SELECT * FROM `' . bqSQL($this->tablePayment) . '` WHERE `id_order` = ' . (int)$cartId
             );
         } catch (Exception $e) {
             throw new PaymentException($e->getMessage(), 801);
         }
 
-        if (!empty($result)) {
-            $result = $result[0];
+        if (empty($result)) {
+            return [];
+        }
 
-            if (empty($result['reason_description'])) {
-                $result['reason_description'] = ($result['reason'] == '?-')
-                    ? $this->ll('Processing transaction')
-                    : $this->ll('No information');
-            }
+        $result = $result[0];
 
-            if (empty($result['status'])) {
-                $result['status_description'] = ($result['status'] == '')
-                    ? $this->ll('Processing transaction')
-                    : $this->ll('No information');
-            }
+        if (empty($result['reason_description'])) {
+            $result['reason_description'] = ($result['reason'] == '?-')
+                ? $this->ll('Processing transaction')
+                : $this->ll('No information');
+        }
+
+        if (empty($result['status'])) {
+            $result['status_description'] = ($result['status'] == '')
+                ? $this->ll('Processing transaction')
+                : $this->ll('No information');
         }
 
         return $result;
@@ -2833,9 +2906,11 @@ class PlacetoPayPayment extends PaymentModule
      */
     private function reference(string $string, bool $rollBack = false): string
     {
-        return !$rollBack
-            ? base64_encode($string)
-            : base64_decode($string);
+        if (!$rollBack) {
+            return base64_encode($string);
+        }
+
+        return (string)base64_decode($string, true);
     }
 
     private function getHeaders(): array
