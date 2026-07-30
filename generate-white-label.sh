@@ -2,8 +2,12 @@
 
 # Generar versiones de marca blanca del plugin PrestaShop PlacetoPay
 # Este script crea versiones personalizadas para diferentes clientes
+#
+# Compatible con macOS (bash 3.2 + BSD sed) y Linux (bash 4+ + GNU sed).
+# No usar arreglos asociativos (declare -A) ni `sed -i` sin la capa de
+# compatibilidad definida más abajo.
 
-set -e
+set -euo pipefail
 
 # Colores para la salida
 RED='\033[0;31m'
@@ -18,9 +22,78 @@ TEMP_DIR="${BASE_DIR}/temp_builds"
 OUTPUT_DIR="${BASE_DIR}/builds"
 CONFIG_FILE="${BASE_DIR}/config/clients.php"
 
-# Versiones de PHP y PrestaShop para generar
-declare -a PHP_VERSIONS=("7.4.33" "8.1")
-declare -a PRESTASHOP_VERSIONS=("prestashop-8.x" "prestashop-9.x")
+# Matriz de compilación: "etiqueta-prestashop|php-plataforma"
+#
+# Se genera un artefacto por versión de PrestaShop porque el árbol de
+# dependencias NO puede ser el mismo para ambas: el autoloader de Composer se
+# registra con prepend=true, así que las clases que empaqueta el módulo tapan a
+# las del core de PrestaShop durante todo el request. Si la versión empaquetada
+# es incompatible con la del core, PHP revienta en tiempo de compilación.
+#
+#   - PrestaShop 8.x → PHP 7.2–8.1. Resolviendo con 7.4 se obtiene
+#     psr/log 1.1.x, que es el que trae el core de PS 8 (monolog 1/2).
+#   - PrestaShop 9.x → PHP >= 8.1. Resolviendo con 8.1 se obtiene
+#     psr/log 3.x, que es el que trae el core de PS 9 (monolog 3).
+#
+# psr/log no tiene versión compatible con ambos (1.x no declara tipos y monolog 3
+# los estrecha; 3.x declara `: void` y monolog 1/2 no) => el split es obligatorio.
+BUILD_TARGETS=(
+    "prestashop-8.x|7.4.33"
+    "prestashop-9.x|8.1"
+)
+
+# Rutas excluidas al copiar el código fuente al directorio de trabajo
+RSYNC_EXCLUDES=(
+    --exclude='builds/'
+    --exclude='temp_builds/'
+    --exclude='vendor/'
+    --exclude='node_modules/'
+    --exclude='composer.lock'
+    --exclude='.git/'
+    --exclude='.git*'
+    --exclude='.github/'
+    --exclude='.claude/'
+    --exclude='.idea/'
+    --exclude='.vscode/'
+    --exclude='.DS_Store'
+    --exclude='*.sh'
+    --exclude='config/'
+    --exclude='src/Countries/'
+    --exclude='placetopaypayment.php'
+    --exclude='woocommerce-gateway-placetopay/'
+)
+
+# ---------------------------------------------------------------------------
+# Capa de compatibilidad de sed (BSD vs GNU)
+# ---------------------------------------------------------------------------
+# BSD sed (macOS) exige el sufijo de respaldo justo después de -i; GNU sed no lo
+# admite. Se detecta por capacidad (no por $OSTYPE) para funcionar también cuando
+# hay GNU sed instalado como `sed` en macOS.
+if sed --version >/dev/null 2>&1; then
+    SED_INPLACE=(sed -i)
+else
+    SED_INPLACE=(sed -i '')
+fi
+
+# Aplica expresiones sed in-place sobre un único archivo (no falla si no existe)
+sed_file() {
+    local file="$1"
+    shift
+
+    [[ -f "$file" ]] || return 0
+    "${SED_INPLACE[@]}" "$@" "$file"
+}
+
+# Aplica expresiones sed in-place a todos los archivos de un árbol que coincidan
+# con el patrón indicado. Una sola invocación de sed por lote (`-exec ... +`).
+sed_tree() {
+    local dir="$1"
+    local name_pattern="$2"
+    shift 2
+
+    [[ -d "$dir" ]] || return 0
+    find "$dir" -type f -name "$name_pattern" -exec "${SED_INPLACE[@]}" "$@" {} +
+}
 
 # Funciones para imprimir con colores
 print_status() {
@@ -39,6 +112,40 @@ print_error() {
     echo -e "${RED}[ERRO]${NC} $1"
 }
 
+# Verificar que las herramientas necesarias estén disponibles
+check_requirements() {
+    local missing=0
+    local tool
+
+    for tool in php composer rsync zip find awk; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            print_error "Herramienta requerida no encontrada en PATH: $tool"
+            missing=1
+        fi
+    done
+
+    [[ $missing -eq 0 ]] || exit 1
+}
+
+# Comprobar que la sintaxis de `sed -i` detectada realmente edita archivos.
+# Sin esto, una detección errónea produce artefactos donde los reemplazos se
+# omitieron en silencio (el peor fallo posible: el ZIP se genera igual).
+verify_sed_inplace() {
+    local probe="${TMPDIR:-/tmp}/p2p-sed-probe.$$"
+
+    printf 'placetopay\n' > "$probe"
+    "${SED_INPLACE[@]}" -e 's/placetopay/ok/' "$probe" >/dev/null 2>&1 || true
+
+    if [[ "$(cat "$probe" 2>/dev/null)" != "ok" ]]; then
+        rm -f "$probe" "$probe"*
+        print_error "La sintaxis de 'sed -i' detectada no funciona en este sistema."
+        print_error "Detectado: ${SED_INPLACE[*]}"
+        exit 1
+    fi
+
+    rm -f "$probe" "$probe"*
+}
+
 # Función para obtener configuración de cliente desde archivo PHP
 get_client_config() {
     local client_key="$1"
@@ -49,19 +156,23 @@ get_client_config() {
     fi
 
     # Usar PHP para extraer la configuración del cliente
-    php -r "
-        \$config = include '$CONFIG_FILE';
-        if (!isset(\$config['$client_key'])) {
+    CLIENT_KEY="$client_key" CONFIG_PATH="$CONFIG_FILE" php -r '
+        $config = include getenv("CONFIG_PATH");
+        $key = getenv("CLIENT_KEY");
+
+        if (!isset($config[$key])) {
             exit(1);
         }
-        \$client = \$config['$client_key'];
-        echo 'CLIENT=' . \$client['client'] . '|';
-        echo 'COUNTRY_CODE=' . \$client['country_code'] . '|';
-        echo 'COUNTRY_NAME=' . \$client['country_name'] . '|';
-        echo 'CLIENT_ID=' . (isset(\$client['client_id']) ? \$client['client_id'] : '') . '|';
-        echo 'TEMPLATE_FILE=' . (isset(\$client['template_file']) ? \$client['template_file'] : '') . '|';
-        echo 'LOGO_FILE=' . (isset(\$client['logo_file']) ? \$client['logo_file'] : 'Placetopay.png') . '|';
-    " 2>/dev/null || echo ""
+
+        $client = $config[$key];
+
+        echo "CLIENT=" . $client["client"] . "|";
+        echo "COUNTRY_CODE=" . $client["country_code"] . "|";
+        echo "COUNTRY_NAME=" . $client["country_name"] . "|";
+        echo "CLIENT_ID=" . (isset($client["client_id"]) ? $client["client_id"] : "") . "|";
+        echo "TEMPLATE_FILE=" . (isset($client["template_file"]) ? $client["template_file"] : "") . "|";
+        echo "LOGO_FILE=" . (isset($client["logo_file"]) ? $client["logo_file"] : "Placetopay.png");
+    ' 2>/dev/null || echo ""
 }
 
 # Función para obtener todos los clientes disponibles desde archivo PHP
@@ -71,10 +182,10 @@ get_all_clients() {
         return 1
     fi
 
-    php -r "
-        \$config = include '$CONFIG_FILE';
-        echo implode(' ', array_keys(\$config));
-    " 2>/dev/null || echo ""
+    CONFIG_PATH="$CONFIG_FILE" php -r '
+        $config = include getenv("CONFIG_PATH");
+        echo implode(" ", array_keys($config));
+    ' 2>/dev/null || echo ""
 }
 
 # Función para parsear configuración
@@ -89,11 +200,17 @@ parse_config() {
     TEMPLATE_FILE=""
     LOGO_FILE=""
 
+    local part key value
+    local IFS_BACKUP="$IFS"
+
     IFS='|' read -ra PARTS <<< "$config"
+    IFS="$IFS_BACKUP"
+
     for part in "${PARTS[@]}"; do
-        IFS='=' read -ra KV <<< "$part"
-        local key="${KV[0]}"
-        local value="${KV[1]}"
+        [[ -n "$part" ]] || continue
+
+        key="${part%%=*}"
+        value="${part#*=}"
 
         case "$key" in
             "CLIENT") CLIENT="$value" ;;
@@ -113,8 +230,10 @@ get_client_id() {
     local country_name="$2"
 
     # Convertir a minúsculas y unir con guión
-    local client_lower=$(echo "$client" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
-    local country_lower=$(echo "$country_name" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+    local client_lower
+    local country_lower
+    client_lower=$(echo "$client" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+    country_lower=$(echo "$country_name" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
 
     echo "${client_lower}-${country_lower}"
 }
@@ -140,13 +259,6 @@ get_namespace_name() {
     }'
 }
 
-# Función para convertir CLIENT_ID a snake_case para nombres de funciones PHP
-# Convierte "getnet-chile" -> "getnet_chile" (reemplaza guiones con guiones bajos)
-get_php_function_id() {
-    local client_id="$1"
-    echo "$client_id" | tr '-' '_'
-}
-
 # Función para reemplazar namespaces en archivos PHP
 replace_namespaces() {
     local work_dir="$1"
@@ -154,18 +266,11 @@ replace_namespaces() {
 
     print_status "Reemplazando namespaces: PlacetoPay -> $namespace_name"
 
-    # Buscar y reemplazar en todos los archivos PHP
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s|namespace PlacetoPay|namespace $namespace_name|g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s|use PlacetoPay\\\\|use $namespace_name\\\\|g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s|\\\\PlacetoPay\\\\|\\\\$namespace_name\\\\|g" {} \;
-    else
-        # Linux
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s|namespace PlacetoPay|namespace $namespace_name|g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s|use PlacetoPay\\\\|use $namespace_name\\\\|g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s|\\\\PlacetoPay\\\\|\\\\$namespace_name\\\\|g" {} \;
-    fi
+    sed_tree "$work_dir/src" '*.php' \
+        -e "s|namespace PlacetoPay|namespace ${namespace_name}|g" \
+        -e "s|use PlacetoPay\\\\|use ${namespace_name}\\\\|g" \
+        -e "s|\\\\PlacetoPay\\\\|\\\\${namespace_name}\\\\|g" \
+        -e "s|@package PlacetoPay|@package ${namespace_name}|g"
 }
 
 # Función para reemplazar nombres de clases en archivos PHP
@@ -181,65 +286,19 @@ replace_class_names() {
     fi
 
     # Reemplazar declaración y referencias de clase en archivos
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        # macOS
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/class PlacetoPayPayment /class ${namespace_name}Payment /g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/PlacetoPayPayment::/\${namespace_name}Payment::/g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/new PlacetoPayPayment(/new ${namespace_name}Payment(/g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "s/extends PlacetoPayPayment/extends ${namespace_name}Payment/g" {} \;
-
-        # Eliminar el use de Constants\Client que no existe
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i '' "/use.*Constants\\\\Client;/d" {} \;
-    else
-        # Linux
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/class PlacetoPayPayment /class ${namespace_name}Payment /g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/PlacetoPayPayment::/\${namespace_name}Payment::/g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/new PlacetoPayPayment(/new ${namespace_name}Payment(/g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i "s/extends PlacetoPayPayment/extends ${namespace_name}Payment/g" {} \;
-        find "$work_dir/src" -type f -name "*.php" -exec sed -i "/use.*Constants\\\\Client;/d" {} \;
-    fi
+    # La última expresión elimina el use de Constants\Client que no existe
+    sed_tree "$work_dir/src" '*.php' \
+        -e "s/class PlacetoPayPayment /class ${namespace_name}Payment /g" \
+        -e "s/PlacetoPayPayment::/${namespace_name}Payment::/g" \
+        -e "s/new PlacetoPayPayment(/new ${namespace_name}Payment(/g" \
+        -e "s/extends PlacetoPayPayment/extends ${namespace_name}Payment/g" \
+        -e "/use.*Constants\\\\Client;/d"
 }
 
 # Función para actualizar getModuleName() en helpers.php
 # NOTA: Ya no es necesaria porque getModuleName() usa _MODULE_NAME_ (siempre definida)
 # y la detección por ruta (cada módulo tiene su propia copia de helpers.php)
 # El fallback nunca debería ejecutarse en condiciones normales
-
-# Función para actualizar el namespace y nombre del paquete en composer.json
-# Esto genera un hash único del autoloader para cada cliente, evitando conflictos
-update_composer_namespace() {
-    local work_dir="$1"
-    local namespace_name="$2"
-    local client_id="$3"
-
-    print_status "Actualizando namespace y nombre del paquete en composer.json: PlacetoPay -> $namespace_name"
-
-    local composer_file="$work_dir/composer.json"
-    if [[ -f "$composer_file" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS
-            # Actualizar el namespace en PSR-4 autoloader
-            sed -i '' 's|"PlacetoPay\\\\": "src/"|"'"${namespace_name}"'\\\\": "src/"|g' "$composer_file"
-            # Cambiar el nombre del paquete para generar hash único del autoloader
-            # Esto evita conflictos cuando múltiples módulos están instalados
-            # Usar patrón más flexible que maneje espacios y comas opcionales
-            sed -i '' 's|"name": "placetopay/prestashop-gateway"|"name": "placetopay/prestashop-gateway-'"${client_id}"'"|g' "$composer_file"
-        else
-            # Linux
-            # Actualizar el namespace en PSR-4 autoloader
-            sed -i 's|"PlacetoPay\\\\": "src/"|"'"${namespace_name}"'\\\\": "src/"|g' "$composer_file"
-            # Cambiar el nombre del paquete para generar hash único del autoloader
-            sed -i 's|"name": "placetopay/prestashop-gateway"|"name": "placetopay/prestashop-gateway-'"${client_id}"'"|g' "$composer_file"
-        fi
-
-        # Verificar que el cambio se aplicó correctamente
-        if grep -q "\"name\": \"placetopay/prestashop-gateway-${client_id}\"" "$composer_file"; then
-            print_status "✓ composer.json actualizado con nombre único: placetopay/prestashop-gateway-${client_id}"
-        else
-            print_warning "⚠ No se pudo verificar el cambio en composer.json"
-        fi
-    fi
-}
 
 # Función para actualizar referencias a la clase en archivos de proceso
 update_class_references() {
@@ -249,62 +308,26 @@ update_class_references() {
     print_status "Actualizando referencias a clase principal: PlacetoPayPayment -> $main_class_name"
 
     # Archivos que instancian la clase directamente
-    local files_to_update=(
-        "$work_dir/process.php"
-        "$work_dir/redirect.php"
-        "$work_dir/sonda.php"
-    )
-
-    for file in "${files_to_update[@]}"; do
-        if [[ -f "$file" ]]; then
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                # macOS
-                sed -i '' "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$file"
-                sed -i '' "s/PlacetoPayPayment()/\${main_class_name}()/g" "$file"
-            else
-                # Linux
-                sed -i "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$file"
-                sed -i "s/PlacetoPayPayment()/\${main_class_name}()/g" "$file"
-            fi
-        fi
+    local file
+    for file in process.php redirect.php sonda.php; do
+        sed_file "$work_dir/$file" \
+            -e "s/new PlacetoPayPayment()/new ${main_class_name}()/g" \
+            -e "s/PlacetoPayPayment()/${main_class_name}()/g" \
+            -e "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${main_class_name}/g"
     done
 
-    declare -A front_controllers
-    front_controllers[sonda]=Sonda
-    front_controllers[redirect]=Redirect
-    front_controllers[process]=Process
+    # Pares "archivo:SufijoDeClase" (bash 3.2 no soporta arreglos asociativos)
+    local front_controllers=("sonda:Sonda" "redirect:Redirect" "process:Process")
+    local controller_entry controller_key class_suffix
 
-    for controller_key in "${!front_controllers[@]}"; do
-        local controller_file="$work_dir/controllers/front/${controller_key}.php"
-        local class_suffix="${front_controllers[$controller_key]}"
+    for controller_entry in "${front_controllers[@]}"; do
+        controller_key="${controller_entry%%:*}"
+        class_suffix="${controller_entry##*:}"
 
-        if [[ -f "$controller_file" ]]; then
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                # macOS
-                sed -i '' "s/class PlacetoPayPayment${class_suffix}ModuleFrontController/class ${main_class_name}${class_suffix}ModuleFrontController/g" "$controller_file"
-            else
-                # Linux
-                sed -i "s/class PlacetoPayPayment${class_suffix}ModuleFrontController/class ${main_class_name}${class_suffix}ModuleFrontController/g" "$controller_file"
-            fi
-
-            if [[ "$controller_key" == "sonda" ]]; then
-                if [[ "$OSTYPE" == "darwin"* ]]; then
-                    sed -i '' "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
-                else
-                    sed -i "s/resolvePendingPaymentsPlacetoPay()/resolvePendingPayments${main_class_name}()/g" "$controller_file"
-                fi
-            fi
-        fi
+        sed_file "$work_dir/controllers/front/${controller_key}.php" \
+            -e "s/class PlacetoPayPayment${class_suffix}ModuleFrontController/class ${main_class_name}${class_suffix}ModuleFrontController/g" \
+            -e "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${main_class_name}/g"
     done
-
-    # Actualizar nombre de función en sonda.php
-    if [[ -f "$work_dir/sonda.php" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            sed -i '' "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${main_class_name}/g" "$work_dir/sonda.php"
-        else
-            sed -i "s/resolvePendingPaymentsPlacetoPay/resolvePendingPayments${main_class_name}/g" "$work_dir/sonda.php"
-        fi
-    fi
 }
 
 # Función para reemplazar las constantes de configuración de la base de datos
@@ -316,64 +339,17 @@ replace_configuration_constants() {
 
     # Convertir CLIENT_ID a formato de constante (mayúsculas con guión bajo)
     # Ejemplo: getnet-chile -> GETNET_CHILE
-    local const_prefix=$(echo "$client_id" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
+    local const_prefix
+    const_prefix=$(echo "$client_id" | tr '[:lower:]' '[:upper:]' | tr '-' '_')
 
     print_status "Reemplazando constantes de configuración: PLACETOPAY_ -> ${const_prefix}_"
 
-    local payment_file="$work_dir/src/Models/${namespace_name}Payment.php"
-
-    if [[ -f "$payment_file" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS
-            # Reemplazar las constantes de configuración de la base de datos
-            sed -i '' "s/'PLACETOPAY_COMPANYDOCUMENT'/'${const_prefix}_COMPANYDOCUMENT'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_COMPANYNAME'/'${const_prefix}_COMPANYNAME'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_EMAILCONTACT'/'${const_prefix}_EMAILCONTACT'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_TELEPHONECONTACT'/'${const_prefix}_TELEPHONECONTACT'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_DESCRIPTION'/'${const_prefix}_DESCRIPTION'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_EXPIRATION_TIME_MINUTES'/'${const_prefix}_EXPIRATION_TIME_MINUTES'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_SHOWONRETURN'/'${const_prefix}_SHOWONRETURN'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_CIFINMESSAGE'/'${const_prefix}_CIFINMESSAGE'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_ALLOWBUYWITHPENDINGPAYMENTS'/'${const_prefix}_ALLOWBUYWITHPENDINGPAYMENTS'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_FILL_TAX_INFORMATION'/'${const_prefix}_FILL_TAX_INFORMATION'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_FILL_BUYER_INFORMATION'/'${const_prefix}_FILL_BUYER_INFORMATION'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_SKIP_RESULT'/'${const_prefix}_SKIP_RESULT'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_CLIENT'/'${const_prefix}_CLIENT'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_DISCOUNT'/'${const_prefix}_DISCOUNT'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_INVOICE'/'${const_prefix}_INVOICE'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_ENVIRONMENT'/'${const_prefix}_ENVIRONMENT'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_CUSTOM_CONNECTION_URL'/'${const_prefix}_CUSTOM_CONNECTION_URL'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_PAYMENT_BUTTON_IMAGE'/'${const_prefix}_PAYMENT_BUTTON_IMAGE'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_LOGIN'/'${const_prefix}_LOGIN'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_TRANKEY'/'${const_prefix}_TRANKEY'/g" "$payment_file"
-            sed -i '' "s/'PLACETOPAY_LIGHTBOX'/'${const_prefix}_LIGHTBOX'/g" "$payment_file"
-            sed -i '' "s/'PS_OS_PLACETOPAY'/'PS_OS_${const_prefix}'/g" "$payment_file"
-        else
-            # Linux
-            sed -i "s/'PLACETOPAY_COMPANYDOCUMENT'/'${const_prefix}_COMPANYDOCUMENT'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_COMPANYNAME'/'${const_prefix}_COMPANYNAME'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_EMAILCONTACT'/'${const_prefix}_EMAILCONTACT'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_TELEPHONECONTACT'/'${const_prefix}_TELEPHONECONTACT'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_DESCRIPTION'/'${const_prefix}_DESCRIPTION'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_EXPIRATION_TIME_MINUTES'/'${const_prefix}_EXPIRATION_TIME_MINUTES'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_SHOWONRETURN'/'${const_prefix}_SHOWONRETURN'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_CIFINMESSAGE'/'${const_prefix}_CIFINMESSAGE'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_ALLOWBUYWITHPENDINGPAYMENTS'/'${const_prefix}_ALLOWBUYWITHPENDINGPAYMENTS'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_FILL_TAX_INFORMATION'/'${const_prefix}_FILL_TAX_INFORMATION'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_FILL_BUYER_INFORMATION'/'${const_prefix}_FILL_BUYER_INFORMATION'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_SKIP_RESULT'/'${const_prefix}_SKIP_RESULT'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_CLIENT'/'${const_prefix}_CLIENT'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_DISCOUNT'/'${const_prefix}_DISCOUNT'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_INVOICE'/'${const_prefix}_INVOICE'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_ENVIRONMENT'/'${const_prefix}_ENVIRONMENT'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_CUSTOM_CONNECTION_URL'/'${const_prefix}_CUSTOM_CONNECTION_URL'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_PAYMENT_BUTTON_IMAGE'/'${const_prefix}_PAYMENT_BUTTON_IMAGE'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_LOGIN'/'${const_prefix}_LOGIN'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_TRANKEY'/'${const_prefix}_TRANKEY'/g" "$payment_file"
-            sed -i "s/'PLACETOPAY_LIGHTBOX'/'${const_prefix}_LIGHTBOX'/g" "$payment_file"
-            sed -i "s/'PS_OS_PLACETOPAY'/'PS_OS_${const_prefix}'/g" "$payment_file"
-        fi
-    fi
+    # La regla es genérica a propósito: cualquier constante nueva 'PLACETOPAY_*'
+    # queda cubierta sin tener que enumerarla aquí.
+    # PS_OS_PLACETOPAY va aparte porque no empieza por 'PLACETOPAY_.
+    sed_file "$work_dir/src/Models/${namespace_name}Payment.php" \
+        -e "s/'PS_OS_PLACETOPAY'/'PS_OS_${const_prefix}'/g" \
+        -e "s/'PLACETOPAY_/'${const_prefix}_/g"
 }
 
 # Función para crear el archivo principal del módulo con nombre único
@@ -381,13 +357,9 @@ create_main_module_file() {
     local work_dir="$1"
     local module_name="$2"
     local namespace_name="$3"
+    local main_class_name="$4"
 
     print_status "Creando archivo principal del módulo: ${module_name}.php"
-
-    # Nombre de la clase (PascalCase, primera letra en mayúscula)
-    # El nombre del módulo ya no tiene guiones, así que solo capitalizamos la primera letra
-    # Ejemplo: banchilechile -> Banchilechile
-    local main_class_name="$(echo ${module_name:0:1} | tr '[:lower:]' '[:upper:]')${module_name:1}"
 
     # Crear el archivo principal del módulo
     cat > "$work_dir/${module_name}.php" << EOF
@@ -417,32 +389,17 @@ update_translation_files() {
 
     print_status "Actualizando archivos de traducción: placetopaypayment -> $module_name"
 
-    local translations_dir="$work_dir/translations"
-    if [[ -d "$translations_dir" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS
-            find "$translations_dir" -type f -name "*.php" -exec sed -i '' "s/placetopaypayment/$module_name/g" {} \;
-        else
-            # Linux
-            find "$translations_dir" -type f -name "*.php" -exec sed -i "s/placetopaypayment/$module_name/g" {} \;
-        fi
-    fi
+    sed_tree "$work_dir/translations" '*.php' \
+        -e "s/placetopaypayment/$module_name/g"
 
-    # Actualizar templates (.tpl)
-    local views_dir="$work_dir/views"
-    if [[ -d "$views_dir" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS - Actualizar mod='placetopaypayment' en templates
-            find "$views_dir" -type f -name "*.tpl" -exec sed -i '' "s/mod='placetopaypayment'/mod='$module_name'/g" {} \;
-        else
-            # Linux
-            find "$views_dir" -type f -name "*.tpl" -exec sed -i "s/mod='placetopaypayment'/mod='$module_name'/g" {} \;
-        fi
+    # Actualizar templates (.tpl): mod='placetopaypayment'
+    sed_tree "$work_dir/views" '*.tpl' \
+        -e "s/mod='placetopaypayment'/mod='$module_name'/g"
 
-        # Renombrar el template principal si existe
-        if [[ -f "$views_dir/templates/admin/placetopaypayment.tpl" ]]; then
-            mv "$views_dir/templates/admin/placetopaypayment.tpl" "$views_dir/templates/admin/$module_name.tpl"
-        fi
+    # Renombrar el template principal si existe
+    local admin_tpl="$work_dir/views/templates/admin/placetopaypayment.tpl"
+    if [[ -f "$admin_tpl" ]]; then
+        mv "$admin_tpl" "$work_dir/views/templates/admin/${module_name}.tpl"
     fi
 }
 
@@ -455,70 +412,22 @@ update_root_files() {
 
     print_status "Actualizando archivos raíz: use statements y referencias hardcodeadas"
 
-    # Archivos a actualizar
-    local files=("process.php" "redirect.php" "sonda.php")
+    local file
+    for file in process.php redirect.php sonda.php; do
+        sed_file "$work_dir/$file" \
+            -e "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" \
+            -e "s/new PlacetoPayPayment()/new ${main_class_name}()/g" \
+            -e "s/getPathCMS(/getPathCMS${namespace_name}(/g" \
+            -e "s/getModuleName()/getModuleName${namespace_name}()/g"
 
-    for file in "${files[@]}"; do
-        if [[ -f "$work_dir/$file" ]]; then
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                # macOS
-                # Actualizar namespace del PaymentLogger
-                sed -i '' "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$work_dir/$file"
-
-                # Actualizar instanciación de clase (ej: new PlacetoPayPayment() -> new Banchilechile())
-                sed -i '' "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
-
-                # Actualizar llamadas a getPathCMS() y getModuleName() por las versiones renombradas
-                sed -i '' "s/getPathCMS(/getPathCMS${namespace_name}(/g" "$work_dir/$file"
-                sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
-            else
-                # Linux
-                sed -i "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$work_dir/$file"
-                sed -i "s/new PlacetoPayPayment()/new ${main_class_name}()/g" "$work_dir/$file"
-                sed -i "s/getPathCMS(/getPathCMS${namespace_name}(/g" "$work_dir/$file"
-                sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
-            fi
-        fi
+        sed_file "$work_dir/controllers/front/$file" \
+            -e "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g"
     done
-
-    for file in "${files[@]}"; do
-        if [[ -f "$work_dir/controllers/front/$file" ]]; then
-            local working_file="$work_dir/controllers/front/$file"
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                # macOS
-                # Actualizar namespace del PaymentLogger
-                sed -i '' "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$working_file"
-            else
-                # Linux
-                sed -i "s/use PlacetoPay\\\\Loggers\\\\PaymentLogger;/use ${namespace_name}\\\\Loggers\\\\PaymentLogger;/g" "$working_file"
-            fi
-        fi
-    done
-
-    # Actualizar helpers.php - fallback en getModuleName()
-    if [[ -f "$work_dir/helpers.php" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS - Actualizar el fallback de placetopaypayment a module_name
-            sed -i '' "s/\$moduleName = 'placetopaypayment';/\$moduleName = '${module_name}';/g" "$work_dir/helpers.php"
-        else
-            # Linux
-            sed -i "s/\$moduleName = 'placetopaypayment';/\$moduleName = '${module_name}';/g" "$work_dir/helpers.php"
-        fi
-    fi
 
     # Actualizar templates admin (admin_order.tpl) - IDs y referencias
-    local admin_order_tpl="$work_dir/views/templates/admin/admin_order.tpl"
-    if [[ -f "$admin_order_tpl" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS
-            sed -i '' "s/id=\"placetopaypayment_/id=\"${module_name}_/g" "$admin_order_tpl"
-            sed -i '' "s/#placetopaypayment_/#${module_name}_/g" "$admin_order_tpl"
-        else
-            # Linux
-            sed -i "s/id=\"placetopaypayment_/id=\"${module_name}_/g" "$admin_order_tpl"
-            sed -i "s/#placetopaypayment_/#${module_name}_/g" "$admin_order_tpl"
-        fi
-    fi
+    sed_file "$work_dir/views/templates/admin/admin_order.tpl" \
+        -e "s/id=\"placetopaypayment_/id=\"${module_name}_/g" \
+        -e "s/#placetopaypayment_/#${module_name}_/g"
 }
 
 # Función para actualizar referencias internas hardcodeadas
@@ -531,78 +440,32 @@ update_internal_references() {
 
     # Convertir el nombre del módulo a snake_case para usar en nombres de tabla/función
     # Ejemplo: banchilechile -> banchile_chile (aunque sin mayúsculas no se aplica, lo dejamos por si acaso)
-    local snake_case_name=$(echo "$module_name" | sed 's/\([a-z]\)\([A-Z]\)/\1_\2/g' | tr '[:upper:]' '[:lower:]')
+    local snake_case_name
+    snake_case_name=$(echo "$module_name" | sed 's/\([a-z]\)\([A-Z]\)/\1_\2/g' | tr '[:upper:]' '[:lower:]')
 
-    # Archivos fuente donde hacer los reemplazos
-    local files_to_update=$(find "$work_dir/src" -type f -name "*.php")
-
-    for file in $files_to_update; do
-        if [[ -f "$file" ]]; then
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                # macOS
-                # Reemplazar nombre de tabla de pagos
-                sed -i '' "s/'payment_placetopay'/'payment_${snake_case_name}'/g" "$file"
-
-                # Reemplazar función versionComparePlaceToPay
-                sed -i '' "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$file"
-
-                # Reemplazar función insertPaymentPlaceToPay
-                sed -i '' "s/insertPaymentPlaceToPay/insertPayment${namespace_name}/g" "$file"
-
-                # Reemplazar llamadas a getModuleName() por getModuleName{Namespace}()
-                sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$file"
-            else
-                # Linux
-                sed -i "s/'payment_placetopay'/'payment_${snake_case_name}'/g" "$file"
-                sed -i "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$file"
-                sed -i "s/insertPaymentPlaceToPay/insertPayment${namespace_name}/g" "$file"
-                sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$file"
-            fi
-        fi
-    done
+    sed_tree "$work_dir/src" '*.php' \
+        -e "s/'payment_placetopay'/'payment_${snake_case_name}'/g" \
+        -e "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" \
+        -e "s/insertPaymentPlaceToPay/insertPayment${namespace_name}/g" \
+        -e "s/getModuleName()/getModuleName${namespace_name}()/g"
 
     # También actualizar en archivos raíz (process.php, redirect.php, sonda.php)
-    local root_files=("process.php" "redirect.php" "sonda.php" "controllers/front/sonda.php")
-    for file in "${root_files[@]}"; do
-        if [[ -f "$work_dir/$file" ]]; then
-            if [[ "$OSTYPE" == "darwin"* ]]; then
-                sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
-            else
-                sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/$file"
-            fi
-        fi
+    local file
+    for file in process.php redirect.php sonda.php controllers/front/sonda.php; do
+        sed_file "$work_dir/$file" \
+            -e "s/getModuleName()/getModuleName${namespace_name}()/g"
     done
 
     # Actualizar helpers.php - renombrar funciones para que sean únicas por módulo
-    if [[ -f "$work_dir/helpers.php" ]]; then
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # Renombrar versionComparePlaceToPay
-            sed -i '' "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$work_dir/helpers.php"
-
-            # Renombrar getModuleName() a getModuleName{Namespace}()
-            sed -i '' "s/function getModuleName()/function getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
-            sed -i '' "s/if (!function_exists('getModuleName'))/if (!function_exists('getModuleName${namespace_name}'))/g" "$work_dir/helpers.php"
-
-            # Renombrar getPathCMS() a getPathCMS{Namespace}()
-            sed -i '' "s/function getPathCMS(/function getPathCMS${namespace_name}(/g" "$work_dir/helpers.php"
-            sed -i '' "s/if (!function_exists('getPathCMS'))/if (!function_exists('getPathCMS${namespace_name}'))/g" "$work_dir/helpers.php"
-
-            # Actualizar la llamada a getModuleName() dentro de getPathCMS
-            sed -i '' "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
-
-            # Actualizar el fallback para que retorne el nombre del módulo correcto
-            sed -i '' "s/return 'placetopaypayment';/return '${module_name}';/g" "$work_dir/helpers.php"
-        else
-            # Linux
-            sed -i "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" "$work_dir/helpers.php"
-            sed -i "s/function getModuleName()/function getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
-            sed -i "s/if (!function_exists('getModuleName'))/if (!function_exists('getModuleName${namespace_name}'))/g" "$work_dir/helpers.php"
-            sed -i "s/function getPathCMS(/function getPathCMS${namespace_name}(/g" "$work_dir/helpers.php"
-            sed -i "s/if (!function_exists('getPathCMS'))/if (!function_exists('getPathCMS${namespace_name}'))/g" "$work_dir/helpers.php"
-            sed -i "s/getModuleName()/getModuleName${namespace_name}()/g" "$work_dir/helpers.php"
-            sed -i "s/return 'placetopaypayment';/return '${module_name}';/g" "$work_dir/helpers.php"
-        fi
-    fi
+    # El orden importa: primero las declaraciones, luego las llamadas.
+    sed_file "$work_dir/helpers.php" \
+        -e "s/versionComparePlaceToPay/versionCompare${namespace_name}/g" \
+        -e "s/function getModuleName()/function getModuleName${namespace_name}()/g" \
+        -e "s/if (!function_exists('getModuleName'))/if (!function_exists('getModuleName${namespace_name}'))/g" \
+        -e "s/function getPathCMS(/function getPathCMS${namespace_name}(/g" \
+        -e "s/if (!function_exists('getPathCMS'))/if (!function_exists('getPathCMS${namespace_name}'))/g" \
+        -e "s/getModuleName()/getModuleName${namespace_name}()/g" \
+        -e "s/return 'placetopaypayment';/return '${module_name}';/g"
 }
 
 # Función para obtener nombre del proyecto
@@ -633,68 +496,245 @@ copy_country_config_template() {
     fi
 }
 
-# Función para instalar dependencias con una versión específica de PHP
-install_composer_dependencies() {
-    local work_dir="$1"
-    local php_version="$2"
+# Versión "mayor.menor" que reporta un binario de PHP
+php_binary_version() {
+    "$1" -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;' 2>/dev/null || true
+}
 
-    print_status "Instalando dependencias de Composer con PHP $php_version..."
+# Resolver un binario de PHP para Linux, macOS/Homebrew o el PHP activo del sistema.
+# Siempre se valida la versión reportada por el binario, nunca sólo su nombre.
+resolve_php_binary() {
+    local wanted="$1"
+    local compact="${wanted//./}"
+    local candidate resolved brew_prefix
 
-    # Actualizar la versión de PHP en composer.json (siguiendo el patrón del Makefile)
-    local composer_file="$work_dir/composer.json"
-    if [[ -f "$composer_file" ]]; then
-        # Actualizar versión de PHP usando sed (compatible con macOS y Linux)
-        if [[ "$OSTYPE" == "darwin"* ]]; then
-            # macOS usa -i '' para sed
-            # Reemplazar solo en la sección require (línea que contiene "php" después de "require")
-            sed -i '' "/\"require\"/,/}/ s|\"php\": \".*\"|\"php\": \">=${php_version}\"|g" "$composer_file"
-            # También actualizar platform si existe
-            sed -i '' "/\"platform\"/,/}/ s|\"php\": \".*\"|\"php\": \"${php_version}\"|g" "$composer_file"
+    for candidate in \
+        "php${wanted}" \
+        "php${compact}" \
+        "/usr/bin/php${wanted}" \
+        "/usr/local/bin/php${wanted}" \
+        "/opt/homebrew/opt/php@${wanted}/bin/php" \
+        "/usr/local/opt/php@${wanted}/bin/php" \
+        "/opt/plesk/php/${wanted}/bin/php" \
+        "/opt/cpanel/ea-php${compact}/root/usr/bin/php" \
+        "/usr/local/php${compact}/bin/php"
+    do
+        resolved=""
+
+        if [[ "$candidate" == /* ]]; then
+            if [[ -x "$candidate" ]]; then
+                resolved="$candidate"
+            fi
         else
-            # Linux usa -i sin argumento
-            sed -i "/\"require\"/,/}/ s|\"php\": \".*\"|\"php\": \">=${php_version}\"|g" "$composer_file"
-            sed -i "/\"platform\"/,/}/ s|\"php\": \".*\"|\"php\": \"${php_version}\"|g" "$composer_file"
+            resolved="$(command -v "$candidate" 2>/dev/null || true)"
+        fi
+
+        if [[ -n "$resolved" && "$(php_binary_version "$resolved")" == "$wanted" ]]; then
+            printf '%s\n' "$resolved"
+            return 0
+        fi
+    done
+
+    # Homebrew puede tener el prefijo en una ruta no estándar
+    if command -v brew >/dev/null 2>&1; then
+        brew_prefix="$(brew --prefix "php@${wanted}" 2>/dev/null || true)"
+
+        if [[ -n "$brew_prefix" && -x "${brew_prefix}/bin/php" ]] \
+            && [[ "$(php_binary_version "${brew_prefix}/bin/php")" == "$wanted" ]]; then
+            printf '%s\n' "${brew_prefix}/bin/php"
+            return 0
         fi
     fi
 
-    # Eliminar composer.lock si existe
-    rm -rf "$work_dir/composer.lock"
-
-    # Instalar dependencias con la versión específica de PHP
-    cd "$work_dir"
-
-    hash=$(head -c 32 /dev/urandom | md5sum | awk '{print $1}')
-
-    # Actualizar el nombre del paquete en composer.json para evitar conflictos de autoloader
-    if [[ "$OSTYPE" == "darwin"* ]]; then
-        sed -i '' "s/prestashop-gateway/prestashop-gateway-$hash/g" "$work_dir/composer.json"
-    else
-        sed -i "s/prestashop-gateway/prestashop-gateway-$hash/g" "$work_dir/composer.json"
+    # Último recurso: el PHP activo, sólo si coincide la versión
+    if command -v php >/dev/null 2>&1 && [[ "$(php_binary_version php)" == "$wanted" ]]; then
+        command -v php
+        return 0
     fi
 
-    # substring de la versión de PHP para usar en el comando (ej: 7.4.33 -> 7.4)
-    php_version=$(echo "$php_version" | cut -d. -f1-2)
+    return 1
+}
 
-    # Verificar si existe el comando php con la versión específica
-    if command -v "php${php_version}" >/dev/null 2>&1; then
-        print_status "Usando php${php_version} para instalar dependencias..."
-        "php${php_version}" "$(which composer)" install --no-dev 2>&1 | grep -v "^$" || true
-    else
-        print_error "php${php_version} no encontrado, asegúrate de tenerlo instalado y en tu PATH"
+# Reescribir composer.json con PHP (json_decode/encode) en lugar de sed.
+# Evita el infierno de escapes y permite fijar autoloader-suffix, que es lo que
+# garantiza un autoloader único por módulo sin parchear vendor/ a posteriori.
+patch_composer_json() {
+    local work_dir="$1"
+    local namespace_name="$2"
+    local client_id="$3"
+    local php_version="$4"
+    local autoload_suffix="$5"
+    local php_bin="$6"
+
+    print_status "Ajustando composer.json (namespace ${namespace_name}, PHP ${php_version}, autoloader único)"
+
+    COMPOSER_FILE="$work_dir/composer.json" \
+    NEW_NAME="placetopay/prestashop-gateway-${client_id}" \
+    NEW_NAMESPACE="$namespace_name" \
+    PHP_PLATFORM="$php_version" \
+    AUTOLOAD_SUFFIX="$autoload_suffix" \
+    "$php_bin" -r '
+        $file = getenv("COMPOSER_FILE");
+        $json = json_decode(file_get_contents($file), true);
+
+        if (!is_array($json)) {
+            fwrite(STDERR, "composer.json inválido: " . $file . PHP_EOL);
+            exit(1);
+        }
+
+        // Nombre único por cliente: evita colisiones cuando hay varios módulos
+        // de marca blanca instalados en la misma tienda.
+        $json["name"] = getenv("NEW_NAME");
+        $json["autoload"]["psr-4"] = [getenv("NEW_NAMESPACE") . "\\" => "src/"];
+        $json["require"]["php"] = ">=" . getenv("PHP_PLATFORM");
+        $json["config"]["platform"]["php"] = getenv("PHP_PLATFORM");
+
+        // Hace únicas las clases ComposerAutoloaderInit*/ComposerStaticInit*
+        $json["config"]["autoloader-suffix"] = getenv("AUTOLOAD_SUFFIX");
+
+        file_put_contents(
+            $file,
+            json_encode($json, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) . PHP_EOL
+        );
+    '
+}
+
+# Función para instalar dependencias con una versión específica de PHP.
+# Expone el binario de PHP utilizado en RESOLVED_PHP_BIN para los pasos de
+# verificación posteriores.
+RESOLVED_PHP_BIN=""
+
+install_composer_dependencies() {
+    local work_dir="$1"
+    local php_version="$2"
+    local namespace_name="$3"
+    local client_id="$4"
+
+    # Versión corta para localizar el binario (ej: 7.4.33 -> 7.4)
+    local php_short
+    php_short=$(echo "$php_version" | cut -d. -f1-2)
+
+    local php_bin
+    if ! php_bin="$(resolve_php_binary "$php_short")"; then
+        print_error "PHP ${php_short} no encontrado."
+        print_error "Linux: instala php${php_short} (php${php_short}-cli). macOS: brew install php@${php_short}"
         exit 1
     fi
 
-    # Evitar conflictos de autoload
-    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" "$work_dir/vendor/composer/autoload_real.php"
-    sed -i -E "s/ComposerStaticInit([a-zA-Z0-9])/ComposerStaticInit$hash/g" "$work_dir/vendor/composer/autoload_real.php"
-    sed -i -E "s/'ComposerStaticInit([a-zA-Z0-9])'/'ComposerStaticInit$hash'/g" "$work_dir/vendor/composer/autoload_real.php"
+    local composer_bin
+    if ! composer_bin="$(command -v composer)"; then
+        print_error "Composer no encontrado en PATH"
+        exit 1
+    fi
 
-    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" "$work_dir/vendor/composer/autoload_static.php"
-    sed -i -E "s/ComposerStaticInit([a-zA-Z0-9])/ComposerStaticInit$hash/g" "$work_dir/vendor/composer/autoload_static.php"
+    local autoload_suffix
+    autoload_suffix="$("$php_bin" -r 'echo bin2hex(random_bytes(16));')"
 
-    sed -i -E "s/ComposerAutoloaderInit([a-zA-Z0-9])/ComposerAutoloaderInit$hash/g" "$work_dir/vendor/autoload.php"
+    patch_composer_json \
+        "$work_dir" "$namespace_name" "$client_id" "$php_version" "$autoload_suffix" "$php_bin"
 
-    cd "$BASE_DIR"
+    # Cada plataforma debe resolver su propio árbol de dependencias. El lock del
+    # repositorio no puede representar simultáneamente PHP 7.4 y PHP 8.1.
+    rm -f "$work_dir/composer.lock"
+
+    print_status "Resolviendo dependencias con $php_bin (PHP ${php_short})..."
+    (
+        cd "$work_dir"
+        "$php_bin" "$composer_bin" update \
+            --no-dev \
+            --no-interaction \
+            --no-progress \
+            --prefer-dist \
+            --optimize-autoloader
+    )
+
+    # El suffix se fija vía composer.json, así que el autoloader generado ya es
+    # único; sólo se verifica que Composer lo haya respetado.
+    if ! grep -q "ComposerAutoloaderInit${autoload_suffix}" "$work_dir/vendor/autoload.php"; then
+        print_error "Composer no aplicó el autoloader-suffix esperado (${autoload_suffix})"
+        exit 1
+    fi
+
+    print_status "✓ Autoloader aislado: ComposerAutoloaderInit${autoload_suffix}"
+
+    RESOLVED_PHP_BIN="$php_bin"
+}
+
+# Verificar que las dependencias empaquetadas no rompan las clases del core.
+#
+# El autoloader del módulo se registra con prepend=true, así que sus interfaces
+# PSR ganan sobre las del core de PrestaShop durante todo el request. Si aquí
+# entra psr/http-message 2.x (que declara `__toString(): string`) el core revienta
+# con:
+#   Declaration of Nyholm\Psr7\Stream::__toString() must be compatible with
+#   Psr\Http\Message\StreamInterface::__toString(): string
+# psr/http-message 1.1 es la única versión segura para PS 8 y PS 9 a la vez:
+# añade tipos en parámetros (que guzzlehttp/psr7 2.x necesita) pero no tipos de
+# retorno (que romperían a los implementadores del core).
+assert_bundled_dependencies() {
+    local work_dir="$1"
+    local stream_interface="$work_dir/vendor/psr/http-message/src/StreamInterface.php"
+
+    print_status "Verificando compatibilidad de las dependencias empaquetadas..."
+
+    if [[ -f "$stream_interface" ]]; then
+        if grep -qE 'function __toString\(\)[[:space:]]*:' "$stream_interface"; then
+            print_error "psr/http-message empaquetado declara tipos de retorno (2.x)."
+            print_error "Rompe Nyholm\\Psr7 y GuzzleHttp\\Psr7 del core de PrestaShop."
+            print_error "Mantén \"psr/http-message\": \"^1.1\" en composer.json."
+            exit 1
+        fi
+    fi
+
+    if [[ -d "$work_dir/vendor/psr/log" ]]; then
+        print_error "psr/log quedó empaquetado y sobrescribirá el del core de PrestaShop."
+        print_error "Mantén \"replace\": {\"psr/log\": \"*\"} en composer.json."
+        exit 1
+    fi
+
+    print_status "✓ Dependencias compatibles con el core de PrestaShop"
+}
+
+# Validar la sintaxis de todo el código generado con el PHP de destino.
+# Detecta reemplazos de sed mal escapados antes de empaquetar el ZIP.
+lint_generated_sources() {
+    local work_dir="$1"
+    local php_bin="$2"
+    local failed=0
+    local file
+
+    print_status "Validando sintaxis del código generado..."
+
+    while IFS= read -r file; do
+        if ! "$php_bin" -l "$file" >/dev/null 2>&1; then
+            print_error "Sintaxis inválida en ${file#"$work_dir"/}"
+            "$php_bin" -l "$file" 2>&1 | head -3
+            failed=1
+        fi
+    done < <(find "$work_dir" -type f -name '*.php' -not -path "$work_dir/vendor/*")
+
+    if [[ $failed -ne 0 ]]; then
+        exit 1
+    fi
+
+    print_status "✓ Sintaxis válida"
+}
+
+# Verificar que no quedaron marcas de la plantilla original en el artefacto
+assert_no_placetopay_leftovers() {
+    local work_dir="$1"
+    local leftovers
+
+    leftovers=$(grep -rlE 'PlacetoPayPayment|namespace PlacetoPay|placetopaypayment' \
+        "$work_dir" --include='*.php' --include='*.tpl' 2>/dev/null \
+        | grep -v "^${work_dir}/vendor/" || true)
+
+    if [[ -n "$leftovers" ]]; then
+        print_warning "Quedan referencias a la plantilla original en:"
+        echo "$leftovers" | while IFS= read -r file; do
+            echo "    ${file#"$work_dir"/}"
+        done
+    fi
 }
 
 # Función para limpiar archivos innecesarios del vendor (siguiendo el Makefile)
@@ -707,7 +747,7 @@ cleanup_vendor_files() {
     find "$work_dir" -type d -name ".git*" -exec rm -rf {} + 2>/dev/null || true
     find "$work_dir" -type d -name "squizlabs" -exec rm -rf {} + 2>/dev/null || true
 
-    # Limpiar vendor exactamente como en el Makefile (líneas 34-41)
+    # Limpiar vendor exactamente como en el Makefile
     rm -rf "$work_dir/vendor/bin"
     rm -rf "$work_dir/vendor/alejociro/redirection/tests"
     rm -rf "$work_dir/vendor/alejociro/redirection/examples"
@@ -716,38 +756,38 @@ cleanup_vendor_files() {
     rm -rf "$work_dir/vendor/guzzlehttp/guzzle/docs"
     rm -rf "$work_dir/vendor/guzzlehttp/guzzle/tests"
     rm -rf "$work_dir/vendor/guzzlehttp/streams/tests"
-    rm -Rf "$work_dir/.phpactor.json"
-    rm -Rf "$work_dir/.php-cs-fixer.cache"
-    rm -Rf "$work_dir/.vimrc.setup"
-    rm -Rf "$work_dir/*.hasts"
-    rm -Rf "$work_dir/*.hasaia"
-    rm -Rf "$work_dir/*.sql"
-    rm -Rf "$work_dir/*.log"
-    rm -Rf "$work_dir/*.diff"
 }
 
-# Función para limpiar archivos de desarrollo del build (siguiendo el Makefile líneas 25-33)
+# Función para limpiar archivos de desarrollo del build (siguiendo el Makefile)
 cleanup_build_files() {
     local work_dir="$1"
 
     print_status "Eliminando archivos de desarrollo innecesarios..."
 
-    # Eliminar .git* (ya se hizo con find, pero por si acaso)
-    rm -rf "$work_dir/.git"*
-
-    # Eliminar según el Makefile
+    rm -rf "$work_dir"/.git*
     rm -rf "$work_dir/.idea"
-    rm -rf "$work_dir/config"*
+    rm -rf "$work_dir/.vscode"
+    rm -rf "$work_dir/.claude"
+    rm -rf "$work_dir/config"
+    rm -rf "$work_dir/logos"
     rm -rf "$work_dir/Dockerfile"
     rm -rf "$work_dir/Makefile"
-    rm -rf "$work_dir/.env"*
-    rm -rf "$work_dir/composer."*
+    rm -rf "$work_dir"/.env*
+    rm -rf "$work_dir"/composer.*
+    rm -rf "$work_dir/.phpactor.json"
     rm -rf "$work_dir/.php_cs.cache"
+    rm -rf "$work_dir/.php-cs-fixer.cache"
+    rm -rf "$work_dir/.vimrc.setup"
     rm -rf "$work_dir"/*.md
-
-    # Eliminar logos y scripts de generación (adicionales para white label)
-    rm -rf "$work_dir/logos"
     rm -rf "$work_dir"/*.sh
+    rm -rf "$work_dir"/*.sql
+    rm -rf "$work_dir"/*.log
+    rm -rf "$work_dir"/*.diff
+    rm -rf "$work_dir"/*.hasts
+    rm -rf "$work_dir"/*.hasaia
+
+    # Basura de macOS: no debe viajar en el ZIP
+    find "$work_dir" -name '.DS_Store' -type f -delete 2>/dev/null || true
 }
 
 # Función para crear versión de marca blanca con una versión específica de PHP
@@ -794,25 +834,23 @@ create_white_label_version_with_php() {
     #   - banchile-chile -> banchilechile
     #   - placetopay-colombia -> placetopaycolombia
     #   - getnet-chile -> getnetchile
-    local module_name=$(echo "${CLIENT_ID}" | tr -d '-')
+    local module_name
+    module_name=$(echo "${CLIENT_ID}" | tr -d '-')
+
     local work_dir="$TEMP_DIR/$module_name"
+    rm -rf "$work_dir"
     mkdir -p "$work_dir"
 
     print_status "Nombre del módulo: $module_name"
 
-    # Copiar todos los archivos (como cp -pr en el Makefile, pero usando rsync para excluir lo necesario)
+    # Nombre de la clase principal (PascalCase, primera letra en mayúscula)
+    # Ejemplo: banchilechile -> Banchilechile
+    local main_class_name
+    main_class_name="$(echo "${module_name:0:1}" | tr '[:lower:]' '[:upper:]')${module_name:1}"
+
+    # Copiar los archivos fuente al directorio de trabajo
     print_status "Copiando archivos fuente..."
-    rsync -a \
-        --exclude='builds/' \
-        --exclude='temp_builds/' \
-        --exclude='.git/' \
-        --exclude='.git*' \
-        --exclude='*.sh' \
-        --exclude='config/' \
-        --exclude='src/Countries/' \
-        --exclude='placetopaypayment.php' \
-        --exclude='woocommerce-gateway-placetopay/' \
-        "$BASE_DIR/" "$work_dir/" 2>/dev/null || true
+    rsync -a "${RSYNC_EXCLUDES[@]}" "$BASE_DIR/" "$work_dir/"
 
     # Copiar template de CountryConfig.php si existe
     if [[ -n "$TEMPLATE_FILE" ]]; then
@@ -839,15 +877,8 @@ create_white_label_version_with_php() {
     # Reemplazar constantes de configuración de la base de datos
     replace_configuration_constants "$work_dir" "$CLIENT_ID" "$namespace_name"
 
-    # Actualizar namespace y nombre del paquete en composer.json antes de instalar dependencias
-    # IMPORTANTE: Esto debe hacerse ANTES de composer install para generar hash único del autoloader
-    update_composer_namespace "$work_dir" "$namespace_name" "$CLIENT_ID"
-
     # Crear archivo principal del módulo con nombre único
-    create_main_module_file "$work_dir" "$module_name" "$namespace_name"
-
-    # Obtener el nombre de la clase principal para actualizar referencias
-    local main_class_name="$(echo ${module_name:0:1} | tr '[:lower:]' '[:upper:]')${module_name:1}"
+    create_main_module_file "$work_dir" "$module_name" "$namespace_name" "$main_class_name"
 
     # Actualizar referencias a la clase en process.php, redirect.php, sonda.php
     update_class_references "$work_dir" "$main_class_name"
@@ -862,7 +893,12 @@ create_white_label_version_with_php() {
     update_internal_references "$work_dir" "$module_name" "$namespace_name"
 
     # Instalar dependencias de composer con la versión específica de PHP
-    install_composer_dependencies "$work_dir" "$php_version"
+    install_composer_dependencies "$work_dir" "$php_version" "$namespace_name" "$CLIENT_ID"
+
+    # Verificaciones antes de empaquetar
+    assert_bundled_dependencies "$work_dir"
+    lint_generated_sources "$work_dir" "$RESOLVED_PHP_BIN"
+    assert_no_placetopay_leftovers "$work_dir"
 
     # Limpiar archivos innecesarios del vendor
     cleanup_vendor_files "$work_dir"
@@ -873,9 +909,11 @@ create_white_label_version_with_php() {
     # Crear archivo ZIP
     print_status "Creando archivo ZIP..."
     mkdir -p "$OUTPUT_DIR"
-    cd "$TEMP_DIR"
-    zip -rq "$OUTPUT_DIR/$project_name.zip" "$module_name"
-    cd "$BASE_DIR"
+    rm -f "$OUTPUT_DIR/$project_name.zip"
+    (
+        cd "$TEMP_DIR"
+        zip -rq -X "$OUTPUT_DIR/$project_name.zip" "$module_name"
+    )
 
     # Limpiar directorio temporal de este build
     rm -rf "$work_dir"
@@ -893,19 +931,22 @@ create_white_label_version() {
     print_status "========================================="
     echo
 
-    # Generar una versión para cada versión de PHP/PrestaShop
-    local i=0
-    for php_version in "${PHP_VERSIONS[@]}"; do
-        local prestashop_version="${PRESTASHOP_VERSIONS[$i]}"
-        create_white_label_version_with_php "$client_key" "$php_version" "$prestashop_version" "$plugin_version"
+    # Un artefacto por versión de PrestaShop (ver BUILD_TARGETS)
+    local target prestashop_version php_version
+    for target in "${BUILD_TARGETS[@]}"; do
+        prestashop_version="${target%%|*}"
+        php_version="${target##*|}"
+
+        create_white_label_version_with_php \
+            "$client_key" "$php_version" "$prestashop_version" "$plugin_version"
         echo
-        i=$((i + 1))
     done
 }
 
 # Función principal
 main() {
-    local plugin_version="$1"
+    local plugin_version="${1:-untagged}"
+
     print_status "Iniciando proceso de generación de marca blanca..."
 
     # Verificar que existe el archivo de configuración
@@ -921,6 +962,7 @@ main() {
     mkdir -p "$TEMP_DIR" "$OUTPUT_DIR"
 
     # Procesar cada configuración de cliente
+    local client_key
     for client_key in $(get_all_clients); do
         create_white_label_version "$client_key" "$plugin_version"
 
@@ -942,6 +984,20 @@ main() {
     done || print_warning "No se encontraron archivos ZIP en el directorio de salida: $OUTPUT_DIR"
 }
 
+# Listar los clientes configurados
+list_clients() {
+    local client_key config
+
+    for client_key in $(get_all_clients); do
+        config=$(get_client_config "$client_key")
+
+        if [[ -n "$config" ]]; then
+            parse_config "$config"
+            echo "  $client_key: $CLIENT ($COUNTRY_NAME - $COUNTRY_CODE)"
+        fi
+    done
+}
+
 # Mostrar información de uso
 usage() {
     echo "Uso: $0 [OPCIONES] [CLIENTE] [VERSION]"
@@ -954,16 +1010,18 @@ usage() {
     echo "  CLIENTE       Generar solo para un cliente específico (opcional)"
     echo "  VERSION       Generar .zip para cargar en GitHub tag (opcional)"
     echo ""
-    echo "Clientes disponibles:"
-    for client in $(get_all_clients); do
-        config=$(get_client_config "$client")
-
-        if [[ -n "$config" ]]; then
-            parse_config "$config"
-            echo "  - $client: $CLIENT ($COUNTRY_NAME - $COUNTRY_CODE)"
-        fi
+    echo "Cada cliente produce un artefacto por versión de PrestaShop:"
+    local target
+    for target in "${BUILD_TARGETS[@]}"; do
+        echo "  - ${target%%|*} (dependencias resueltas con PHP ${target##*|})"
     done
+    echo ""
+    echo "Clientes disponibles:"
+    list_clients
 }
+
+check_requirements
+verify_sed_inplace
 
 # Manejar argumentos de línea de comandos
 case "${1:-}" in
@@ -973,13 +1031,7 @@ case "${1:-}" in
         ;;
     -l|--list)
         echo "Configuraciones de clientes disponibles:"
-        for client_key in $(get_all_clients); do
-            config=$(get_client_config "$client_key")
-            if [[ -n "$config" ]]; then
-                parse_config "$config"
-                echo "  $client_key: $CLIENT ($COUNTRY_NAME - $COUNTRY_CODE)"
-            fi
-        done
+        list_clients
         exit 0
         ;;
     "")

@@ -17,7 +17,7 @@ return [
         'country_code' => 'CO',
         'country_name' => 'Colombia',
         'client_id' => 'placetopay-colombia',
-        'template_file' => 'ColombiaColombiaConfig',
+        'template_file' => 'PlacetopayColombiaConfig',
         'logo_file' => 'Placetopay.png',
     ],
     'placetopay-ecuador' => [
