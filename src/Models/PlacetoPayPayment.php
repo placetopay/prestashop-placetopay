@@ -1797,7 +1797,7 @@ class PlacetoPayPayment extends PaymentModule
 
         $content = mb_convert_encoding($content, 'HTML-ENTITIES', 'UTF-8');
 
-        return "<form accept-charset='UTF-8' {$action} id='payment-form'>{$content}</form>";
+        return "<form accept-charset='UTF-8' method='post' {$action} id='payment-form'>{$content}</form>";
     }
 
     private function getPluginVersion(): string
