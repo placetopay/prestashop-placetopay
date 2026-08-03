@@ -114,6 +114,11 @@ class PlacetoPayPayment extends PaymentModule
     const SIGNATURE_ALGORITHM_DEFAULT = 'sha1';
 
     /**
+     * Table name without the database prefix, required by Db::insert()
+     */
+    const TABLE_PAYMENT = 'payment_placetopay';
+
+    /**
      * @var int
      */
     public $is_eu_compatible;
@@ -121,7 +126,7 @@ class PlacetoPayPayment extends PaymentModule
     /**
      * @var string
      */
-    private $tablePayment = _DB_PREFIX_ . 'payment_placetopay';
+    private $tablePayment = _DB_PREFIX_ . self::TABLE_PAYMENT;
 
     /**
      * @var string
@@ -989,7 +994,7 @@ class PlacetoPayPayment extends PaymentModule
      * Register payment
      *
      * @param $requestId
-     * @param $orderId
+     * @param $cardId
      * @param $currencyId
      * @param $amount
      * @param $status
@@ -1013,50 +1018,27 @@ class PlacetoPayPayment extends PaymentModule
         // Default values
         $reason = '';
         $date = date('Y-m-d H:i:s');
-        $reasonDescription = pSQL($message);
         $conversion = 1;
         $authCode = '000000';
 
-        $cardId = (int)$cardId;
-        $currencyId = (int)$currencyId;
-        $requestId = (int)$requestId;
-        $status = (int)$status;
-        $amount = (float)$amount;
-        $ipAddress = pSQL($ipAddress);
-        $reference = pSQL($reference);
-
-        $sql = "
-            INSERT INTO `" . bqSQL($this->tablePayment) . "` (
-                id_order,
-                id_currency,
-                date,
-                amount,
-                status,
-                reason,
-                reason_description,
-                conversion,
-                ip_address,
-                id_request,
-                authcode,
-                reference
-            ) VALUES (
-                '$cardId',
-                '$currencyId',
-                '$date',
-                '$amount',
-                '$status',
-                '$reason',
-                '$reasonDescription',
-                '$conversion',
-                '$ipAddress',
-                '$requestId',
-                '$authCode',
-                '$reference'
-            )
-        ";
+        // Db::insert() escapes the column names, but not the values, so they are still sanitized here
+        $data = [
+            'id_order' => (int)$cardId,
+            'id_currency' => (int)$currencyId,
+            'date' => pSQL($date),
+            'amount' => sprintf('%.2F', (float)$amount),
+            'status' => (int)$status,
+            'reason' => pSQL($reason),
+            'reason_description' => pSQL($message),
+            'conversion' => sprintf('%F', (float)$conversion),
+            'ip_address' => pSQL($ipAddress),
+            'id_request' => (int)$requestId,
+            'authcode' => pSQL($authCode),
+            'reference' => pSQL($reference),
+        ];
 
         try {
-            Db::getInstance()->Execute($sql);
+            Db::getInstance()->insert(self::TABLE_PAYMENT, $data);
         } catch (Exception $e) {
             throw new PaymentException($e->getMessage(), 401);
         }
@@ -2906,11 +2888,9 @@ class PlacetoPayPayment extends PaymentModule
      */
     private function reference(string $string, bool $rollBack = false): string
     {
-        if (!$rollBack) {
-            return base64_encode($string);
-        }
-
-        return (string)base64_decode($string, true);
+        return !$rollBack
+            ? base64_encode($string)
+            : base64_decode($string);
     }
 
     private function getHeaders(): array
