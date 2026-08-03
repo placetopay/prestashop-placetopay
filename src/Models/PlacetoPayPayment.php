@@ -1021,7 +1021,6 @@ class PlacetoPayPayment extends PaymentModule
         $conversion = 1;
         $authCode = '000000';
 
-        // Db::insert() escapes the column names, but not the values, so they are still sanitized here
         $data = [
             'id_order' => (int)$cardId,
             'id_currency' => (int)$currencyId,
