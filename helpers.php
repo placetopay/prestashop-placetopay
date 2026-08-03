@@ -22,12 +22,18 @@ if (!function_exists('getPathCMS')) {
         }
 
         if (!file_exists(fixPath($pathCMS . '/config/config.inc.php'))) {
-            $message = "Miss-configuration in Server [mode: " . php_sapi_name() . "] [{$filename}]" . breakLine();
-            $message .= "Option [{$option}]" . breakLine();
-            $message .= "Used [{$pathUsed}]" . breakLine();
-            $message .= "Path [{$pathCMS}]" . breakLine();
+            $detail = sprintf(
+                'Miss-configuration in Server [mode: %s] [%s] [Option: %s] [Used: %s] [Path: %s]',
+                php_sapi_name(),
+                $filename,
+                $option,
+                $pathUsed,
+                $pathCMS
+            );
 
-            die($message);
+            error_log($detail);
+
+            die(isConsole() ? $detail . breakLine() : 'Miss-configuration in server, contact the store administrator');
         }
 
         return $pathCMS;
@@ -54,7 +60,7 @@ if (!function_exists('isConsole')) {
         static $isConsole;
 
         if (is_null($isConsole)) {
-            $isConsole = \Tools::isPHPCLI();
+            $isConsole = class_exists('Tools') ? \Tools::isPHPCLI() : PHP_SAPI === 'cli';
         }
 
         return $isConsole;

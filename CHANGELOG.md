@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](http://semver.org).
 
 ## [Unreleased]
 
+## [6.0.1 (2026-07-30)](https://github.com/placetopay/prestashop-placetopay/compare/6.0.0...6.0.1)
+
+### Changed
+- Resolve vulnerabilities
+
+### Fixed
+- Error in generate with label with dependencies
+
 ## [6.0.0 (2026-02-26)](https://github.com/placetopay/prestashop-placetopay/compare/5.0.3...6.0.0)
 
 ### Added
